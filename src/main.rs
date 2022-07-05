@@ -20,7 +20,8 @@ use anyhow::{
 };
 use exitcode;
 use log::{
-    trace, 
+    trace,
+    warn,
     error
 };
 use petgraph::dot::Dot;
@@ -719,14 +720,19 @@ fn main() {
                 let threshold: f64 = threshold.parse().unwrap();
 
                 let model_matches = match api.match_model(&uuid, threshold) {
-                    Ok(model_matches) => model_matches,
+                    Ok(model_matches) => {
+                        trace!("We found {} matche(s)!", model_matches.inner.len());
+                        model_matches
+                    },
                     Err(e) => {
+                        warn!("No matched found.");
                         eprintln!("{}", e);
                         ::std::process::exit(exitcode::DATAERR);
                     },
                 };
 
-                match format::format_list_of_model_matches(&model_matches, &output_format, pretty, color) {
+                let output = format::format_list_of_model_matches(&model_matches, &output_format, pretty, color);
+                match output {
                     Ok(output) => {
                         println!("{}", output);
                         ::std::process::exit(exitcode::OK);

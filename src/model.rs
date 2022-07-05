@@ -629,6 +629,7 @@ impl ToJson for ListOfModelMatches {
 impl ToCsv for ListOfModelMatches {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
+        let matches = *self.inner.clone();
         let buf = BufWriter::new(Vec::new());
         let mut writer = Writer::from_writer(buf);
 
@@ -637,21 +638,21 @@ impl ToCsv for ListOfModelMatches {
             writer.write_record(&columns)?;
         }
     
-        // for m in *self.inner {
-        //     let model = m.model;
-        //     let percentage = m.percentage;
-        //     let mut values: Vec<String> = Vec::new();
+        for m in matches {
+            let model = m.model;
+            let percentage = m.percentage;
+            let mut values: Vec<String> = Vec::new();
     
-        //     values.push(format!("{:.4}", percentage));
-        //     values.push(model.uuid.to_string());
-        //     values.push(model.name);
-        //     values.push(model.folder_id.to_string());
-        //     values.push(model.is_assembly.to_string());
-        //     values.push(model.file_type.to_string());
-        //     values.push(model.units);
-        //     values.push(model.state);
-        //     writer.write_record(&values)?;
-        // }
+            values.push(format!("{:.4}", percentage));
+            values.push(model.uuid.to_string());
+            values.push(model.name);
+            values.push(model.folder_id.to_string());
+            values.push(model.is_assembly.to_string());
+            values.push(model.file_type.to_string());
+            values.push(model.units);
+            values.push(model.state);
+            writer.write_record(&values)?;
+        }
        
         writer.flush()?;
     

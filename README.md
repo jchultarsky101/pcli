@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.3.4.
+The latest version is 1.3.5.
+
+### Version 1.3.5
+
+* Fixed a bug causing output to be suppressed when using CSV format in model-match
 
 #### Version 1.3.4
 
