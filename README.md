@@ -9,7 +9,15 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.3.5.
+The latest version is 1.4.1
+
+#### Version 1.4.1
+
+* Updated the CSV writer to terminate on CRLF instead of just CR
+
+#### Version 1.3.5
+
+* Added delete-model command
 
 #### Version 1.3.5
 
@@ -575,6 +583,16 @@ pcli --tenant="delta" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 This will cause the status of the model to be reset to "reprocessing" and the model will progress through the normal steps of processing and indexing as when uploading a new file.
 
 The command produces no output.
+
+### Deleting a model
+
+This command will delete a model and all related metadata from the Physna database. Please, be careful when using this function.
+
+Example:
+
+```bash
+pcli --tenant="delta" delete-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
+```
 
 ### Uploading Metadata
 

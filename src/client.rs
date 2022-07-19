@@ -416,6 +416,21 @@ impl ApiClient {
         Ok(result)
     }
 
+    pub fn delete_model(&self, uuid: &Uuid) -> Result<(), ClientError> {
+        let url = format!("{}/v2/models/{id}", self.base_url, id=urlencode(uuid.to_string()));
+        trace!("Deleting model {}...", uuid.to_string());
+        
+        let builder = self.client.request(reqwest::Method::DELETE, url)
+                        .timeout(Duration::from_secs(180))
+                        .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+                        .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        let response = self.client.execute(request)?;
+        self.evaluate_satus(response.status())?;
+        Ok(())
+    }
+
     pub fn reprocess_model(&self, uuid: &Uuid) -> Result<()> {
         let url = format!("{}/v1/{}/models/reprocess", self.base_url, self.tenant);
         let bearer: String = format!("Bearer {}", self.access_token);

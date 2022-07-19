@@ -1,4 +1,7 @@
-use csv::Writer;
+use csv::{
+    WriterBuilder,
+    Terminator
+};
 use std::io::BufWriter;
 use serde::{Serialize, Deserialize};
 use std::iter::Extend;
@@ -84,7 +87,7 @@ impl ToCsv for ListOfFolders {
         let folders = self.folders.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME"];
@@ -180,7 +183,7 @@ impl ToCsv for PropertyCollection {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME"];
@@ -252,7 +255,7 @@ impl ToCsv for ModelMetadata {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["MODEL_UUID", "ID", "NAME", "VALUE"];
@@ -309,7 +312,7 @@ impl ToCsv for Model {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
@@ -346,7 +349,7 @@ impl ToCsv for ListOfModels {
         let models = self.models.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
@@ -548,7 +551,7 @@ impl ToCsv for FlatBom {
         let models = self.inner.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["UUID", "NAME"];
@@ -631,7 +634,7 @@ impl ToCsv for ListOfModelMatches {
 
         let matches = *self.inner.clone();
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["MATCH_PERCENTAGE", "ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
@@ -712,7 +715,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["MODEL_NAME", "MATCHING_MODEL_NAME", "MATCH", "SOURCE_UUID", "MATCHING_UUID", "SOURCE_FOLDER_ID", "MATCHING_FOLDER_ID", "COMPARISON_URL", "MODEL_ONE_THUMBNAIL_URL", "MODEL_TWO_THUMBNAIL_URL"];
@@ -815,7 +818,7 @@ impl ToCsv for EnvironmentStatusReport {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = Writer::from_writer(buf);
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
             let columns = vec!["FOLDER_ID", "FOLDER_NAME", "FILE_TYPE", "STATE", "COUNT"];
