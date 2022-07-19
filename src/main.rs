@@ -150,6 +150,18 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("delete-model")
+                .about("Deletes a specific model")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .takes_value(true)
+                        .help("The model UUID")
+                        .required(true)
+                ),
+        )
+        .subcommand(
             Command::new("model-meta")
                 .about("Reads the metadata (properties) for a specific model")
                 .arg(
@@ -791,6 +803,25 @@ fn main() {
                 let uuid = sub_matches.value_of("uuid").unwrap();
                 let uuid = Uuid::parse_str(uuid).unwrap();
                 match api.reprocess_model(&uuid) {
+                    Ok(()) => {
+                        println!();
+                        ::std::process::exit(exitcode::OK);
+                    },
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        ::std::process::exit(exitcode::DATAERR); 
+                    }
+                };
+            } else {
+                eprintln!("Model ID not specified!");
+                ::std::process::exit(exitcode::USAGE);
+            }
+        },
+        Some(("delete-model", sub_matches)) => {
+            if sub_matches.is_present("uuid") {
+                let uuid = sub_matches.value_of("uuid").unwrap();
+                let uuid = Uuid::parse_str(uuid).unwrap();
+                match api.delete_model(&uuid) {
                     Ok(()) => {
                         println!();
                         ::std::process::exit(exitcode::OK);
