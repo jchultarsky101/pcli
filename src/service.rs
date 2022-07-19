@@ -113,6 +113,11 @@ impl Api {
         Ok(())
     }
 
+    pub fn delete_model(&self, uuid: &Uuid) -> anyhow::Result<()> {
+        self.client.delete_model(uuid)?;
+        Ok(())
+    }
+
     pub fn get_model_assembly_tree(&mut self, uuid: &Uuid)  -> anyhow::Result<ModelAssemblyTree> {
 
         trace!("Reading assembly tree data for {}...", uuid.to_string());
