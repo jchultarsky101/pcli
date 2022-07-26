@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.4.1
+The latest version is 1.4.2
+
+### Version 1.4.2
+
+* Enabled Source ID argument when uploading files
 
 #### Version 1.4.1
 
@@ -506,7 +510,7 @@ $ pcli help upload
 ```
 ```
 pcli help upload
-pcli-upload 1.3.2
+pcli-upload 1.4.2
 Uploads a file to Physna
 
 USAGE:
@@ -519,6 +523,7 @@ OPTIONS:
     -i, --input <input>        Path to the input file
     -m, --meta <meta>          Input CSV file name containing additional metadata associated with
                                this model
+        --source <source>      Specifies the Source ID to be used
         --timeout <timeout>    When validating, specifies the timeout in seconds
         --units <units>        The unit of measure for the model (e.g. 'inch', 'mm', etc.)
     -V, --version              Print version information
@@ -532,6 +537,7 @@ OPTIONS:
 * "batch" is a UUID that represents a transaction. When uploading a group of logically related models (e.g. an assembly with all of its parts), you will need to provide UUID type 4 as the transaction ID to instruct Physna that all of these files are related. If not provided, each file will be considered independent from any other and a batch UUID will be generated automatically by the client for each file
 * "validate" is an optional argument that will cause the process to wait until the file upload completes. It will retrieve the model back and check the status. If the status is one of the final states, it returns the model data. If it is still pending, it will continue to wait. If no timeout is provided, it could wait forever or until error occurs.
 * "timeout" only applies when "validate" is present. It specifies the maximum wait time allowed. The value is in seconds. Use that argument together with "validate" to limit the time an operation can take.
+* "source" is an optional string provided by the user that represents an unique identifier for the source system. It could be helpful to link a model in Physna to an entry in a PLM system or some other database. If not specified, the original file name will be used as the default value.
 
 Here is an example of how all this comes together:
 
