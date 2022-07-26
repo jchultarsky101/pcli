@@ -350,6 +350,13 @@ fn main() {
                         .help("When validating, specifies the timeout in seconds")
                         .required(false)
                 )
+                .arg(
+                    Arg::new("source")
+                        .long("source")
+                        .takes_value(true)
+                        .help("Specifies the Source ID to be used")
+                        .required(false)
+                )
 
         )
         .subcommand(
@@ -874,7 +881,7 @@ fn main() {
                 Some(duration) => Some(duration.parse::<u64>().unwrap()),
                 None => None,
             };
-            let source_id: Option<String> = match sub_matches.value_of("source-uuid") {
+            let source_id: Option<String> = match sub_matches.value_of("source") {
                 Some(id) => Some(id.to_string()),
                 None => None,
             };
