@@ -357,7 +357,7 @@ impl Api {
         Ok(stats)
     }
 
-    pub fn upload_file(&self, folder_id: u32, file: &str, batch_uuid: Uuid, units: &str) -> Result<Option<Model>> {
+    pub fn upload_file(&self, folder_id: u32, file: &str, batch_uuid: Uuid, units: &str, source_id: Option<String>) -> Result<Option<Model>> {
         const CAPACITY: usize = 1000000;
         let mut f = File::open(file)?;
         let mut total_size: u64 = 0;
@@ -366,11 +366,19 @@ impl Api {
         let mut result: Result<Option<Model>> = Err(anyhow!("Failed to upload file"));
 
         let file_name = Path::new(&file.to_owned()).file_name().unwrap().to_os_string().into_string().unwrap();
-        let mut source_id_resolved = String::new();
-        source_id_resolved.push_str("/");
-        source_id_resolved.push_str(Uuid::new_v4().to_string().as_str());
-        source_id_resolved.push_str("/");
-        source_id_resolved.push_str(file_name.as_str());
+
+        let mut source_id_resolved = match source_id {
+            Some(source_id) => source_id,
+            None => {
+                let mut id = String::new();
+                id.push_str("/");
+                id.push_str(Uuid::new_v4().to_string().as_str());
+                id.push_str("/");
+                id.push_str(file_name.as_str());
+
+                id
+            }
+        };
     
         trace!("Uploading file {} with size {} byte(s)...", file.to_owned(), file_size.to_owned());
         while total_size < file_size {

@@ -874,6 +874,10 @@ fn main() {
                 Some(duration) => Some(duration.parse::<u64>().unwrap()),
                 None => None,
             };
+            let source_id: Option<String> = match sub_matches.value_of("source-uuid") {
+                Some(id) => Some(id.to_string()),
+                None => None,
+            };
 
             let glob = glob(file.as_str());
             match glob {
@@ -881,7 +885,7 @@ fn main() {
                     let mut list_of_models: Vec<model::Model> = Vec::new();
                     for path in glob {
                         let file = path.unwrap().into_os_string().into_string().unwrap();
-                        let result = api.upload_file(folder_id, &file, batch_uuid, &units);
+                        let result = api.upload_file(folder_id, &file, batch_uuid, &units, source_id.clone());
                         match result {
                             Ok(model) => {
                                 match model {
