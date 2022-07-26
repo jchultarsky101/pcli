@@ -367,7 +367,7 @@ impl Api {
 
         let file_name = Path::new(&file.to_owned()).file_name().unwrap().to_os_string().into_string().unwrap();
 
-        let mut source_id_resolved = match source_id {
+        let source_id_resolved = match source_id {
             Some(source_id) => source_id,
             None => {
                 let mut id = String::new();
