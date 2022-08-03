@@ -275,9 +275,18 @@ impl ApiClient {
     }
 
     fn evaluate_satus(&self, status: StatusCode) -> Result<(), ClientError> {
+
+        if status.is_success() {
+            ()
+        }
+
         match status {
-            StatusCode::OK => (), // Nothing to do, continue
-            StatusCode::CREATED => (), // Nothing to do, continue
+            StatusCode::OK |
+            StatusCode::CREATED |
+            StatusCode::ACCEPTED |
+            StatusCode::NON_AUTHORITATIVE_INFORMATION |
+            StatusCode::NO_CONTENT |
+            StatusCode::RESET_CONTENT => (), // Nothing to do, continue
             StatusCode::FORBIDDEN => {
                 return Err(ClientError::Forbidden)
             },
@@ -290,10 +299,6 @@ impl ApiClient {
             StatusCode::CONTINUE |
             StatusCode::SWITCHING_PROTOCOLS |
             StatusCode::PROCESSING |
-            StatusCode::ACCEPTED |
-            StatusCode::NON_AUTHORITATIVE_INFORMATION |
-            StatusCode::NO_CONTENT |
-            StatusCode::RESET_CONTENT |
             StatusCode::PARTIAL_CONTENT |
             StatusCode::MULTI_STATUS |
             StatusCode::ALREADY_REPORTED |
