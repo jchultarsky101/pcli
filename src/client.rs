@@ -23,6 +23,7 @@ use serde::{
 };
 use substring::Substring;
 use crate::model::{
+    FolderCreateResponse,
     Model,
     ModelMetadataItem,
     ModelMetadata,
@@ -408,6 +409,32 @@ impl ApiClient {
         let json = self.get(url.as_str(), None)?;
         //trace!("{}", json);
         let result: FolderListResponse = serde_json::from_str(&json)?;
+        Ok(result)
+    }
+
+    pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
+        let url = format!("{}/v1/{}/containers", self.base_url, self.tenant);
+        let bearer: String = format!("Bearer {}", self.access_token);
+
+        let form = Form::new().part("name", Part::text(name.clone())).part("sourceId", Part::text("".to_string()));
+
+        trace!("POST {}", url);
+
+        let response = self.client.post(url)
+            .timeout(Duration::from_secs(180))
+            .header("Authorization", bearer)
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .multipart(form)
+            .send()?;
+
+        self.evaluate_satus(response.status())?;
+        let json = response.text().unwrap();
+        trace!("{}", json);
+        let result: FolderCreateResponse = serde_json::from_str(&json)?;
+
         Ok(result)
     }
 

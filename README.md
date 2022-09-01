@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.4.5
+The latest version is 1.5.0
+
+### Version 1.5.0
+
+* Added create-folder command
 
 ### Version 1.4.5
 

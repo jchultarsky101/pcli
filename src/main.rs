@@ -430,6 +430,18 @@ fn main() {
                 .about("Lists all available folders"),
         )
         .subcommand(
+            Command::new("create-folder")
+                .about("Creates a new folder")
+                .arg(
+                    Arg::new("name")
+                        .short('n')
+                        .long("name")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Name of the new folder")
+                )
+        )
+        .subcommand(
             Command::new("properties")
                 .about("Lists all available metadata propertie names and their IDs"),
         )
@@ -593,6 +605,29 @@ fn main() {
                 },
                 Err(e) => {
                     eprintln!("Error occurred while reading folders: {}. Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("create-folder", sub_matches)) => {
+            let name = sub_matches.value_of("name").unwrap();
+            let folder = api.create_folder(&name.to_string());
+            match folder {
+                Ok(folder) => {
+                    let output = format::format_folder(folder, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while creating a new folder: {}. Try invalidating the token.", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }

@@ -78,6 +78,22 @@ impl Api {
         }
     }
 
+    pub fn create_folder(&self, name: &String) -> Result<Folder> {
+        let folder = self.client.create_folder(name);
+        match folder {
+            Ok(folder) => Ok(Folder::from(folder)),
+            Err(e) => {
+                match e {
+                    ClientError::Parsing(message) => {
+                        error!("{}", message);
+                        return Err(anyhow!("{}", message))
+                    },
+                    _ => return Err(anyhow!(e)),
+                }
+            },
+        }
+    }
+
     pub fn get_model_metadata(&mut self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
         Ok(self.client.get_model_metadata(uuid)?)
     }

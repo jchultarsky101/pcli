@@ -55,6 +55,12 @@ impl Folder {
     }
 }
 
+impl From<FolderCreateResponse> for Folder {
+    fn from(response: FolderCreateResponse) -> Self {
+        Folder::new(response.container_id, response.name)
+    }
+}
+
 impl ToJson for Folder {
     fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
         if pretty {
@@ -62,6 +68,31 @@ impl ToJson for Folder {
         } else {
             serde_json::to_string(self)
         }
+    }
+}
+
+impl ToCsv for Folder {
+    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+
+        if pretty {
+            let columns = vec!["ID", "NAME"];
+            writer.write_record(&columns)?;
+        }
+    
+        let mut values: Vec<String> = Vec::new();
+    
+        values.push(self.id.to_string());
+        values.push(self.name.to_owned());
+        writer.write_record(&values)?;
+       
+        writer.flush()?;
+    
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)        
     }
 }
 
@@ -932,4 +963,12 @@ pub struct FileUploadResponse {
     pub attachment_url: Option<String>,
     #[serde(rename = "shortId")]
     pub short_id: Option<u64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct FolderCreateResponse {
+    #[serde(rename = "ContainerId")]
+    pub container_id: u32,
+    #[serde(rename = "Name")]
+    pub name: String
 }

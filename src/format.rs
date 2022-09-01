@@ -1,4 +1,5 @@
 use crate::model::{
+    Folder,
     Model, 
     ModelMetadata,
     ListOfModels, 
@@ -57,6 +58,21 @@ pub fn format_list_of_folders(folders: ListOfFolders, format: &Format, pretty: b
         },
         Format::Csv => {
             Ok(color_string(folders.to_csv(pretty)?.as_str(), color))
+        },
+        _ => {
+            Err(anyhow!("Unsupported format {:?}", format))
+        }
+    }
+}
+
+pub fn format_folder(folder: Folder, format: &Format, pretty: bool, color: Option<Color>) -> anyhow::Result<colored::ColoredString> {
+    let folder = Folder::from(folder);
+    match format {
+        Format::Json => {
+           Ok(color_string(folder.to_json(pretty)?.as_str(), color))
+        },
+        Format::Csv => {
+            Ok(color_string(folder.to_csv(pretty)?.as_str(), color))
         },
         _ => {
             Err(anyhow!("Unsupported format {:?}", format))
