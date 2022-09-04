@@ -363,14 +363,6 @@ fn main() {
             Command::new("upload-model-meta")
                 .about("Reads metadata from an input CSV file and uploads it for a model specified by UUID")
                 .arg(
-                    Arg::new("uuid")
-                        .short('u')
-                        .long("uuid")
-                        .takes_value(true)
-                        .help("The model UUID")
-                        .required(true)
-                )
-                .arg(
                     Arg::new("input")
                         .short('i')
                         .long("input")
@@ -704,23 +696,16 @@ fn main() {
             }
         },
         Some(("upload-model-meta", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
-                let input_file = sub_matches.value_of("input").unwrap();
-                match api.upload_model_metadata(&uuid, &input_file) {
-                    Ok(_) => {
-                        ::std::process::exit(exitcode::OK);
-                    },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        ::std::process::exit(exitcode::DATAERR); 
-                    }
-                };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
-            }
+            let input_file = sub_matches.value_of("input").unwrap();
+            match api.upload_model_metadata(&input_file) {
+                Ok(_) => {
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR); 
+                }
+            };
         }, 
         Some(("assembly-tree", sub_matches)) => {
             if sub_matches.is_present("uuid") {
@@ -932,10 +917,9 @@ fn main() {
                             Ok(model) => {
                                 match model {
                                     Some(model) => {
-                                        let uuid = &model.uuid.to_owned();
                                         let m: model::Model = match metadata_file {
                                                         Some(metadata_file) => {
-                                                            let _meta_response = api.upload_model_metadata(uuid, metadata_file);
+                                                            let _meta_response = api.upload_model_metadata(metadata_file);
                                                             let m2 = api.get_model(&model.uuid, false);
                                                             m2.unwrap()
                                                         },

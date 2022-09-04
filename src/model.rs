@@ -239,8 +239,6 @@ impl ToCsv for PropertyCollection {
 pub struct ModelMetadataItem {
     #[serde(rename = "modelId")]
     pub model_uuid: Uuid,
-    #[serde(rename = "propertyId")]
-    pub id: u64,
     #[serde(rename = "name")]
     pub name: String,
     #[serde(rename = "value")]
@@ -248,10 +246,9 @@ pub struct ModelMetadataItem {
 }
 
 impl ModelMetadataItem {
-    pub fn new(model_uuid: Uuid, id: u64, name: String, value: String) -> ModelMetadataItem {
+    pub fn new(model_uuid: Uuid, name: String, value: String) -> ModelMetadataItem {
         ModelMetadataItem {
             model_uuid,
-            id,
             name,
             value,
         }
@@ -261,11 +258,11 @@ impl ModelMetadataItem {
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ModelMetadata {
     #[serde(rename = "metadata")]
-    pub properties: HashMap<u64, ModelMetadataItem>,
+    pub properties: Vec<ModelMetadataItem>,
 }
 
 impl ModelMetadata {
-    pub fn new(properties: HashMap<u64, ModelMetadataItem>) -> ModelMetadata {
+    pub fn new(properties: Vec<ModelMetadataItem>) -> ModelMetadata {
         ModelMetadata {
             properties,
         }
@@ -289,14 +286,13 @@ impl ToCsv for ModelMetadata {
         let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
-            let columns = vec!["MODEL_UUID", "ID", "NAME", "VALUE"];
+            let columns = vec!["MODEL_UUID", "NAME", "VALUE"];
             writer.write_record(&columns)?;
         }
     
-        for (key, property) in &self.properties {
+        for property in &self.properties {
             let mut values: Vec<String> = Vec::new();
             values.push(property.model_uuid.to_string());
-            values.push(key.to_string());
             values.push(property.name.to_owned());
             values.push(property.value.to_owned());
             writer.write_record(&values)?;
@@ -971,4 +967,10 @@ pub struct FolderCreateResponse {
     pub container_id: u32,
     #[serde(rename = "Name")]
     pub name: String
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ModelCreateMetadataResponse {
+    #[serde(rename = "metadata")]
+    pub metadata: ModelMetadataItem
 }

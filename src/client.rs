@@ -26,6 +26,7 @@ use crate::model::{
     FolderCreateResponse,
     Model,
     ModelMetadataItem,
+    ModelCreateMetadataResponse,
     ModelMetadata,
     FileUploadResponse,
     PropertyCollection,
@@ -501,7 +502,7 @@ impl ApiClient {
         match response {
             Some(response) => {
                 if response.properties.is_some() {
-                    let props: HashMap<u64, ModelMetadataItem> = response.properties.unwrap().into_iter().map(|property| (property.id, ModelMetadataItem::new(property.model_uuid, property.id, property.name, property.value))).collect();
+                    let props: Vec<ModelMetadataItem> = response.properties.unwrap().into_iter().map(|property| (ModelMetadataItem::new(property.model_uuid, property.name, property.value))).collect();
                     return Ok(Some(ModelMetadata::new(props)));
                 } else {
                     return Ok(None);
@@ -642,8 +643,8 @@ impl ApiClient {
         Ok(result.property)
     }
 
-    pub fn put_model_property(&self, item: &ModelMetadataItem) -> Result<ModelMetadataItem> {
-        let url = format!("{}/v2/models/{}/properties/{}", self.base_url, item.model_uuid, item.id);
+    pub fn put_model_property(&self, id: &u64, item: &ModelMetadataItem) -> Result<ModelMetadataItem> {
+        let url = format!("{}/v2/models/{}/metadata/{}", self.base_url, item.model_uuid, id);
         let bearer: String = format!("Bearer {}", self.access_token);
     
         trace!("PUT {}", url);
@@ -661,15 +662,15 @@ impl ApiClient {
     
         let status = self.evaluate_satus(response.status());
         let json = response.text().unwrap();
-        //trace!("{}", json);
+        trace!("{}", json);
     
         match status {
             Ok(_) => (),
             Err(e) => return Err(anyhow!(e)),
         }
     
-        let result: ModelMetadataItem = serde_json::from_str(&json)?;
-        Ok(result)
+        let result: ModelCreateMetadataResponse = serde_json::from_str(&json)?;
+        Ok(result.metadata)
     }
 }
 
