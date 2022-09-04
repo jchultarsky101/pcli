@@ -9,7 +9,14 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.4.5
+The latest version is 1.5.0
+
+### Version 1.5.0
+
+* Added create-folder command
+* Modified the upload-model-meta command to use the same CSV file format as the output of model-meta. That includes now the UUID of the model as first column. Therefore, I removed the --uuid argument from the command. There are two reasons for this:
+  * One can first query a model, make a small modification and then use that same file to upload
+  * One could concatenate the metadata from multiple model-meta commands into a single master file. Similar file could be created by database extraction methods, etc.
 
 ### Version 1.4.5
 

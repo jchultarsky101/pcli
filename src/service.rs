@@ -25,8 +25,7 @@ use crate::model::{
     EnvironmentStatusReport, 
     PartNodeDictionaryItem,
     ModelMatchReport,
-    PropertyCollection,
-    Pair,
+    PropertyCollection
 };
 use crate::client::{
     AssemblyTree,
@@ -66,6 +65,22 @@ impl Api {
         let list = self.client.get_list_of_folders();
         match list {
             Ok(list) => Ok(ListOfFolders::from(list)),
+            Err(e) => {
+                match e {
+                    ClientError::Parsing(message) => {
+                        error!("{}", message);
+                        return Err(anyhow!("{}", message))
+                    },
+                    _ => return Err(anyhow!(e)),
+                }
+            },
+        }
+    }
+
+    pub fn create_folder(&self, name: &String) -> Result<Folder> {
+        let folder = self.client.create_folder(name);
+        match folder {
+            Ok(folder) => Ok(Folder::from(folder)),
             Err(e) => {
                 match e {
                     ClientError::Parsing(message) => {
@@ -408,7 +423,7 @@ impl Api {
         }
     }
 
-    pub fn upload_model_metadata(&self, uuid: &Uuid, input_file: &str) -> Result<()> {
+    pub fn upload_model_metadata(&self, input_file: &str) -> Result<()> {
 
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
@@ -416,24 +431,22 @@ impl Api {
 
         let mut rdr = csv::Reader::from_reader(File::open(input_file)?);
         for record in rdr.records() {
-            let property = match record {
+            let (id, property) = match record {
                 Ok(record) => {
-                    let pair: Pair = record.deserialize(None)?;
-                    let case_insensitive_name: UniCase<String> = UniCase::new(pair.name.to_owned());
-                    let property = match reverse_lookup.get(&case_insensitive_name) {
-                        Some(id) => ModelMetadataItem::new(uuid.to_owned(), *id, pair.name, pair.value),
+                    let m: ModelMetadataItem = record.deserialize(None)?;
+                    let case_insensitive_name: UniCase<String> = UniCase::new(m.name.to_owned());
+                    match reverse_lookup.get(&case_insensitive_name) {
+                        Some(id) => (*id, m),
                         None => {
-                            let p = self.client.post_property(&pair.name)?;
-                            ModelMetadataItem::new(uuid.to_owned(), p.id, p.name.to_owned(), pair.value.to_owned())
-                        },
-                    };
-
-                    property
+                            let p = self.client.post_property(&m.name)?;
+                            (p.id, m)
+                        }
+                    }
                 },
                 Err(e) => return Err(anyhow!("Failed to read input: {}", e)),
             };
 
-            self.client.put_model_property(&property)?;
+            self.client.put_model_property(&id, &property)?;
         }        
 
         Ok(())
