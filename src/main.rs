@@ -363,14 +363,6 @@ fn main() {
             Command::new("upload-model-meta")
                 .about("Reads metadata from an input CSV file and uploads it for a model specified by UUID")
                 .arg(
-                    Arg::new("uuid")
-                        .short('u')
-                        .long("uuid")
-                        .takes_value(true)
-                        .help("The model UUID")
-                        .required(true)
-                )
-                .arg(
                     Arg::new("input")
                         .short('i')
                         .long("input")
@@ -428,6 +420,18 @@ fn main() {
         .subcommand(
             Command::new("folders")
                 .about("Lists all available folders"),
+        )
+        .subcommand(
+            Command::new("create-folder")
+                .about("Creates a new folder")
+                .arg(
+                    Arg::new("name")
+                        .short('n')
+                        .long("name")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Name of the new folder")
+                )
         )
         .subcommand(
             Command::new("properties")
@@ -597,6 +601,29 @@ fn main() {
                 }
             }
         },
+        Some(("create-folder", sub_matches)) => {
+            let name = sub_matches.value_of("name").unwrap();
+            let folder = api.create_folder(&name.to_string());
+            match folder {
+                Ok(folder) => {
+                    let output = format::format_folder(folder, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while creating a new folder: {}. Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
         Some(("properties", _sub_matches)) => {
             let properties = api.list_all_properties();
             match properties {
@@ -669,23 +696,16 @@ fn main() {
             }
         },
         Some(("upload-model-meta", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
-                let input_file = sub_matches.value_of("input").unwrap();
-                match api.upload_model_metadata(&uuid, &input_file) {
-                    Ok(_) => {
-                        ::std::process::exit(exitcode::OK);
-                    },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        ::std::process::exit(exitcode::DATAERR); 
-                    }
-                };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
-            }
+            let input_file = sub_matches.value_of("input").unwrap();
+            match api.upload_model_metadata(&input_file) {
+                Ok(_) => {
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR); 
+                }
+            };
         }, 
         Some(("assembly-tree", sub_matches)) => {
             if sub_matches.is_present("uuid") {
@@ -897,10 +917,9 @@ fn main() {
                             Ok(model) => {
                                 match model {
                                     Some(model) => {
-                                        let uuid = &model.uuid.to_owned();
                                         let m: model::Model = match metadata_file {
                                                         Some(metadata_file) => {
-                                                            let _meta_response = api.upload_model_metadata(uuid, metadata_file);
+                                                            let _meta_response = api.upload_model_metadata(metadata_file);
                                                             let m2 = api.get_model(&model.uuid, false);
                                                             m2.unwrap()
                                                         },
