@@ -9,6 +9,8 @@ use crate::model::{
     ListOfModelMatches, 
     EnvironmentStatusReport,
     PropertyCollection,
+    ListOfImageClassifiers,
+    ListOfClassificationScores,
     ToJson, 
     ToCsv
 };
@@ -186,6 +188,34 @@ pub fn format_environment_status_report(stats: &EnvironmentStatusReport, format:
         },
         Format::Csv => {
             Ok(color_string(stats.to_csv(pretty)?.as_str(), color))
+        },
+        _ => {
+            Err(anyhow!("Unsupported format {:?}", format))
+        }
+    }
+}
+
+pub fn format_list_of_classifiers(classifiers: ListOfImageClassifiers, format: &Format, pretty: bool, color: Option<Color>) -> anyhow::Result<colored::ColoredString> {
+    match format {
+        Format::Json => {
+           Ok(color_string(classifiers.to_json(pretty)?.as_str(), color))
+        },
+        Format::Csv => {
+            Ok(color_string(classifiers.to_csv(pretty)?.as_str(), color))
+        },
+        _ => {
+            Err(anyhow!("Unsupported format {:?}", format))
+        }
+    }
+}
+
+pub fn format_list_of_classification_predictions(scores: ListOfClassificationScores, format: &Format, pretty: bool, color: Option<Color>) -> anyhow::Result<colored::ColoredString> {
+    match format {
+        Format::Json => {
+           Ok(color_string(scores.to_json(pretty)?.as_str(), color))
+        },
+        Format::Csv => {
+            Ok(color_string(scores.to_csv(pretty)?.as_str(), color))
         },
         _ => {
             Err(anyhow!("Unsupported format {:?}", format))

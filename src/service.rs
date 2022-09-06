@@ -25,7 +25,9 @@ use crate::model::{
     EnvironmentStatusReport, 
     PartNodeDictionaryItem,
     ModelMatchReport,
-    PropertyCollection
+    PropertyCollection,
+    ListOfImageClassifiers,
+    ListOfClassificationScores
 };
 use crate::client::{
     AssemblyTree,
@@ -450,5 +452,32 @@ impl Api {
         }        
 
         Ok(())
+    }
+
+    pub fn create_image_classifier(&self, name: String, folder: Vec<u32>) -> Result<Uuid> {
+        let response = self.client.create_image_classifier(&name, folder)?;
+        Ok(response.id)
+    }
+
+    pub fn get_image_classifiers(&self) -> Result<ListOfImageClassifiers> {
+        let classifiers = self.client.get_image_classifiers()?;
+        Ok(ListOfImageClassifiers::new(classifiers))
+    }
+
+    pub fn get_classification_predictions(&self, uuid: Uuid, file: &str) -> Result<ListOfClassificationScores> {
+
+        const CAPACITY: usize = 1000000;
+        let mut f = File::open(file)?;
+        let file_size = f.metadata().unwrap().len();
+
+        trace!("Reading input file {} with size of {} byte(s)...", file, file_size);
+
+        let buffer = &mut [0 as u8; CAPACITY];
+        let chunk_size: usize = f.read(buffer)?;
+
+        trace!("Read {} byte(s)", chunk_size);
+
+        let scores = self.client.get_classification_scores(uuid, Box::new(buffer[0..chunk_size].to_vec()))?;
+        Ok(scores)
     }
 }
