@@ -196,7 +196,7 @@ fn main() {
         )
         .subcommand(
             Command::new("assembly-tree")
-                .about("Reads the model's assebly tree")
+                .about("Reads the model's assembly tree")
                 .arg(
                     Arg::new("uuid")
                         .short('u')
@@ -436,6 +436,53 @@ fn main() {
         .subcommand(
             Command::new("properties")
                 .about("Lists all available metadata propertie names and their IDs"),
+        )
+        .subcommand(
+            Command::new("create-image-classifier")
+                .about("Creates a new image classifier")
+                .arg(
+                    Arg::new("name")
+                        .short('n')
+                        .long("name")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Name of the new image classifier")
+                )
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .takes_value(true)
+                        .multiple_occurrences(true)
+                        .help("Folder ID (you can provide multiple, e.g. --folder=1 --folder=2)")
+                        .required(true)
+                )
+        )
+        .subcommand(
+            Command::new("classifiers")
+                .about("Lists all available image classifiers"),
+        )
+        .subcommand(
+            Command::new("classification-predictions")
+                .about("Read the list of classification predictions for an image by given classifier")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .takes_value(true)
+                        .multiple_occurrences(true)
+                        .help("Classifier UUID")
+                        .required(true)
+                )
+                .arg(
+                    Arg::new("input")
+                        .short('i')
+                        .long("input")
+                        .takes_value(true)
+                        .multiple_occurrences(false)
+                        .help("Path to the input file")
+                        .required(true)
+                ),
         )
         .arg(
             Arg::new("config")
@@ -968,7 +1015,7 @@ fn main() {
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
-        }
+        },
         Some(("match-report", sub_matches)) => {
             let uuids = sub_matches.values_of("uuid");
             let duplicates_file_name = sub_matches.value_of("duplicates").unwrap();
@@ -1022,7 +1069,74 @@ fn main() {
                     trace!("No list of UUIDs specified.");
                 },
             }
-        },        
+        },  
+        Some(("create-image-classifier", sub_matches)) => {
+            let name = sub_matches.value_of("name").unwrap();
+
+            let folders: Vec<u32>;
+            let folder_id_strings = Some(String::from(sub_matches.value_of("folder").unwrap()));
+            folders = folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect();
+
+            let uuid = api.create_image_classifier(name.to_string(), folders);
+            match uuid {
+                Ok(uuid) => {
+                    println!("{}", uuid);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while creating a new image classifier: {}. Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("classifiers", _sub_matches)) => {
+            let classifiers = api.get_image_classifiers();
+            match classifiers {
+                Ok(classifiers) => {
+                    let output = format::format_list_of_classifiers(classifiers, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while reading classifiers: {}. Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("classification-predictions", sub_matches)) => {
+
+            let uuid = sub_matches.value_of("uuid").unwrap();
+            let file =  String::from(sub_matches.value_of("input").unwrap());
+            let classifier_uuid = Uuid::parse_str(uuid).unwrap();
+            let scores = api.get_classification_predictions(classifier_uuid, file.as_str());
+            match scores {
+                Ok(scores) => {
+                    let output = format::format_list_of_classification_predictions(scores, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while reading classification predictions: {}. Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
         _ => unreachable!("Invalid command"),
     }
 

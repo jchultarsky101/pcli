@@ -31,6 +31,8 @@ use crate::model::{
     FileUploadResponse,
     PropertyCollection,
     Property,
+    ImageClassifier,
+    ListOfClassificationScores,
 };
 use std::{
     collections::HashMap,
@@ -250,6 +252,50 @@ impl PropertyValueRequest {
 struct PropertyResponse {
     #[serde(rename = "property")]
     property: Property,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ModelFilter {
+    #[serde(rename = "containerIds")]
+    pub container_ids: Vec<u32>
+}
+
+impl ModelFilter {
+    pub fn new(folders: Vec<u32>) -> Self {
+        ModelFilter {
+            container_ids: folders
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ImageClassifierCreateRequest {
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "modelFilter")]
+    pub filter: ModelFilter
+}
+
+impl ImageClassifierCreateRequest {
+    pub fn new(name: String, folders: Vec<u32>) -> Self {
+        let filter = ModelFilter::new(folders);
+        ImageClassifierCreateRequest {
+            name,
+            filter
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ImageClassifierCreateResponse {
+    #[serde(rename = "id")]
+    pub id: Uuid,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "status")]
+    pub status: String,
+    #[serde(rename = "modelFilter")]
+    pub model_filter: ModelFilter
 }
 
 #[derive(Clone, Debug)]
@@ -671,6 +717,71 @@ impl ApiClient {
     
         let result: ModelCreateMetadataResponse = serde_json::from_str(&json)?;
         Ok(result.metadata)
+    }
+
+    pub fn create_image_classifier(&self, name: &String, folders: Vec<u32>) -> Result<ImageClassifierCreateResponse, ClientError> {
+        let url = format!("{}/v1/{}/image-classifiers", self.base_url, self.tenant);
+        let bearer: String = format!("Bearer {}", self.access_token);
+
+        let req = ImageClassifierCreateRequest::new(name.clone(), folders);
+        trace!("POST {}", url);
+
+        let response = self.client.post(url)
+            .timeout(Duration::from_secs(180))
+            .header("Authorization", bearer)
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .json(&req)
+            .send()?;
+
+        self.evaluate_satus(response.status())?;
+        let json = response.text().unwrap();
+        trace!("{}", json);
+        let result: ImageClassifierCreateResponse = serde_json::from_str(&json)?;
+
+        Ok(result)
+    }
+
+    pub fn get_image_classifiers(&self) -> Result<Vec<ImageClassifier>, ClientError> {
+        let url = format!("{}/v1/{}/image-classifiers", self.base_url, self.tenant);
+        trace!("GET {}", url.to_string());
+
+        let json = self.get(url.as_str(), None)?;
+        //trace!("{}", json);
+        let result: Vec<ImageClassifier> = serde_json::from_str(&json)?;
+
+        Ok(result)
+    }
+
+    pub fn get_classification_scores(&self, classifier_uuid: Uuid, file_name: String, bytes: Box<Vec<u8>>) -> Result<ListOfClassificationScores, ClientError> {
+        let url = format!("{}/v1/{}/image-classifiers/{}/predictions", self.base_url, self.tenant, classifier_uuid.to_string());
+        let bearer: String = format!("Bearer {}", self.access_token);
+
+        trace!("POST {}", url);
+
+        let f = file_name.to_owned();
+        let form = Form::new()
+            .part("classifierUuid", Part::text(classifier_uuid.to_string()))
+            .part("image", Part::bytes(*bytes).file_name(f));
+
+        let response = self.client.post(url)
+            .timeout(Duration::from_secs(180))
+            .header("Authorization", bearer)
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .multipart(form)
+            .send()?;
+
+        self.evaluate_satus(response.status())?;
+        let json = response.text().unwrap();
+        trace!("{}", json);
+        let result: ListOfClassificationScores = serde_json::from_str(&json)?;
+
+        Ok(result)
     }
 }
 
