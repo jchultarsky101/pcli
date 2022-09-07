@@ -1080,7 +1080,7 @@ impl ToCsv for ListOfClassificationScores {
         let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
 
         if pretty {
-            let columns = vec!["ID", "NAME", "STATUS"];
+            let columns = vec!["ID", "NAME", "SCORE"];
             writer.write_record(&columns)?;
         }
     
