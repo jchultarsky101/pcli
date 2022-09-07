@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.5.0
+The latest version is 1.6.0
+
+### Version 1.6.0
+
+* Added create-image-classifier, classifiers, classification-predictions
 
 ### Version 1.5.0
 
@@ -102,14 +106,14 @@ The latest version is 1.5.0
 
 #### Version 1.0.7
 
-* Removed special filterning logic when creating match-report
+* Removed special filtering logic when creating match-report
 * Added model-meta command to read metadata for a specific model UUID
 * Enhanced the model command to include the metadata in the response
 * Optimized the match-report logic
 * Added CSV output capability for all sub-commands
 * Added thumbnails URLs in the CSV output for match-model and match-report
 * Now using more human-readable tracing messages (including ANSI color)
-* Implemented a workaround for situations where the assebly tree reports child models that no longer exist in the database
+* Implemented a workaround for situations where the assembly tree reports child models that no longer exist in the database
 * Implemented local cache for model requests to improve performance of large data operations
 * Updated the README.md
 
@@ -174,7 +178,7 @@ For example:
 $ pcli help
 ```
 ```
-pcli 1.3.0
+pcli 1.6.0
 Julian Chultarsky <jchultarsky@physna.com>
 CLI client utility to the Physna public API/V2
 
@@ -193,25 +197,31 @@ OPTIONS:
     -V, --version            Print version information
 
 SUBCOMMANDS:
-    assembly-bom         Generates flat BoM of model IDs for model
-    assembly-tree        Reads the model's assebly tree
-    folders              Lists all available folders
-    help                 Print this message or the help of the given subcommand(s)
-    invalidate           Invalidates the current access token
-    match-folder         Matches all models in a folder(s) to all other models
-    match-model          Matches all models to the specified one
-    match-report         Generates a match report for the specified models
-    model                Reads data for a specific model
-    model-meta           Reads the metadata (properties) for a specific model
-    models               Lists all available models
-    properties           Lists all available metadata propertie names and their IDs
-    reprocess            Reprocesses a specific model
-    status               Generates a tenant's environment status summary
-    sysinfo              Prints details of the current host system
-    token                Obtains security access token from the provider
-    upload               Uploads a file to Physna
-    upload-model-meta    Reads metadata from an input CSV file and uploads it for a model
-                         specified by UUID
+    assembly-bom                  Generates flat BoM of model IDs for model
+    assembly-tree                 Reads the model's assembly tree
+    classification-predictions    Read the list of classification predictions for an image by
+                                      given classifier
+    classifiers                   Lists all available image classifiers
+    create-folder                 Creates a new folder
+    create-image-classifier       Creates a new image classifier
+    delete-model                  Deletes a specific model
+    folders                       Lists all available folders
+    help                          Print this message or the help of the given subcommand(s)
+    invalidate                    Invalidates the current access token
+    match-folder                  Matches all models in a folder(s) to all other models
+    match-model                   Matches all models to the specified one
+    match-report                  Generates a match report for the specified models
+    model                         Reads data for a specific model
+    model-meta                    Reads the metadata (properties) for a specific model
+    models                        Lists all available models
+    properties                    Lists all available metadata propertie names and their IDs
+    reprocess                     Reprocesses a specific model
+    status                        Generates a tenant's environment status summary
+    sysinfo                       Prints details of the current host system
+    token                         Obtains security access token from the provider
+    upload                        Uploads a file to Physna
+    upload-model-meta             Reads metadata from an input CSV file and uploads it for a
+                                      model specified by UUID
 ```
 
 The application supports sub-commands. To get more detailed help for a
@@ -221,8 +231,11 @@ first enter the command and add"--help" after as shown in the example:
 ```bash
 $ pcli help model
 ```
+
+Produces the following output:
+
 ```
-pcli-model 1.3.0
+pcli-model 1.6.0
 Reads data for a specific model
 
 USAGE:
@@ -341,7 +354,7 @@ If I ommit "pretty" it is the same as setting a value of false for it, which is 
 ### Working with Tokens
 
 It is important to understand how the authentication and authorization work.
-Physna uses OpenID Connect provider and uplon successful authentication will issue the user
+Physna uses OpenID Connect provider and upon successful authentication will issue the user
 an access token, which will be valid for the duration of the session (several hours). As long
 as your token is valid, you do not need to authenticate every time you run the CLI utility.
 
@@ -386,7 +399,7 @@ much to worry about, not just the access token by Physna.
 
 If you are automating your operations via shell scripts and you plan to invoke the CLI multiple times,
 it is always a good idea to start with a fresh session. In your BASH script, call the "invalidate" command
-first and once. You can then iterrate over a batch of command executions without concern that your session
+first and once. You can then iterate over a batch of command executions without concern that your session
 may expire in the middle of your work. This is handy especially when you have unattended executions (e.g. triggered by a cron job, etc.).
 
 Also in the case of unattended executions, you could enter your Client Secret in your configuration file. This is
@@ -447,6 +460,9 @@ parsing later:
 ```bash
 $ pcli --tenant="mycompany" --format="csv" folders
 ```
+
+The output is:
+
 ```
 1,Default Container
 2,Crawler
@@ -475,7 +491,7 @@ You can list multiple folder IDs if you would like to query multiple folders at 
 pcli help models
 ```
 ```
-pcli-models 1.3.0
+pcli-models 1.6.0
 Lists all available models
 
 USAGE:
@@ -525,7 +541,7 @@ $ pcli help upload
 ```
 ```
 pcli help upload
-pcli-upload 1.4.2
+pcli-upload 1.6.0
 Uploads a file to Physna
 
 USAGE:
@@ -536,8 +552,6 @@ OPTIONS:
     -d, --folder <folder>      Folder ID (e.g. --folder=1)
     -h, --help                 Print help information
     -i, --input <input>        Path to the input file
-    -m, --meta <meta>          Input CSV file name containing additional metadata associated with
-                               this model
         --source <source>      Specifies the Source ID to be used
         --timeout <timeout>    When validating, specifies the timeout in seconds
         --units <units>        The unit of measure for the model (e.g. 'inch', 'mm', etc.)
@@ -546,7 +560,6 @@ OPTIONS:
 ```
 
 * "input" is the path to the file you would like to upload in your local file system
-* "meta" is an optional input file containing additional metadata related to the model. The format is NAME,VALUE (both text). See "Uploading Metadata" section below, the behaviour here is identical to it
 * "folder" is the Physna folder ID that will be the destination for your upload
 * "units" is the unit of measure for your 3D model. It is a string. For example "mm"
 * "batch" is a UUID that represents a transaction. When uploading a group of logically related models (e.g. an assembly with all of its parts), you will need to provide UUID type 4 as the transaction ID to instruct Physna that all of these files are related. If not provided, each file will be considered independent from any other and a batch UUID will be generated automatically by the client for each file
@@ -557,12 +570,10 @@ OPTIONS:
 Here is an example of how all this comes together:
 
 ```bash
-$ pcli --tenant="mycompany" upload --folder="5" --input="/path/to/my/file" --meta="/path/to/my/metadata.csv" --units="mm"
+$ pcli --tenant="mycompany" upload --folder="5" --input="/path/to/my/file" --units="mm"
 ```
 
-If successful, we will upload the model in "file" and once that is completed, we will automatically also upload the optional metadata for it found in "metadata.csv" file.
-
-Uploading of metadata here is optional and as convenience feature since often both are uploaded at the same time. If the "meta" argiment is omitted, only the geometry will be uploaded.
+If successful, we will upload the model in the file named "file".
 
 Example of uploading a model and waiting until it is ready for use (or error):
 
@@ -572,7 +583,7 @@ $ pcli --tenant="mycompany" upload --folder="5" --input="/path/to/my/file" --uni
 
 This operation will block until the model is fully indexed or 60 seconds have elapsed.
 
-You can upload multiple files in one operation. To do that, you can specify the input path to contain a wild card or simply be a directory path. If wild card is used, you need to surround the path with dowble quotes.
+You can upload multiple files in one operation. To do that, you can specify the input path to contain a wild card or simply be a directory path. If wild card is used, you need to surround the path with double quotes.
 
 **NOTE:** Be careful with uploading all files in a directory. It may contain files that are not 3D models. 
 
@@ -582,12 +593,12 @@ For example:
 $ pcli --tenant="mycompany" upload --folder="5" --input="/path/*.stl" --units="mm"
 ```
 
-The above command will upload all files with STL extension in direcotry "/path".
+The above command will upload all files with STL extension in directory "/path".
 
 ### Reprocessing a Model
 
 The "reprocess" command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
-in Physna has not completed normally. It only takes a single mandatary parameter: the UUID of the model we want to reprocess.
+in Physna has not completed normally. It only takes a single mandatory parameter: the UUID of the model we want to reprocess.
 
 NOTE: You can combine this operation with a loop in your own script to reprocess any models that show status other than "finished" in a specific folder if you wish.
 
@@ -615,6 +626,46 @@ Example:
 pcli --tenant="delta" delete-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 ```
 
+### Reading Metadata
+
+In addition to the 3D geometry data, additional metadata can be associated with the model. The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings. The metadata is returned as part of the model data when using the commands "model" or "models". However, PCLI offers an additional specialized command to only retrieve the metadata and not the rest of the model data. This is useful when scripting more sophisticated solutions. 
+
+The command is:
+
+```
+pcli-model-meta 1.6.0
+Reads the metadata (properties) for a specific model
+
+USAGE:
+    pcli --tenant <tenant> model-meta --uuid <uuid>
+
+OPTIONS:
+    -h, --help           Print help information
+    -u, --uuid <uuid>    The model UUID
+    -V, --version        Print version information
+```
+
+It takes one mandatory argument - the model's UUID. The output by default is JSON, but when we specify CSV, the output contains the following columns:
+
+* MODEL_UUID - the UUID of the model
+* NAME - the property name
+* VALUE - the property value
+
+**NOTE:** The property names are case insensitive and are capitalized.
+
+Here is an example:
+
+```
+pcli --tenant=mycompany --format=csv --pretty model-meta --uuid=97377547-9062-4149-90f7-16daf400148a
+MODEL_UUID,NAME,VALUE
+97377547-9063-4149-90f7-16daf400148a,DESCRIPTION,Test description
+97377547-9063-4149-90f7-16daf400148a,SKU,Test
+```
+
+In this example, the model has two properties ("DESCRIPTION" and "SKU") with their corresponding names.
+
+The reason for the UUID of the model to be included as the first column is simple. You can concatenate the output of many executions of this command into one single file. That larger file will contain metadata for many models. You will see how that becomes helpful in the next section.
+
 ### Uploading Metadata
 
 In some cases, we need to associate additional metadata with the geometry of a model. The command "upload-model-meta" serves this purpose.
@@ -623,35 +674,23 @@ In some cases, we need to associate additional metadata with the geometry of a m
 pcli help upload-model-meta
 ```
 ```
-pcli-upload-model-meta 1.3.0
-Reads metadata from an input CSV file and uploads it for a model specified by UUID
+pcli-upload-model-meta 1.6.0
+Reads metadata from an input CSV file and uploads it. 
 
 USAGE:
-    pcli upload-model-meta --uuid <uuid> --input <input>
+    pcli upload-model-meta --input <input>
 
 OPTIONS:
     -h, --help             Print help information
     -i, --input <input>    Path to the input file
-    -u, --uuid <uuid>      The model UUID
     -V, --version          Print version information
 ```
 
-The required arguments are:
+The file format is the same as the output produced by the command "model-meta". The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
 
-* "uuid" - the model's UUID
-* "input" - CSV formatted input file. It must contain a header record with the following column names: "NAME","VALUE"
+The required argument is "input" - the name of the CSV formatted input file.
 
-Here is an example of a metadata file:
-
-```
-NAME,VALUE
-MyFirstTagName,Value1
-MySecondTagName,Value2
-```
-
-If the operation is successful, your model will show two new properties with the provided names ("MyFirstTagName" and "MySecondTagName") with their corresponding values.
-
-If a property with this name already exists for the model, its value will be overriden with the new value provided. If the property does not exist, a new property with the provided name will be created.
+If a property with this name already exists for the model, its value will be overridden with the new value provided. If the property does not exist, a new property with the provided (but capitalized) name will be created.
 
 This command does not delete any existing properties. Deletion would need to be performed manually via the web UI.
 
@@ -683,7 +722,7 @@ As with the other commands, you can choose to output in JSON or CSV format.
 
 To output a graph representation of your assembly tree:
 
-*NOTE:* If you are using pipes to send the output to another process, please make sure you have obtained your
+**NOTE:** If you are using pipes to send the output to another process, please make sure you have obtained your
 token correctly prior to executing the operation. If not, the process will stop and wait for you to enter the client secret on the command line
 and your output will not be valid.
 
@@ -749,6 +788,59 @@ per type of file and status.
 ```bash
 $ pcli --tenant="mytenant" --format="csv" --pretty status --folder="1"
 ```
+
+### Classifiers
+
+In addition to geometric search and comparison functions, Physna offers AI technology capable of automatic classification of images into 3D models. If you have uploaded sufficient number of models in your environment and have created and trained an image classifier, you could upload a 2D image of a part (e.g. digital picture taken with your phone) and Physna can recognize the object and retrieve the 3D model that corresponds to it.
+
+At this time, the training of new classifiers within Physna is only available via the web UI since user input is required during the training process. The PCLI offers commands to query the classifier(s) and retrieve a list of predictions from the AI.
+
+#### List the available classifiers
+
+To obtain the list of currently available classifiers in your environment, use the "classifiers" command. It takes no arguments:
+
+```
+pcli --tenant=mycompany --format=csv --pretty classifiers
+ID,NAME,STATUS
+8db6569f-65e6-45ca-8fc2-3603c9967437,MyClassifier,deployed
+```
+
+You will need the classifier UUID in order to be able to execute the next command.
+
+#### Classification predictions
+
+As I mentioned above, you can take a 2D picture of a part and upload that image as input. Physna's AI will analyze the image and produce a list of predictions to what 3D models this image belongs. The command to do this is:
+
+```
+pcli help classification-predictions
+pcli-classification-predictions 1.6.0
+Read the list of classification predictions for an image by given classifier
+
+USAGE:
+    pcli --tenant <tenant> classification-predictions --uuid <uuid> --input <input>
+
+OPTIONS:
+    -h, --help             Print help information
+    -i, --input <input>    Path to the input file
+    -u, --uuid <uuid>      Classifier UUID
+    -V, --version          Print version information
+```
+
+The required arguments are:
+
+* "uuid" - the UUID of the classifier to use. See the previous section for details on how to obtain that UUID
+* "input" - the path to the 2D file in your local file system
+
+Here is an example:
+
+```
+pcli --tenant=delta --format=csv --pretty classification-predictions --uuid=1d896c02-9fba-4807-b9ec-07c96a7db946 --input=./mypart.png
+ID,NAME,STATUS
+96a2bb55-dcef-4a05-a43f-82bf696f872d,part1,0.9844062328338624
+9575ad2b-0548-4b48-9cec-7ed183bff064,part2,0.0000015775714246046846
+```
+
+In this case, we have one model with score of 0.98, which is very close match.
 
 ## Advanced Use
 
