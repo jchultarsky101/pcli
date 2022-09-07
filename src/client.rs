@@ -755,15 +755,16 @@ impl ApiClient {
         Ok(result)
     }
 
-    pub fn get_classification_scores(&self, classifier_uuid: Uuid, bytes: Box<Vec<u8>>) -> Result<ListOfClassificationScores, ClientError> {
+    pub fn get_classification_scores(&self, classifier_uuid: Uuid, file_name: String, bytes: Box<Vec<u8>>) -> Result<ListOfClassificationScores, ClientError> {
         let url = format!("{}/v1/{}/image-classifiers/{}/predictions", self.base_url, self.tenant, classifier_uuid.to_string());
         let bearer: String = format!("Bearer {}", self.access_token);
 
         trace!("POST {}", url);
 
+        let f = file_name.to_owned();
         let form = Form::new()
             .part("classifierUuid", Part::text(classifier_uuid.to_string()))
-            .part("image", Part::bytes(*bytes));
+            .part("image", Part::bytes(*bytes).file_name(f));
 
         let response = self.client.post(url)
             .timeout(Duration::from_secs(180))

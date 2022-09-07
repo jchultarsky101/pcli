@@ -477,7 +477,7 @@ impl Api {
 
         trace!("Read {} byte(s)", chunk_size);
 
-        let scores = self.client.get_classification_scores(uuid, Box::new(buffer[0..chunk_size].to_vec()))?;
+        let scores = self.client.get_classification_scores(uuid, file.to_string(), Box::new(buffer[0..chunk_size].to_vec()))?;
         Ok(scores)
     }
 }
