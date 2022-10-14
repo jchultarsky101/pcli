@@ -407,8 +407,6 @@ impl ApiClient {
 
     pub fn get(&self, url: &str, query_parameters: Option<HashMap<String, String>>) -> Result<String, ClientError> {
 
-        trace!("GET: {}", url);
-
         let mut builder = self.client.request(reqwest::Method::GET, url)
                         .timeout(Duration::from_secs(180))
                         .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
@@ -424,6 +422,7 @@ impl ApiClient {
         }
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        trace!("GET {}", request.url());
         let response = self.client.execute(request)?;
         
         trace!("Status: {}", response.status());
