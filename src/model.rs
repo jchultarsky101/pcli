@@ -1,12 +1,13 @@
 use crate::client;
 use anyhow::Result;
 use csv::{Terminator, WriterBuilder};
+use log::trace;
 use petgraph::matrix_graph::MatrixGraph;
 use ptree::style::Style;
 use ptree::TreeItem;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::io::BufWriter;
@@ -788,20 +789,45 @@ impl ToCsv for SimpleDuplicatesMatchReport {
             .terminator(Terminator::CRLF)
             .from_writer(buf);
 
+        let mut columns: HashSet<String> = HashSet::new();
+        let standard_columns = vec![
+            "MODEL_NAME",
+            "MATCHING_MODEL_NAME",
+            "MATCH",
+            "SOURCE_UUID",
+            "MATCHING_UUID",
+            "SOURCE_FOLDER_ID",
+            "MATCHING_FOLDER_ID",
+            "COMPARISON_URL",
+            "MODEL_ONE_THUMBNAIL_URL",
+            "MODEL_TWO_THUMBNAIL_URL",
+        ];
+
+        // populate the column names with the names of all properties found in the result
+        for (_uuid, item) in &self.inner {
+            for model_match in &item.matches {
+                let model = model_match.model.clone();
+                let meta = model.metadata;
+
+                match meta {
+                    Some(meta) => {
+                        for property in &meta.properties {
+                            let name = property.name.to_owned();
+                            columns.insert(name);
+                        }
+                    }
+                    None => (),
+                }
+            }
+        }
+
+        let mut all_columns: Vec<&str> = standard_columns.clone();
+        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_columns.append(&mut all_property_columns);
+
         if pretty {
-            let columns = vec![
-                "MODEL_NAME",
-                "MATCHING_MODEL_NAME",
-                "MATCH",
-                "SOURCE_UUID",
-                "MATCHING_UUID",
-                "SOURCE_FOLDER_ID",
-                "MATCHING_FOLDER_ID",
-                "COMPARISON_URL",
-                "MODEL_ONE_THUMBNAIL_URL",
-                "MODEL_TWO_THUMBNAIL_URL",
-            ];
-            writer.write_record(&columns)?;
+            trace!("CSV: {:?}", &all_columns);
+            writer.write_record(&all_columns)?;
         }
 
         for (_uuid, item) in &self.inner {
@@ -831,6 +857,27 @@ impl ToCsv for SimpleDuplicatesMatchReport {
                 match &m.model_two_thumbnail {
                     Some(thumb) => values.push(thumb.to_owned()),
                     None => values.push("".to_string()),
+                }
+
+                let meta = m.model.metadata.clone();
+                let mut properties: HashMap<String, String> = HashMap::new();
+                match meta {
+                    Some(meta) => {
+                        for property in meta.properties {
+                            let name = property.name;
+                            let value = property.value;
+                            properties.insert(name, value);
+                        }
+                    }
+                    None => (),
+                }
+
+                for column_name in &columns {
+                    let value = match properties.get(column_name) {
+                        Some(value) => value.to_owned(),
+                        None => String::from(""),
+                    };
+                    values.push(value);
                 }
 
                 writer.write_record(&values)?;
