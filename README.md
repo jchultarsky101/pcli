@@ -1,6 +1,6 @@
 # Physna CLI
 
-This utility is a CLI client for the Physna's public API V2 (and in part API V1). It could be used to interract with the system
+This utility is a CLI client for the Physna's public API V2 (and in part API V1). It could be used to interact with the system
 in automated ways.
 
 ## Physna Account
