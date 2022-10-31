@@ -95,7 +95,7 @@ impl Api {
         }
     }
 
-    pub fn get_model_metadata(&mut self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
+    pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
         Ok(self.client.get_model_metadata(uuid)?)
     }
 
@@ -219,7 +219,10 @@ impl Api {
                         let matches = result.matches;
                         if !matches.is_empty() {
                             for m in matches {
-                                let model_match = ModelMatch::from(m);
+                                let mut model_match = ModelMatch::from(m);
+                                let model = model_match.model.clone();
+                                let metadata = self.get_model_metadata(&model.uuid)?;
+                                model_match.model.metadata = metadata;
                                 list_of_matches.push(model_match);
                             }
                         }

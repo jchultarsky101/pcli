@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.0
+The latest version is 1.6.1
+
+### Version 1.6.1
+
+* Now displaying the list of metadata properties in the CSV output of match-folder
 
 ### Version 1.6.0
 

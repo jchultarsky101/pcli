@@ -1,21 +1,19 @@
-use csv::{
-    WriterBuilder,
-    Terminator
-};
+use crate::client;
+use anyhow::Result;
+use csv::{Terminator, WriterBuilder};
+use log::trace;
+use petgraph::matrix_graph::MatrixGraph;
+use ptree::style::Style;
+use ptree::TreeItem;
+use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
+use std::io;
 use std::io::BufWriter;
-use serde::{Serialize, Deserialize};
 use std::iter::Extend;
 use std::iter::IntoIterator;
-use std::collections::HashMap;
-use ptree::TreeItem;
-use ptree::style::Style;
-use std::io;
-use std::borrow::Cow;
-use anyhow::Result;
-use std::hash::{Hash, Hasher};
-use crate::client;
 use uuid::Uuid;
-use petgraph::matrix_graph::MatrixGraph;
 
 #[derive(Clone, Debug)]
 pub struct Configuration {
@@ -26,7 +24,7 @@ pub struct Configuration {
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ResponseContent {
     #[serde(rename = "status")]
-    pub status: u32, 
+    pub status: u32,
     #[serde(rename = "content")]
     pub content: String,
 }
@@ -37,7 +35,7 @@ pub trait ToJson {
 }
 
 /// Marshals the state into CSV
-pub trait ToCsv{
+pub trait ToCsv {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String>;
 }
 
@@ -51,7 +49,7 @@ pub struct Folder {
 
 impl Folder {
     pub fn new(id: u32, name: String) -> Self {
-        Folder{id, name}
+        Folder { id, name }
     }
 }
 
@@ -73,26 +71,27 @@ impl ToJson for Folder {
 
 impl ToCsv for Folder {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME"];
             writer.write_record(&columns)?;
         }
-    
+
         let mut values: Vec<String> = Vec::new();
-    
+
         values.push(self.id.to_string());
         values.push(self.name.to_owned());
         writer.write_record(&values)?;
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -118,33 +117,35 @@ impl ToCsv for ListOfFolders {
         let folders = self.folders.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME"];
             writer.write_record(&columns)?;
         }
-    
+
         for folder in folders {
             let mut values: Vec<String> = Vec::new();
-    
+
             values.push(folder.id.to_string());
             values.push(folder.name);
             writer.write_record(&values)?;
         }
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
 impl From<Vec<Folder>> for ListOfFolders {
     fn from(folders: Vec<Folder>) -> Self {
         let folders = folders.into_iter().map(|f| Folder::from(f)).collect();
-        ListOfFolders{folders: folders}
+        ListOfFolders { folders: folders }
     }
 }
 
@@ -212,15 +213,16 @@ impl ToJson for PropertyCollection {
 
 impl ToCsv for PropertyCollection {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME"];
             writer.write_record(&columns)?;
         }
-    
+
         for property in &self.properties {
             let mut values: Vec<String> = Vec::new();
             values.push(property.id.to_string());
@@ -228,10 +230,10 @@ impl ToCsv for PropertyCollection {
             writer.write_record(&values)?;
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -263,9 +265,7 @@ pub struct ModelMetadata {
 
 impl ModelMetadata {
     pub fn new(properties: Vec<ModelMetadataItem>) -> ModelMetadata {
-        ModelMetadata {
-            properties,
-        }
+        ModelMetadata { properties }
     }
 }
 
@@ -281,15 +281,16 @@ impl ToJson for ModelMetadata {
 
 impl ToCsv for ModelMetadata {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["MODEL_UUID", "NAME", "VALUE"];
             writer.write_record(&columns)?;
         }
-    
+
         for property in &self.properties {
             let mut values: Vec<String> = Vec::new();
             values.push(property.model_uuid.to_string());
@@ -298,30 +299,30 @@ impl ToCsv for ModelMetadata {
             writer.write_record(&values)?;
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
 impl From<FileUploadResponse> for Model {
     fn from(response: FileUploadResponse) -> Self {
-       Model {
-        uuid: response.uuid,
-        is_assembly: response.is_assembly,
-        name: response.name,
-        folder_id: response.folder_id,
-        owner_id: "".to_string(),
-        created_at: response.created_at,
-        file_type: "".to_string(),
-        thumbnail: response.thumbnail,
-        units: response.units,
-        state: response.state,
-        attachment_url: response.attachment_url,
-        short_id: response.short_id,
-        metadata: None,
-       }
+        Model {
+            uuid: response.uuid,
+            is_assembly: response.is_assembly,
+            name: response.name,
+            folder_id: response.folder_id,
+            owner_id: "".to_string(),
+            created_at: response.created_at,
+            file_type: "".to_string(),
+            thumbnail: response.thumbnail,
+            units: response.units,
+            state: response.state,
+            attachment_url: response.attachment_url,
+            short_id: response.short_id,
+            metadata: None,
+        }
     }
 }
 
@@ -337,17 +338,26 @@ impl ToJson for Model {
 
 impl ToCsv for Model {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
-            let columns = vec!["ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
+            let columns = vec![
+                "ID",
+                "NAME",
+                "FOLDER_ID",
+                "IS_ASSEMBLY",
+                "FILE_TYPE",
+                "UNITS",
+                "STATE",
+            ];
             writer.write_record(&columns)?;
         }
-    
+
         let mut values: Vec<String> = Vec::new();
-    
+
         values.push(self.uuid.to_string());
         values.push(self.name.to_owned());
         values.push(self.folder_id.to_string());
@@ -356,12 +366,12 @@ impl ToCsv for Model {
         values.push(self.units.to_owned());
         values.push(self.state.to_owned());
         writer.write_record(&values)?;
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -376,16 +386,26 @@ impl ToCsv for ListOfModels {
         let models = self.models.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
-            let columns = vec!["ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
+            let columns = vec![
+                "ID",
+                "NAME",
+                "FOLDER_ID",
+                "IS_ASSEMBLY",
+                "FILE_TYPE",
+                "UNITS",
+                "STATE",
+            ];
             writer.write_record(&columns)?;
         }
-    
+
         for model in models {
             let mut values: Vec<String> = Vec::new();
-    
+
             values.push(model.uuid.to_string());
             values.push(model.name);
             values.push(model.folder_id.to_string());
@@ -395,12 +415,12 @@ impl ToCsv for ListOfModels {
             values.push(model.state);
             writer.write_record(&values)?;
         }
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -417,8 +437,11 @@ impl ToJson for ListOfModels {
 
 impl From<Vec<Model>> for ListOfModels {
     fn from(physna_list_of_models_response: Vec<Model>) -> Self {
-        let models = physna_list_of_models_response.into_iter().map(|m| Model::from(m)).collect();
-        ListOfModels{models: models}
+        let models = physna_list_of_models_response
+            .into_iter()
+            .map(|m| Model::from(m))
+            .collect();
+        ListOfModels { models: models }
     }
 }
 
@@ -432,10 +455,7 @@ pub struct ModelAssemblyTree {
 
 impl ModelAssemblyTree {
     pub fn new(model: Model, children: Option<Vec<ModelAssemblyTree>>) -> ModelAssemblyTree {
-        ModelAssemblyTree {
-            model,
-            children,
-        }
+        ModelAssemblyTree { model, children }
     }
 }
 
@@ -453,7 +473,12 @@ impl TreeItem for ModelAssemblyTree {
     type Child = Self;
 
     fn write_self<W: io::Write>(&self, f: &mut W, style: &Style) -> io::Result<()> {
-        write!(f, "{}:[{}]", style.paint(self.model.name.clone()), style.paint(self.model.uuid.clone()))
+        write!(
+            f,
+            "{}:[{}]",
+            style.paint(self.model.name.clone()),
+            style.paint(self.model.uuid.clone())
+        )
     }
 
     fn children(&self) -> Cow<[Self::Child]> {
@@ -474,7 +499,7 @@ impl TreeItem for ModelAssemblyTree {
 
 // impl AssemblyGraph {
 //     pub fn new() -> AssemblyGraph {
-//         AssemblyGraph { 
+//         AssemblyGraph {
 //             flat_bom: IndexMap::new(),
 //             graph: MatrixGraph::new(),
 //             last_node_index: AtomicUsize::new(1),
@@ -523,13 +548,13 @@ pub struct FlatBom {
 
 impl FlatBom {
     pub fn new(elements: HashMap<String, Model>) -> Self {
-        FlatBom{
+        FlatBom {
             inner: elements.to_owned(),
         }
     }
 
     pub fn empty() -> Self {
-        FlatBom{
+        FlatBom {
             inner: HashMap::new(),
         }
     }
@@ -544,7 +569,10 @@ impl From<ModelAssemblyTree> for FlatBom {
         let mut items: HashMap<String, Model> = HashMap::new();
 
         // Insert the model of the root assembply itself
-        items.insert(assembly_tree.model.uuid.to_string(), assembly_tree.model.to_owned());
+        items.insert(
+            assembly_tree.model.uuid.to_string(),
+            assembly_tree.model.to_owned(),
+        );
 
         // Recursivelly insert the models of all children models
         match assembly_tree.children {
@@ -553,13 +581,13 @@ impl From<ModelAssemblyTree> for FlatBom {
                     let sub_bom = FlatBom::from(child);
                     items.extend(sub_bom.inner);
                 }
-            },
+            }
             None => {
                 // Nothing to do here. The root assembly already added above.
             }
         }
 
-       FlatBom::new(items)
+        FlatBom::new(items)
     }
 }
 
@@ -578,25 +606,27 @@ impl ToCsv for FlatBom {
         let models = self.inner.clone();
 
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["UUID", "NAME"];
             writer.write_record(&columns)?;
         }
-    
+
         for (uuid, model) in models {
             let mut values: Vec<String> = Vec::new();
             values.push(uuid);
             values.push(model.name.to_owned());
             writer.write_record(&values)?;
         }
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -622,7 +652,13 @@ impl PartialEq for ModelMatch {
 impl Eq for ModelMatch {}
 
 impl ModelMatch {
-    pub fn new(model: Model, percentage: f64, comparison_url: Option<String>, model_one_thumbnail: Option<String>, model_two_thumbnail: Option<String>) -> ModelMatch {
+    pub fn new(
+        model: Model,
+        percentage: f64,
+        comparison_url: Option<String>,
+        model_one_thumbnail: Option<String>,
+        model_two_thumbnail: Option<String>,
+    ) -> ModelMatch {
         ModelMatch {
             model,
             percentage,
@@ -640,9 +676,7 @@ pub struct ListOfModelMatches {
 
 impl ListOfModelMatches {
     pub fn new(matches: Box<Vec<ModelMatch>>) -> ListOfModelMatches {
-        ListOfModelMatches{
-            inner: matches,
-        }
+        ListOfModelMatches { inner: matches }
     }
 }
 
@@ -658,21 +692,31 @@ impl ToJson for ListOfModelMatches {
 
 impl ToCsv for ListOfModelMatches {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let matches = *self.inner.clone();
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
-            let columns = vec!["MATCH_PERCENTAGE", "ID", "NAME", "FOLDER_ID", "IS_ASSEMBLY", "FILE_TYPE", "UNITS", "STATE"];
+            let columns = vec![
+                "MATCH_PERCENTAGE",
+                "ID",
+                "NAME",
+                "FOLDER_ID",
+                "IS_ASSEMBLY",
+                "FILE_TYPE",
+                "UNITS",
+                "STATE",
+            ];
             writer.write_record(&columns)?;
         }
-    
+
         for m in matches {
             let model = m.model;
             let percentage = m.percentage;
             let mut values: Vec<String> = Vec::new();
-    
+
             values.push(format!("{:.4}", percentage));
             values.push(model.uuid.to_string());
             values.push(model.name);
@@ -683,12 +727,12 @@ impl ToCsv for ListOfModelMatches {
             values.push(model.state);
             writer.write_record(&values)?;
         }
-       
+
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -740,21 +784,57 @@ impl ToJson for SimpleDuplicatesMatchReport {
 
 impl ToCsv for SimpleDuplicatesMatchReport {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        let mut columns: HashSet<String> = HashSet::new();
+        let standard_columns = vec![
+            "MODEL_NAME",
+            "MATCHING_MODEL_NAME",
+            "MATCH",
+            "SOURCE_UUID",
+            "MATCHING_UUID",
+            "SOURCE_FOLDER_ID",
+            "MATCHING_FOLDER_ID",
+            "COMPARISON_URL",
+            "MODEL_ONE_THUMBNAIL_URL",
+            "MODEL_TWO_THUMBNAIL_URL",
+        ];
+
+        // populate the column names with the names of all properties found in the result
+        for (_uuid, item) in &self.inner {
+            for model_match in &item.matches {
+                let model = model_match.model.clone();
+                let meta = model.metadata;
+
+                match meta {
+                    Some(meta) => {
+                        for property in &meta.properties {
+                            let name = property.name.to_owned();
+                            columns.insert(name);
+                        }
+                    }
+                    None => (),
+                }
+            }
+        }
+
+        let mut all_columns: Vec<&str> = standard_columns.clone();
+        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_columns.append(&mut all_property_columns);
 
         if pretty {
-            let columns = vec!["MODEL_NAME", "MATCHING_MODEL_NAME", "MATCH", "SOURCE_UUID", "MATCHING_UUID", "SOURCE_FOLDER_ID", "MATCHING_FOLDER_ID", "COMPARISON_URL", "MODEL_ONE_THUMBNAIL_URL", "MODEL_TWO_THUMBNAIL_URL"];
-            writer.write_record(&columns)?;
+            trace!("CSV: {:?}", &all_columns);
+            writer.write_record(&all_columns)?;
         }
-    
+
         for (_uuid, item) in &self.inner {
-            
             let model_name = item.name.to_owned();
             let source_uuid = item.uuid.to_string();
             let source_folder_id = item.folder_id.to_string();
-            
+
             for m in &item.matches {
                 let mut values: Vec<String> = Vec::new();
 
@@ -779,14 +859,35 @@ impl ToCsv for SimpleDuplicatesMatchReport {
                     None => values.push("".to_string()),
                 }
 
+                let meta = m.model.metadata.clone();
+                let mut properties: HashMap<String, String> = HashMap::new();
+                match meta {
+                    Some(meta) => {
+                        for property in meta.properties {
+                            let name = property.name;
+                            let value = property.value;
+                            properties.insert(name, value);
+                        }
+                    }
+                    None => (),
+                }
+
+                for column_name in &columns {
+                    let value = match properties.get(column_name) {
+                        Some(value) => value.to_owned(),
+                        None => String::from(""),
+                    };
+                    values.push(value);
+                }
+
                 writer.write_record(&values)?;
             }
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
@@ -800,8 +901,14 @@ pub struct ModelStatusRecord {
 }
 
 impl ModelStatusRecord {
-    pub fn new(folder_id: u32, folder_name: String, file_type: String, state: String, count: u64) -> Self {
-        ModelStatusRecord{
+    pub fn new(
+        folder_id: u32,
+        folder_name: String,
+        file_type: String,
+        state: String,
+        count: u64,
+    ) -> Self {
+        ModelStatusRecord {
             folder_id,
             folder_name,
             file_type,
@@ -825,9 +932,7 @@ pub struct EnvironmentStatusReport {
 
 impl EnvironmentStatusReport {
     pub fn new() -> Self {
-        EnvironmentStatusReport{
-            stats: Vec::new(),
-        }
+        EnvironmentStatusReport { stats: Vec::new() }
     }
 }
 
@@ -843,23 +948,23 @@ impl ToJson for EnvironmentStatusReport {
 
 impl ToCsv for EnvironmentStatusReport {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["FOLDER_ID", "FOLDER_NAME", "FILE_TYPE", "STATE", "COUNT"];
             writer.write_record(&columns)?;
         }
-    
+
         for stat in &self.stats {
-            
             let folder_id = stat.folder_id.to_string().to_owned();
             let folder_name = stat.folder_name.to_owned();
             let file_type = stat.file_type.to_owned();
             let state = stat.state.to_owned();
             let count = stat.count.to_string().to_owned();
-            
+
             let mut values: Vec<String> = Vec::new();
             values.push(folder_id);
             values.push(folder_name);
@@ -870,26 +975,27 @@ impl ToCsv for EnvironmentStatusReport {
             writer.write_record(&values)?;
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)        
+        Ok(result)
     }
 }
 
 impl From<client::Folder> for Folder {
     fn from(folder: client::Folder) -> Self {
-        Folder::new(
-            folder.id,
-            folder.name,
-        )
+        Folder::new(folder.id, folder.name)
     }
 }
 
 impl From<client::FolderListResponse> for ListOfFolders {
     fn from(response: client::FolderListResponse) -> Self {
-        let folders = response.folders.into_iter().map(|f| Folder::from(f)).collect();
-        ListOfFolders{folders: folders}
+        let folders = response
+            .folders
+            .into_iter()
+            .map(|f| Folder::from(f))
+            .collect();
+        ListOfFolders { folders: folders }
     }
 }
 
@@ -919,7 +1025,13 @@ impl From<client::PartToPartMatch> for ModelMatch {
         let percentage = m.match_percentage;
         let model_one_thumbnail = model.thumbnail.clone();
         let model_two_thumbnail = m.matched_model.thumbnail.clone();
-        ModelMatch::new(model, percentage, None, model_one_thumbnail, model_two_thumbnail)
+        ModelMatch::new(
+            model,
+            percentage,
+            None,
+            model_one_thumbnail,
+            model_two_thumbnail,
+        )
     }
 }
 
@@ -966,13 +1078,13 @@ pub struct FolderCreateResponse {
     #[serde(rename = "ContainerId")]
     pub container_id: u32,
     #[serde(rename = "Name")]
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ModelCreateMetadataResponse {
     #[serde(rename = "metadata")]
-    pub metadata: ModelMetadataItem
+    pub metadata: ModelMetadataItem,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -993,9 +1105,7 @@ pub struct ListOfImageClassifiers {
 
 impl ListOfImageClassifiers {
     pub fn new(classifiers: Vec<ImageClassifier>) -> Self {
-        ListOfImageClassifiers {
-            classifiers
-        }
+        ListOfImageClassifiers { classifiers }
     }
 }
 
@@ -1017,21 +1127,21 @@ impl ToJson for ListOfImageClassifiers {
 
 impl ToCsv for ListOfImageClassifiers {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME", "STATUS"];
             writer.write_record(&columns)?;
         }
-    
+
         for classifier in &self.classifiers {
-            
             let id = classifier.uuid.to_string().to_owned();
             let name = classifier.name.to_owned();
             let status = classifier.status.to_owned();
-            
+
             let mut values: Vec<String> = Vec::new();
             values.push(id);
             values.push(name);
@@ -1040,10 +1150,10 @@ impl ToCsv for ListOfImageClassifiers {
             writer.write_record(&values)?;
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)         
+        Ok(result)
     }
 }
 
@@ -1075,21 +1185,21 @@ impl ToJson for ListOfClassificationScores {
 
 impl ToCsv for ListOfClassificationScores {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-
         let buf = BufWriter::new(Vec::new());
-        let mut writer = WriterBuilder::new().terminator(Terminator::CRLF).from_writer(buf);
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
 
         if pretty {
             let columns = vec!["ID", "NAME", "SCORE"];
             writer.write_record(&columns)?;
         }
-    
+
         for score in &self.scores {
-            
             let id = score.model_uuid.to_string().to_owned();
             let name = score.model_name.to_owned();
             let status = score.score.to_string();
-            
+
             let mut values: Vec<String> = Vec::new();
             values.push(id);
             values.push(name);
@@ -1098,9 +1208,9 @@ impl ToCsv for ListOfClassificationScores {
             writer.write_record(&values)?;
         }
         writer.flush()?;
-    
+
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
-        Ok(result)         
+        Ok(result)
     }
 }
