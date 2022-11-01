@@ -95,13 +95,50 @@ pub struct ClientConfiguration {
     tenants: HashMap<String, Tenant>,
 }
 
+fn validate_uuid_argument(uuid: Option<&str>) -> Uuid {
+    let uuid = match uuid {
+        Some(uuid) => uuid,
+        None => {
+            eprintln!("Error: {}", "The argument --uuid is mandatory");
+            ::std::process::exit(exitcode::DATAERR);                        
+        }
+    };
+    let uuid = Uuid::from_str(uuid);
+    let uuid = match uuid {
+        Ok(uuid) => uuid,
+        Err(e) => {
+            eprintln!("Error: Invalid UUID format: {}", e);
+            ::std::process::exit(exitcode::DATAERR);
+        },
+    };
+    uuid
+}
+
+fn validate_string_argument(name: &str, value: Option<&str>) -> String {
+    let value = match value {
+        Some(value) => value.to_string(),
+        None => {
+            eprintln!("Error: The argument {} is mandatory", name);
+            ::std::process::exit(exitcode::DATAERR);
+        }
+    };
+    value
+}
+
 /// The main application entry point
 fn main() {
 
     //env_logger::init();
     let _log_init_result = pretty_env_logger::try_init_timed();
 
-    let home_directory = home_dir().unwrap();
+    let home_directory = home_dir();
+    let home_directory = match home_directory {
+        Some(dir) => dir,
+        None => {
+            eprintln!("Error: Failed to determine the home directory");
+            ::std::process::exit(exitcode::DATAERR);
+        }
+    };
     let home_directory = String::from(home_directory.to_str().unwrap());
     let mut default_configuration_file_path = home_directory;
     default_configuration_file_path.push_str("/.pcli.conf");
@@ -527,8 +564,8 @@ fn main() {
         )        
         .get_matches();
 
-    let tenant = String::from(matches.value_of("tenant").unwrap());
-    let format_string: &str = matches.value_of("format").unwrap();
+    let tenant = validate_string_argument("tenant", matches.value_of("tenant"));
+    let format_string = validate_string_argument("format", matches.value_of("format"));
     let format_string = format_string.to_uppercase();
     let output_format = match format::Format::from_str(format_string.as_str()) {
         Ok(format) => format,
@@ -597,7 +634,6 @@ fn main() {
             println!("System name:             {:?}", sys.name().unwrap_or("unknown".to_string()));
             println!("System kernel version:   {:?}", sys.kernel_version().unwrap_or("unknown".to_string()));
             println!("System OS version:       {:?}", sys.os_version().unwrap_or("unknown".to_string()));
-            //println!("System host name:        {:?}", sys.host_name().unwrap_or("unknown".to_string()));
             println!("NB CPUs: {}", sys.cpus().len());
         },
         Some(("token", _sub_matches)) => {
@@ -649,7 +685,14 @@ fn main() {
             }
         },
         Some(("create-folder", sub_matches)) => {
-            let name = sub_matches.value_of("name").unwrap();
+            let name = sub_matches.value_of("name");
+            let name = match name {
+                Some(name) => name,
+                None => {
+                    eprintln!("Error: The folder name argument is mandatory");
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            };
             let folder = api.create_folder(&name.to_string());
             match folder {
                 Ok(folder) => {
@@ -695,8 +738,7 @@ fn main() {
         },        
         Some(("model", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
                 match api.get_model(&uuid, false) {
                     Ok(model) => {
                         let output = format::format_model(&model, &output_format, pretty, color).unwrap();
@@ -715,8 +757,7 @@ fn main() {
         },
         Some(("model-meta", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
                 match api.get_model_metadata(&uuid) {
                     Ok(meta) => {
                         match meta {
@@ -743,7 +784,7 @@ fn main() {
             }
         },
         Some(("upload-model-meta", sub_matches)) => {
-            let input_file = sub_matches.value_of("input").unwrap();
+            let input_file = validate_string_argument("input", sub_matches.value_of("input"));
             match api.upload_model_metadata(&input_file) {
                 Ok(_) => {
                     ::std::process::exit(exitcode::OK);
@@ -756,8 +797,7 @@ fn main() {
         }, 
         Some(("assembly-tree", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
                 let tree = api.get_model_assembly_tree(&uuid);
                 let proper_tree = model::ModelAssemblyTree::from(tree.unwrap());
 
@@ -800,18 +840,29 @@ fn main() {
         },
         Some(("match-model", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = Uuid::from_str(sub_matches.value_of("uuid").unwrap()).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
 
-                let threshold = sub_matches.value_of("threshold").unwrap();
-                let threshold: f64 = threshold.parse().unwrap();
+                let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
+                let threshold: f64 = match threshold.parse() {
+                    Ok(threshold) => threshold,
+                    Err(e) => {
+                        eprintln!("Error: Failed to parse the threshold value: {}", e);
+                        ::std::process::exit(exitcode::DATAERR);
+                    }
+                };
 
+                if (threshold > 1.0) || (threshold < 0.0) {
+                    eprintln!("Error: The threshold value must be between 0 and 1");
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+                
                 let model_matches = match api.match_model(&uuid, threshold) {
                     Ok(model_matches) => {
-                        trace!("We found {} matche(s)!", model_matches.inner.len());
+                        trace!("We found {} match(es)!", model_matches.inner.len());
                         model_matches
                     },
                     Err(e) => {
-                        warn!("No matched found.");
+                        warn!("No matches found.");
                         eprintln!("{}", e);
                         ::std::process::exit(exitcode::DATAERR);
                     },
@@ -831,8 +882,20 @@ fn main() {
             }
         },
         Some(("match-folder", sub_matches)) => {
-            let threshold = sub_matches.value_of("threshold").unwrap();
-            let threshold: f64 = threshold.parse().unwrap();
+            let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
+            let threshold: f64 = match threshold.parse() {
+                Ok(threshold) => threshold,
+                Err(e) => {
+                    eprintln!("Error: Failed to parse the threshold value: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            };
+            
+            if (threshold > 1.0) || (threshold < 0.0) {
+                eprintln!("Error: The threshold value must be between 0 and 1");
+                ::std::process::exit(exitcode::DATAERR);
+            }
+
             let exclusive: bool = sub_matches.is_present("exclusive");
 
             let search: Option<String>;
@@ -842,19 +905,23 @@ fn main() {
                 search = None;
             }
 
-            let folders: Option<Vec<u32>>;
-            if sub_matches.is_present("folder") {
-                let folder_id_strings = Some(String::from(sub_matches.value_of("folder").unwrap()));
-                folders = Some(folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect());
-            } else {
-                folders = None;
-            }
+            let folder_id = validate_string_argument("folder", sub_matches.value_of("folder"));
+            let folder_id = match folder_id.parse::<u32>() {
+                Ok(folder_id) => folder_id,
+                Err(e) => {
+                    eprintln!("Error: Failed to parse the value for folder ID: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            };
+            let mut folders_list: Vec<u32> = Vec::new();
+            folders_list.push(folder_id);
+            let folders_list = Some(folders_list);
 
-            match api.list_all_models(folders.clone(), search) {
+            match api.list_all_models(folders_list.clone(), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, exclusive) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
                             println!("{}", output.unwrap());
@@ -874,8 +941,7 @@ fn main() {
         },
         Some(("reprocess", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
                 match api.reprocess_model(&uuid) {
                     Ok(()) => {
                         println!();
@@ -893,8 +959,7 @@ fn main() {
         },
         Some(("delete-model", sub_matches)) => {
             if sub_matches.is_present("uuid") {
-                let uuid = sub_matches.value_of("uuid").unwrap();
-                let uuid = Uuid::parse_str(uuid).unwrap();
+                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
                 match api.delete_model(&uuid) {
                     Ok(()) => {
                         println!();
@@ -934,8 +999,23 @@ fn main() {
         },
         Some(("upload", sub_matches)) => {
 
-            let folder_id =  String::from(sub_matches.value_of("folder").unwrap());
-            let folder_id = u32::from_str(&folder_id).unwrap();
+            let folder_id = sub_matches.value_of("folder");
+            let folder_id = match folder_id {
+                Some(folder_id) => {
+                    match u32::from_str(&folder_id) {
+                        Ok(folder_id) => folder_id,
+                        Err(e) => {
+                            eprintln!("Error: Invalid number format for the folder ID: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+                },
+                None => {
+                    eprintln!("Error: The folder ID argument is mandatory");
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            };
+
             let file =  String::from(sub_matches.value_of("input").unwrap());
             let metadata_file = sub_matches.value_of("meta");
             let batch_uuid = match sub_matches.value_of("batch") {
@@ -1113,10 +1193,9 @@ fn main() {
         },
         Some(("classification-predictions", sub_matches)) => {
 
-            let uuid = sub_matches.value_of("uuid").unwrap();
+            let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
             let file =  String::from(sub_matches.value_of("input").unwrap());
-            let classifier_uuid = Uuid::parse_str(uuid).unwrap();
-            let scores = api.get_classification_predictions(classifier_uuid, file.as_str());
+            let scores = api.get_classification_predictions(uuid, file.as_str());
             match scores {
                 Ok(scores) => {
                     let output = format::format_list_of_classification_predictions(scores, &output_format, pretty, color);
