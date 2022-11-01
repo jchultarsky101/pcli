@@ -204,7 +204,7 @@ impl Api {
         Ok(result)
     }
 
-    pub fn match_model(&self, uuid: &Uuid, threshold: f64) -> anyhow::Result<ListOfModelMatches> {
+    pub fn match_model(&self, uuid: &Uuid, threshold: f64, with_meta: bool) -> anyhow::Result<ListOfModelMatches> {
 
         trace!("Matching model {}...", uuid);    
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
@@ -221,7 +221,13 @@ impl Api {
                             for m in matches {
                                 let mut model_match = ModelMatch::from(m);
                                 let model = model_match.model.clone();
-                                let metadata = self.get_model_metadata(&model.uuid)?;
+                                let metadata: Option<ModelMetadata>;
+                                if with_meta {
+                                    metadata = self.get_model_metadata(&model.uuid)?;
+                                } else {
+                                    metadata = None;
+                                }
+                                
                                 model_match.model.metadata = metadata;
                                 list_of_matches.push(model_match);
                             }
@@ -266,14 +272,14 @@ impl Api {
         }
     }
 
-    pub fn generate_simple_model_match_report(&mut self, uuids: Vec<Uuid>, threshold: f64, folders: Option<Vec<u32>>, exclusive: bool) -> anyhow::Result<SimpleDuplicatesMatchReport> {
+    pub fn generate_simple_model_match_report(&mut self, uuids: Vec<Uuid>, threshold: f64, folders: Option<Vec<u32>>, exclusive: bool, with_meta: bool) -> anyhow::Result<SimpleDuplicatesMatchReport> {
 
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         for uuid in uuids {
             let model = self.get_model(&uuid, true)?;
             if model.state.eq("finished") {
-                let matches = self.match_model(&uuid, threshold)?;
+                let matches = self.match_model(&uuid, threshold, with_meta)?;
     
                 let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
                 for m in *matches.inner {
@@ -307,7 +313,7 @@ impl Api {
         Ok(simple_match_report)
     }
 
-    pub fn generate_model_match_report(&mut self, uuids: Vec<Uuid>, threshold: f64) -> anyhow::Result<ModelMatchReport> {
+    pub fn generate_model_match_report(&mut self, uuids: Vec<Uuid>, threshold: f64, with_meta: bool) -> anyhow::Result<ModelMatchReport> {
 
         let mut flat_bom = FlatBom::empty();
         let mut roots: HashMap<Uuid, ModelAssemblyTree> = HashMap::new();
@@ -326,7 +332,7 @@ impl Api {
         }
 
         let target_uuids: Vec<Uuid> = flat_bom.inner.to_owned().keys().map(|uuid| Uuid::parse_str(uuid.as_str()).unwrap()).collect();
-        let simple_match_report = self.generate_simple_model_match_report(target_uuids, threshold, None, false)?;
+        let simple_match_report = self.generate_simple_model_match_report(target_uuids, threshold, None, false, with_meta)?;
         
         // Create the DAG
         let mut graph: MatrixGraph<String, f64> = MatrixGraph::new();
