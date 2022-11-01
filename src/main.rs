@@ -261,6 +261,14 @@ fn main() {
                         .takes_value(true)
                         .help("Match threshold percentage (e.g. '96.5'")
                         .required(true)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
                 ),
         )
         .subcommand(
@@ -297,6 +305,14 @@ fn main() {
                         .long("exclusive")
                         .takes_value(false)
                         .help("If specified, the output will include only models that belong to the input folder(s)")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
                         .required(false)
                 ),
         )        
@@ -452,6 +468,14 @@ fn main() {
                         .takes_value(true)
                         .help("Output file name to store the index-name-uuid dictionary in JSON format")
                         .required(true)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
                 ),    
         )
         .subcommand(
@@ -856,7 +880,9 @@ fn main() {
                     ::std::process::exit(exitcode::DATAERR);
                 }
                 
-                let model_matches = match api.match_model(&uuid, threshold) {
+                let with_meta = sub_matches.is_present("meta");
+
+                let model_matches = match api.match_model(&uuid, threshold, with_meta) {
                     Ok(model_matches) => {
                         trace!("We found {} match(es)!", model_matches.inner.len());
                         model_matches
@@ -897,6 +923,7 @@ fn main() {
             }
 
             let exclusive: bool = sub_matches.is_present("exclusive");
+            let with_meta: bool = sub_matches.is_present("meta");
 
             let search: Option<String>;
             if sub_matches.is_present("search") {
@@ -921,7 +948,7 @@ fn main() {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, exclusive) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, exclusive, with_meta) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
                             println!("{}", output.unwrap());
@@ -1110,8 +1137,10 @@ fn main() {
 
                     let threshold = sub_matches.value_of("threshold").unwrap();
                     let threshold: f64 = threshold.parse().unwrap();
+
+                    let with_meta: bool = sub_matches.is_present("meta");
         
-                    match api.generate_model_match_report(uuids, threshold) {
+                    match api.generate_model_match_report(uuids, threshold, with_meta) {
                         Ok(report) => {
 
                             let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
