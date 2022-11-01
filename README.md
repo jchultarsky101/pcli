@@ -9,11 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.1
+The latest version is 1.6.3
 
-### Version 1.6.1
+### Version 1.6.4
 
-* Now displaying the list of metadata properties in the CSV output of match-folder
+* Now displaying the list of metadata properties in the CSV output of match-folder, model-match
+* Added optional argument --meta to selectively include the metadata in the output
 
 ### Version 1.6.0
 
