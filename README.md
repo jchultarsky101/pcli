@@ -9,11 +9,17 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.1
+The latest version is 1.6.5
 
-### Version 1.6.1
+### Version 1.6.5
 
-* Now displaying the list of metadata properties in the CSV output of match-folder
+* Bug fixes
+* Added content to the README.md
+
+### Version 1.6.4
+
+* Now displaying the list of metadata properties in the CSV output of match-folder, model-match
+* Added optional argument --meta to selectively include the metadata in the output
 
 ### Version 1.6.0
 
@@ -182,7 +188,7 @@ For example:
 $ pcli help
 ```
 ```
-pcli 1.6.0
+pcli 1.6.5
 Julian Chultarsky <jchultarsky@physna.com>
 CLI client utility to the Physna public API/V2
 
@@ -239,11 +245,11 @@ $ pcli help model
 Produces the following output:
 
 ```
-pcli-model 1.6.0
+pcli-model 1.6.5
 Reads data for a specific model
 
 USAGE:
-    pcli model --uuid <uuid>
+    pcli --tenant <tenant> model --uuid <uuid>
 
 OPTIONS:
     -h, --help           Print help information
@@ -479,45 +485,37 @@ Adding "--pretty" in this case will add header row to the CSV output containing 
 
 ### Listing Available Models
 
-To obtain a list of models in your tenant environment, use the "models" sub-command. Please, note that there
-
-is also "model" (singular) command, which is used for querying specific model. The "models" command takes
-an optional argument "--folders", which is a list of folder IDs and restricts which folders are being queried. It is a best practice to always supply the folder ID(s) you are targetting to avoid querying too much data by accident. 
+To obtain a list of models in your tenant environment, use the "models" sub-command. Please, note that there is also "model" (singular) command, which is used for querying a single model. The "models" command takes a mandatory argument "--folder", which is the folder ID of interest and limits the search.
 
 Example:
-
-There is also "model" (singular) command, which is used for querying a single specific model. The "model*s*" command takes
-an optional argument "--folder", which specifies the folder ID and restricts which folders are being queried. It is a best practice to always supply the folder ID(s) you are targetting to avoid querying too much data by accident.
-
-You can list multiple folder IDs if you would like to query multiple folders at the same time. The help screen will show how to use it:
 
 ```bash
 pcli help models
 ```
 ```
-pcli-models 1.6.0
+pcli-models 1.6.5
 Lists all available models
 
 USAGE:
-    pcli models [OPTIONS] --folder <folder>
+    pcli --tenant <tenant> models [OPTIONS] --folder <folder>
 
 OPTIONS:
-    -d, --folder <folder>    Folder ID (you can provide multiple, e.g. --folder=1 --folder=2)
+    -d, --folder <folder>    Folder ID (e.g. --folder=1)
     -h, --help               Print help information
     -s, --search <search>    Search clause to further filter output (optional: e.g. a model name)
     -V, --version            Print version information
 ```
 
-Example for listing all available models in folders 1 and 2:
+Example for listing all available models in folder 1 (the Default folder):
 
 ```bash
-$ pcli --tenant="delta" models --folder="1" --folder="2"
+$ pcli --tenant="delta" models --folder="1"
 ```
 
-The output from the above will include the combined list of models in both folders with ID of 1 and folder with ID of 2.
+The output from the above will include the list of models in folder with ID of 1.
 
-You can further filter the output of the "models" command by specifying a search term. For example, to list
-all models in folder 3 whith model name containing the string "mypart", you can execute the following:
+You can further filter the output of the "models" command by specifying an optional search term. For example, to list
+all models in folder 3 with model name containing the string "mypart", you can execute the following:
 
 ```bash
 $ pcli --tenant="delta" models --folder="3" --search="mypart"
@@ -527,7 +525,7 @@ As with the "folder" command, you can specify CSV as the output format, use "--p
 
 ### Querying for a Specific Model
 
-The "model" command takes a unique identifier for the model we are interested in. This is done via the "--uuid"
+The "model" command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.
 
 ```bash
@@ -544,8 +542,7 @@ The "upload" command assists you with uploading new 3D models to Physna. It take
 $ pcli help upload
 ```
 ```
-pcli help upload
-pcli-upload 1.6.0
+pcli-upload 1.6.5
 Uploads a file to Physna
 
 USAGE:
@@ -556,6 +553,8 @@ OPTIONS:
     -d, --folder <folder>      Folder ID (e.g. --folder=1)
     -h, --help                 Print help information
     -i, --input <input>        Path to the input file
+    -m, --meta <meta>          Input CSV file name containing additional metadata associated with
+                               this model
         --source <source>      Specifies the Source ID to be used
         --timeout <timeout>    When validating, specifies the timeout in seconds
         --units <units>        The unit of measure for the model (e.g. 'inch', 'mm', etc.)
@@ -570,6 +569,8 @@ OPTIONS:
 * "validate" is an optional argument that will cause the process to wait until the file upload completes. It will retrieve the model back and check the status. If the status is one of the final states, it returns the model data. If it is still pending, it will continue to wait. If no timeout is provided, it could wait forever or until error occurs.
 * "timeout" only applies when "validate" is present. It specifies the maximum wait time allowed. The value is in seconds. Use that argument together with "validate" to limit the time an operation can take.
 * "source" is an optional string provided by the user that represents an unique identifier for the source system. It could be helpful to link a model in Physna to an entry in a PLM system or some other database. If not specified, the original file name will be used as the default value.
+* "meta" is optional. It is the file path to additional file containing metadata associated with this model. Once the model is uploaded, we will attempt to upload the metadata for it as well.
+* "validate" is optional. Normally, the upload operation is asynchronous. This means that as soon as the content of the file is uploaded to Physna, the control will be returned back to the user. However, Physna will continue to process the model in order to index it in the background. That takes additional time. In some cases, you may want to block and wait until the model is fully ready for use before proceeding to the next operation. In such cases, you can add this flag.
 
 Here is an example of how all this comes together:
 
@@ -637,7 +638,7 @@ In addition to the 3D geometry data, additional metadata can be associated with 
 The command is:
 
 ```
-pcli-model-meta 1.6.0
+pcli-model-meta 1.6.5
 Reads the metadata (properties) for a specific model
 
 USAGE:
@@ -690,7 +691,7 @@ OPTIONS:
     -V, --version          Print version information
 ```
 
-The file format is the same as the output produced by the command "model-meta". The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
+The file format is the same as the output produced by the command "model-meta". It is the same format used by the 'upload' command earlier. The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
 
 The required argument is "input" - the name of the CSV formatted input file.
 
@@ -708,23 +709,39 @@ The "assembly-tree" command supports the unique output format of "tree".
 
 ### Matching Models to Other Models
 
-Physna's core expertise is in finding geometric matches for models. The sub-command "--match_model" does
+Physna's core expertise is in finding geometric matches for models. The sub-command "--match-model" does
 part-to-part match. This means that a model is matched as a unit to all other models in the system. 
-With this function, we do not cascate from top-level assembly into all of its sub-assemblies, nor we 
+With this function, we do not cascade from top-level assembly into all of its sub-assemblies, nor we 
 try to determine if this model may be a component of another assembly. 
+
+```
+pcli-match-model 1.6.5
+Matches all models to the specified one
+
+USAGE:
+    pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <threshold>
+
+OPTIONS:
+    -h, --help                     Print help information
+    -m, --meta                     Enhance output with model's metadata
+    -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5')
+    -u, --uuid <uuid>              The model UUID
+    -V, --version                  Print version information
+```
+
+* "uuid" is the UUID of the model we are trying to match.
+* "threshold" is the match level. This is a value between [0..1]. For example, 80% match would be 0.8.
+* "meta" is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
+
+Example:
 
 ```bash
 pcli --tenant="delta" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="97.5"
 ```
 
-The UUID is the model's identifier. The "--threshold" is the minimum percentage to match.
-
-The output contains the list of models that matched the criteria and a value between zero and one
-indicating the fit. A value of 1 means 100% match.
+The output contains the list of models that matched the criteria and a value between zero and one indicating the fit. A value of 1 means 100% match.
 
 As with the other commands, you can choose to output in JSON or CSV format.
-
-To output a graph representation of your assembly tree:
 
 **NOTE:** If you are using pipes to send the output to another process, please make sure you have obtained your
 token correctly prior to executing the operation. If not, the process will stop and wait for you to enter the client secret on the command line
@@ -733,7 +750,28 @@ and your output will not be valid.
 ### Matching Entire Folders of Models
 
 Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
-achieve the effect, but we provide a convenience method for this pupose.
+achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute "match-model". It will combine the responses into a single output. The input arguments are the same as the previous command.
+
+```
+pcli-match-folder 1.6.5
+Matches all models in a folder to other models
+
+USAGE:
+    pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold> --folder <folder>
+
+OPTIONS:
+    -d, --folder <folder>          Folder ID (e.g. --folder=1)
+    -e, --exclusive                If specified, the output will include only models that belong to
+                                   the input folder
+    -h, --help                     Print help information
+    -m, --meta                     Enhance output with model's metadata
+    -s, --search <search>          Search clause to further filter output (optional: e.g. a model
+                                   name)
+    -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5'
+    -V, --version                  Print version information
+```
+
+Example:
 
 The following command will execute individual matches for all models found in the folder with ID of 4 (--folder=4) at match threshold of 99% (--threshold=0.99).
 It will output the result in CSV format (--format=csv) and add header line with column names to it (--pretty).
@@ -742,13 +780,7 @@ It will output the result in CSV format (--format=csv) and add header line with 
 $ pcli --tenant="beta" --format="csv" --pretty match-folder --folder="4" --threshold="0.99"
 ```
 
-You can specify multiple folders here. For example:
-
-```bash
-$ pcli --tenant="beta" --format="csv" --pretty match-folder --folder="4" --folder="6" --threshold="0.99"
-```
-
-You can also specify a search term to further narrow down the filter.
+You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.
 
 ### Generating Match Report
 
