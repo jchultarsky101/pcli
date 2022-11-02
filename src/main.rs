@@ -212,14 +212,14 @@ fn main() {
         )
         .subcommand(
             Command::new("models")
-                .about("Lists all available models")
+                .about("Lists all available models in a folder")
                 .arg(
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
                         .takes_value(true)
-                        .multiple_occurrences(true)
-                        .help("Folder ID (you can provide multiple, e.g. --folder=1 --folder=2)")
+                        .multiple_occurrences(false)
+                        .help("Folder ID (e.g. --folder=1)")
                         .required(true)
                 )
                 .arg(
@@ -259,7 +259,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .takes_value(true)
-                        .help("Match threshold percentage (e.g. '96.5'")
+                        .help("Match threshold percentage (e.g. '96.5')")
                         .required(true)
                 )
                 .arg(
@@ -273,7 +273,7 @@ fn main() {
         )
         .subcommand(
             Command::new("match-folder")
-                .about("Matches all models in a folder(s) to all other models")
+                .about("Matches all models in a folder to other models")
                 .arg(
                     Arg::new("threshold")
                         .short('t')
@@ -287,8 +287,8 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .takes_value(true)
-                        .multiple_occurrences(true)
-                        .help("Folder ID (you can provide multiple, e.g. --folder=1 --folder=2)")
+                        .multiple_occurrences(false)
+                        .help("Folder ID (e.g. --folder=1)")
                         .required(true)
                 )
                 .arg(
@@ -304,7 +304,7 @@ fn main() {
                         .short('e')
                         .long("exclusive")
                         .takes_value(false)
-                        .help("If specified, the output will include only models that belong to the input folder(s)")
+                        .help("If specified, the output will include only models that belong to the input folder")
                         .required(false)
                 )
                 .arg(
