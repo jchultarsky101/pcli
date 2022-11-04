@@ -926,7 +926,7 @@ Be aware that "--pretty" adds more to the output. For example, if your output fo
 a header record. If your post-processor counts the number of records in the CSV to tally the number of
 models found (as example), you will have to ignore the first record. In this case it is probably better 
 not to include the "--pretty" flag. This argument is binary and does not take a value. If it is present, it
-means that it is active; if not, it is effectivelly set to false.
+means that it is active; if not, it is effectively set to false.
 
 ## Support
 
