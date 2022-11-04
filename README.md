@@ -9,9 +9,7 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.6
-
-### 
+The latest version is 1.6.5
 
 ### Version 1.6.5
 
@@ -135,6 +133,29 @@ It is a native app, which means that it is compiled to binary for each
 target platform. You would need to download the correct version for your
 operating system. Place the file in a directory of your choice on your system.
 There is no need to run an installer application - it should be ready for use at this time.
+
+### Pre-compiled binary
+
+The PCLI application is a single executable binary. All that you need to do is run it in your terminal.
+
+1. Go to the GitHub [repository](https://github.com/jchultarsky101/pcli) for this project
+2. Under "Releases" click on the latest release
+3. Download the ZIP file for your platform: "pc-windows-gnu" is for Windows; "x86_64-apple-darwin" is for Intel-based MacOS
+4. Place the ZIP file in a directory of your choice
+5. Unzip the ZIP file
+6. If necessary, grant execution permissions to the executable file
+7. Optionally, ad the path to your PATH environment variable, create shortcut, symbolic link, etc.
+
+### Building from source
+
+The application is written in Rust. You will need to (install Rust)[https://www.rust-lang.org/tools/install] on your computer in order to compile it. 
+
+1. Clone the GitHub repository
+2. Execute:
+```
+cargo build --release
+```
+3. This will produce the binary for your platform in your project's *target* directory
 
 ## A Word about Tenants
 
