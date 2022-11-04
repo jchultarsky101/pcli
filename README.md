@@ -9,7 +9,9 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.5
+The latest version is 1.6.6
+
+### 
 
 ### Version 1.6.5
 
