@@ -276,7 +276,8 @@ fn main() {
                         .takes_value(true)
                         .help("The name for the classification metadata property")
                         .required(false)
-                        .requires("value")
+                        .requires("meta")
+                        .requires("tag")
                 )
                 .arg(
                     Arg::new("tag")
@@ -896,7 +897,10 @@ fn main() {
                 
                 let with_meta = sub_matches.is_present("meta");
 
-                let model_matches = match api.match_model(&uuid, threshold, with_meta) {
+                let classification = sub_matches.value_of("classification");
+                let tag = sub_matches.value_of("tag");
+                
+                let model_matches = match api.match_model(&uuid, threshold, with_meta, classification, tag) {
                     Ok(model_matches) => {
                         trace!("We found {} match(es)!", model_matches.inner.len());
                         model_matches
