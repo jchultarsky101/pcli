@@ -269,6 +269,20 @@ fn main() {
                         .takes_value(false)
                         .help("Enhance output with model's metadata")
                         .required(false)
+                )
+                .arg(
+                    Arg::new("classification")
+                        .long("classification")
+                        .takes_value(true)
+                        .help("The name for the classification metadata property")
+                        .required(false)
+                        .requires("value")
+                )
+                .arg(
+                    Arg::new("tag")
+                        .long("tag")
+                        .takes_value(true)
+                        .help("The value for the classification metadata property")   
                 ),
         )
         .subcommand(
