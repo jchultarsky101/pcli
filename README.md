@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.6
+The latest version is 1.6.7
+
+### Version 1.6.7
+
+* Added optional arguments to the match-model command allowing the user to set a metadata property for all models that match the source model. This in turn enables automated way to train the classification machine learning algorithm by specifying that tag. The user can also use that tag in the --search argument
 
 ### Version 1.6.6
 
