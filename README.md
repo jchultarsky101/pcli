@@ -746,23 +746,27 @@ With this function, we do not cascade from top-level assembly into all of its su
 try to determine if this model may be a component of another assembly. 
 
 ```
-pcli-match-model 1.6.5
+pcli-match-model 1.6.7
 Matches all models to the specified one
 
 USAGE:
     pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <threshold>
 
 OPTIONS:
-    -h, --help                     Print help information
-    -m, --meta                     Enhance output with model's metadata
-    -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5')
-    -u, --uuid <uuid>              The model UUID
-    -V, --version                  Print version information
+        --classification <classification>    The name for the classification metadata property
+    -h, --help                               Print help information
+    -m, --meta                               Enhance output with model's metadata
+    -t, --threshold <threshold>              Match threshold percentage (e.g. '96.5')
+        --tag <tag>                          The value for the classification metadata property
+    -u, --uuid <uuid>                        The model UUID
+    -V, --version                            Print version information
 ```
 
 * "uuid" is the UUID of the model we are trying to match.
 * "threshold" is the match level. This is a value between [0..1]. For example, 80% match would be 0.8.
 * "meta" is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
+* "classification" is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.
+* "tag" requirest that the classification argument is present. It is the value to be associated with the "classification" property.
 
 Example:
 
@@ -777,6 +781,14 @@ As with the other commands, you can choose to output in JSON or CSV format.
 **NOTE:** If you are using pipes to send the output to another process, please make sure you have obtained your
 token correctly prior to executing the operation. If not, the process will stop and wait for you to enter the client secret on the command line
 and your output will not be valid.
+
+The --classification argument requires further clarification.
+It is an optional argument, but if it is to be used, the --meta argument must be present. 
+The purpose of this is to allow the user to permanently "tag" models that match the source model with a metadata name/value pair. In other words, for each model that 
+matches, we will create a new medata property with name provided as --classification and value provided as --tag. 
+If --classification is not provided, no new metadata will be created. 
+This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
+You can also use the metadata to automate the ML learning for data classification.
 
 ### Matching Entire Folders of Models
 
