@@ -3,7 +3,7 @@ use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfClassificationScores, ListOfFolders,
     ListOfImageClassifiers, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch,
     ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelStatusRecord,
-    PartNodeDictionaryItem, PropertyCollection, SimpleDuplicatesMatchReport,
+    PartNodeDictionaryItem, Property, PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -65,6 +65,11 @@ impl Api {
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
         Ok(self.client.get_model_metadata(uuid)?)
+    }
+
+    pub fn delete_model_metadata_property(&self, uuid: &Uuid, id: &u64) -> anyhow::Result<()> {
+        self.client.delete_model_property(uuid, id)?;
+        Ok(())
     }
 
     pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool) -> anyhow::Result<Model> {
@@ -266,6 +271,18 @@ impl Api {
         }
 
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
+    }
+
+    pub fn set_property(&self, name: &String) -> Result<Property> {
+        self.client.post_property(name)
+    }
+
+    pub fn set_model_property(
+        &self,
+        id: &u64,
+        item: &ModelMetadataItem,
+    ) -> Result<ModelMetadataItem> {
+        self.client.put_model_property(&id, &item)
     }
 
     fn generate_graph_from_assembly_tree(

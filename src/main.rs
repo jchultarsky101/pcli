@@ -1,9 +1,10 @@
-use std::env;
+use std::{env, cmp::Ordering};
 use std::collections::HashMap;
 use clap::{
     Arg, 
     Command
 };
+use model::{ModelMetadata, ModelMetadataItem};
 use std::path::Path;
 use std::fs::read_to_string;
 use serde::{
@@ -331,6 +332,49 @@ fn main() {
                         .required(false)
                 ),
         )        
+        .subcommand(
+            Command::new("label-folder")
+                .about("Labels models in a folder based on KNN algorithm and geometric match score as distance")
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .takes_value(true)
+                        .help("Folder ID (e.g. --folder=1)")
+                        .required(true) 
+                )
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .takes_value(true)
+                        .help("Match threshold percentage (e.g. '96.5')")
+                        .required(true)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("classification")
+                        .long("classification")
+                        .takes_value(true)
+                        .help("The name for the classification metadata property")
+                        .required(false)
+                        .requires("meta")
+                        .requires("tag")
+                )
+                .arg(
+                    Arg::new("tag")
+                        .long("tag")
+                        .takes_value(true)
+                        .help("The value for the classification metadata property")   
+                ),
+        )
         .subcommand(
             Command::new("assembly-bom")
                 .about("Generates flat BoM of model IDs for model")
@@ -983,6 +1027,126 @@ fn main() {
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
+        },
+        Some(("label-folder", sub_matches)) => {
+            let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
+            let threshold: f64 = match threshold.parse() {
+                Ok(threshold) => threshold,
+                Err(e) => {
+                    eprintln!("Error: Failed to parse the threshold value: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            };
+            
+            if (threshold > 1.0) || (threshold < 0.0) {
+                eprintln!("Error: The threshold value must be between 0 and 1");
+                ::std::process::exit(exitcode::DATAERR);
+            }
+            
+            let folder_id = validate_string_argument("folder", sub_matches.value_of("folder"));
+            let folder_id = match folder_id.parse::<u32>() {
+                Ok(folder_id) => folder_id,
+                Err(e) => {
+                    eprintln!("Error: Failed to parse the value for folder ID: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            };
+            
+            
+            let classification = validate_string_argument("classification", sub_matches.value_of("classification"));
+            
+            let tag = validate_string_argument("tag", sub_matches.value_of("tag"));
+
+            let mut folders_list: Vec<u32> = Vec::new();
+            folders_list.push(folder_id);
+            let folders_list = Some(folders_list);
+            
+            let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
+            
+            match api.list_all_models(folders_list.clone(), None) {
+                Ok(physna_models) => {
+                    let models = model::ListOfModels::from(physna_models);
+                    let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
+                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, false, true) {
+                        Ok(report) => {
+                            
+                            // ensure that the classification property is available
+                            let properties = api.list_all_properties();
+                            let property =
+                                properties.as_ref().unwrap().properties.iter().find(
+                                    |p| p.name.eq_ignore_ascii_case(classification.as_str()),
+                                );
+                            let property = match property {
+                                Some(property) => property.clone(),
+                                None => api.set_property(&String::from(classification.clone())).unwrap(),
+                            };
+                                       
+                            for (_master_uuid, mut item) in report.inner {
+                                
+                                //let master_uuid = Uuid::from_str(master_uuid.as_str()).unwrap();
+                                
+                                // sort the list of matches by the mach score
+                                item.matches.sort_by(|a, b| {
+                                    if a.percentage < b.percentage {
+                                        return Ordering::Less;
+                                    } else if a.percentage > b.percentage {
+                                        return Ordering::Greater;
+                                    }
+                                    return Ordering::Equal;
+                                });
+                                
+                                // reverse the sort order. Wee need the best fit on top:
+                                item.matches.reverse();
+                                
+                                for matched_model in item.matches {
+                                    let model = matched_model.model;
+                                    let meta = match model_meta_cache.get(&model.uuid) {
+                                        Some(meta) => meta.clone(),
+                                        None => {
+                                            let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
+                                            model_meta_cache.insert(model.uuid, meta.clone());
+                                            meta
+                                        },
+                                    };
+                                    let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
+                                    
+                                    let classification_value= meta.get(&classification.clone());
+                                    match classification_value {
+                                        Some(_classification_value) => {
+                                            // set the classification value for the master model and exit the loop
+                                            //let value = classification_value.value.clone();
+                                            
+                                            let item = ModelMetadataItem::new(
+                                                model.uuid,
+                                                String::from(classification.clone()),
+                                                String::from(tag.clone()),
+                                            );
+                                            
+                                            api.set_model_property(&property.id, &item).unwrap();
+                                        },
+                                        None => {
+                                            // delete the classification value for the master model
+                                            let _ = api.delete_model_metadata_property(&model.uuid, &property.id);
+                                        },
+                                    }
+                                }
+                            }                            
+                            
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+                },
+                Err(e) => {
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+            
+            
         },
         Some(("reprocess", sub_matches)) => {
             if sub_matches.is_present("uuid") {
