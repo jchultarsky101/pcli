@@ -590,7 +590,12 @@ impl Api {
                 Err(e) => return Err(anyhow!("Failed to read input: {}", e)),
             };
 
-            self.client.put_model_property(&id, &property)?;
+            if property.value.is_empty() {
+                self.client
+                    .delete_model_property(&property.model_uuid, &id)?;
+            } else {
+                self.client.put_model_property(&id, &property)?;
+            }
         }
 
         Ok(())
