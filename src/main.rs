@@ -22,6 +22,7 @@ use anyhow::{
 use exitcode;
 use log::{
     trace,
+    debug,
     warn,
     error
 };
@@ -352,27 +353,12 @@ fn main() {
                         .required(true)
                 )
                 .arg(
-                    Arg::new("meta")
-                        .short('m')
-                        .long("meta")
-                        .takes_value(false)
-                        .help("Enhance output with model's metadata")
-                        .required(false)
-                )
-                .arg(
                     Arg::new("classification")
+                        .short('c')
                         .long("classification")
                         .takes_value(true)
                         .help("The name for the classification metadata property")
-                        .required(false)
-                        .requires("meta")
-                        .requires("tag")
-                )
-                .arg(
-                    Arg::new("tag")
-                        .long("tag")
-                        .takes_value(true)
-                        .help("The value for the classification metadata property")   
+                        .required(true)
                 ),
         )
         .subcommand(
@@ -1051,26 +1037,29 @@ fn main() {
                     ::std::process::exit(exitcode::DATAERR);
                 }
             };
-            
-            
+                        
             let classification = validate_string_argument("classification", sub_matches.value_of("classification"));
             
-            let tag = validate_string_argument("tag", sub_matches.value_of("tag"));
-
             let mut folders_list: Vec<u32> = Vec::new();
             folders_list.push(folder_id);
             let folders_list = Some(folders_list);
             
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
+
+            debug!("Running NKK labeling for folder {}...", folder_id);
             
             match api.list_all_models(folders_list.clone(), None) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
+                    
+                    debug!("Generating simple match report...");
+                    
                     match api.generate_simple_model_match_report(uuids, threshold, folders_list, false, true) {
                         Ok(report) => {
                             
                             // ensure that the classification property is available
+                            debug!("Reading master property list...");
                             let properties = api.list_all_properties();
                             let property =
                                 properties.as_ref().unwrap().properties.iter().find(
@@ -1081,54 +1070,73 @@ fn main() {
                                 None => api.set_property(&String::from(classification.clone())).unwrap(),
                             };
                                        
-                            for (_master_uuid, mut item) in report.inner {
+                            for (master_model_uuid, mut item) in report.inner {
+                                let master_model_uuid = Uuid::from_str(master_model_uuid.as_str()).unwrap();
+
+                                debug!("Analyzing model {}...", master_model_uuid);   
                                 
-                                //let master_uuid = Uuid::from_str(master_uuid.as_str()).unwrap();
-                                
-                                // sort the list of matches by the mach score
-                                item.matches.sort_by(|a, b| {
-                                    if a.percentage < b.percentage {
-                                        return Ordering::Less;
-                                    } else if a.percentage > b.percentage {
-                                        return Ordering::Greater;
-                                    }
-                                    return Ordering::Equal;
-                                });
-                                
-                                // reverse the sort order. Wee need the best fit on top:
-                                item.matches.reverse();
-                                
-                                for matched_model in item.matches {
-                                    let model = matched_model.model;
-                                    let meta = match model_meta_cache.get(&model.uuid) {
-                                        Some(meta) => meta.clone(),
-                                        None => {
-                                            let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
-                                            model_meta_cache.insert(model.uuid, meta.clone());
-                                            meta
-                                        },
-                                    };
-                                    let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
+                                if !item.matches.is_empty() {
+
+                                    debug!("Found matches with threshold of {}.", threshold);
                                     
-                                    let classification_value= meta.get(&classification.clone());
-                                    match classification_value {
-                                        Some(_classification_value) => {
-                                            // set the classification value for the master model and exit the loop
-                                            //let value = classification_value.value.clone();
-                                            
-                                            let item = ModelMetadataItem::new(
-                                                model.uuid,
-                                                String::from(classification.clone()),
-                                                String::from(tag.clone()),
-                                            );
-                                            
-                                            api.set_model_property(&property.id, &item).unwrap();
-                                        },
-                                        None => {
-                                            // delete the classification value for the master model
-                                            let _ = api.delete_model_metadata_property(&model.uuid, &property.id);
-                                        },
+                                    // sort the list of matches by the mach score
+                                    item.matches.sort_by(|a, b| {
+                                        if a.percentage < b.percentage {
+                                            return Ordering::Less;
+                                        } else if a.percentage > b.percentage {
+                                            return Ordering::Greater;
+                                        }
+                                        return Ordering::Equal;
+                                    });
+                                
+                                    // reverse the sort order. Wee need the best fit on top:
+                                    item.matches.reverse();
+
+                                    debug!("Found matches for model {}, Checking for classification labels {}...", master_model_uuid, classification);
+                                    
+                                    for matched_model in item.matches {
+                                        let model = matched_model.model;
+                                        let meta = match model_meta_cache.get(&model.uuid) {
+                                            Some(meta) => meta.clone(),
+                                            None => {
+                                                let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
+                                                model_meta_cache.insert(model.uuid, meta.clone());
+                                                meta
+                                            },
+                                        };
+                                        let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
+                                    
+                                        let classification_value = meta.get(&classification.clone());
+                                        match classification_value {
+                                            Some(classification_value) => {
+                                                // set the classification value for the master model and exit the loop
+                                                //let value = classification_value.value.clone();
+
+                                                debug!("Matching model {} has {}={:?}", model.uuid, classification, classification_value);
+
+                                                if !classification_value.value.eq_ignore_ascii_case("unclassified") {
+                                                    let meta_item = ModelMetadataItem::new(
+                                                        master_model_uuid.clone(),
+                                                        String::from(classification.clone()),
+                                                        String::from(classification_value.value.clone()),
+                                                    );
+
+                                                    debug!("Assigning {}={:?} for model {}...", classification, classification_value, master_model_uuid);
+                                                    api.set_model_property(&property.id, &meta_item).unwrap();
+                                                    break;
+                                                } else {
+                                                    debug!("Ignoring the matching model's classification value.");
+                                                }
+                                            },
+                                            None => {
+                                                ();
+                                            },
+                                        }
                                     }
+                                } else {
+                                    debug!("There are no matches for this model. Deleting the classification metadata...");
+                                    // Did not find any matches for this model. If there was an old classification value, it needs to be deleted
+                                    let _ = api.delete_model_metadata_property(&master_model_uuid, &property.id);
                                 }
                             }                            
                             

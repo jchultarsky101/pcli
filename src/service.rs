@@ -213,7 +213,7 @@ impl Api {
                     if result.page_data.total > 0 {
                         let matches = result.matches;
                         if !matches.is_empty() {
-                            debug!("Reading the list of properties since we would need to update the classification property...");
+                            debug!("Reading the list of properties for model {}...", uuid);
                             let properties = match classification {
                                 Some(_) => Some(self.client.get_list_of_properties()?),
                                 None => None,
