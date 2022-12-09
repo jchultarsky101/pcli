@@ -3,7 +3,7 @@ use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfClassificationScores, ListOfFolders,
     ListOfImageClassifiers, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch,
     ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelStatusRecord,
-    PartNodeDictionaryItem, PropertyCollection, SimpleDuplicatesMatchReport,
+    PartNodeDictionaryItem, Property, PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -65,6 +65,11 @@ impl Api {
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
         Ok(self.client.get_model_metadata(uuid)?)
+    }
+
+    pub fn delete_model_metadata_property(&self, uuid: &Uuid, id: &u64) -> anyhow::Result<()> {
+        self.client.delete_model_property(uuid, id)?;
+        Ok(())
     }
 
     pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool) -> anyhow::Result<Model> {
@@ -208,7 +213,7 @@ impl Api {
                     if result.page_data.total > 0 {
                         let matches = result.matches;
                         if !matches.is_empty() {
-                            debug!("Reading the list of properties since we would need to update the classification property...");
+                            debug!("Reading the list of properties for model {}...", uuid);
                             let properties = match classification {
                                 Some(_) => Some(self.client.get_list_of_properties()?),
                                 None => None,
@@ -266,6 +271,18 @@ impl Api {
         }
 
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
+    }
+
+    pub fn set_property(&self, name: &String) -> Result<Property> {
+        self.client.post_property(name)
+    }
+
+    pub fn set_model_property(
+        &self,
+        id: &u64,
+        item: &ModelMetadataItem,
+    ) -> Result<ModelMetadataItem> {
+        self.client.put_model_property(&id, &item)
     }
 
     fn generate_graph_from_assembly_tree(
@@ -573,7 +590,12 @@ impl Api {
                 Err(e) => return Err(anyhow!("Failed to read input: {}", e)),
             };
 
-            self.client.put_model_property(&id, &property)?;
+            if property.value.is_empty() {
+                self.client
+                    .delete_model_property(&property.model_uuid, &id)?;
+            } else {
+                self.client.put_model_property(&id, &property)?;
+            }
         }
 
         Ok(())
