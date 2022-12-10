@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.8
+The latest version is 1.6.9
+
+### Version 1.6.9
+
+* Added --exclusive flag to the label-folder command
+* Updated README.md
 
 ### Version 1.6.8
 
@@ -224,7 +229,7 @@ For example:
 $ pcli help
 ```
 ```
-pcli 1.6.8
+pcli 1.6.9
 Julian Chultarsky <jchultarsky@physna.com>
 CLI client utility to the Physna public API/V2
 
@@ -283,7 +288,7 @@ $ pcli help model
 Produces the following output:
 
 ```
-pcli-model 1.6.8
+pcli-model 1.6.9
 Reads data for a specific model
 
 USAGE:
@@ -531,7 +536,7 @@ Example:
 pcli help models
 ```
 ```
-pcli-models 1.6.5
+pcli-models 1.6.9
 Lists all available models
 
 USAGE:
@@ -580,7 +585,7 @@ The "upload" command assists you with uploading new 3D models to Physna. It take
 $ pcli help upload
 ```
 ```
-pcli-upload 1.6.8
+pcli-upload 1.6.9
 Uploads a file to Physna
 
 USAGE:
@@ -676,7 +681,7 @@ In addition to the 3D geometry data, additional metadata can be associated with 
 The command is:
 
 ```
-pcli-model-meta 1.6.8
+pcli-model-meta 1.6.9
 Reads the metadata (properties) for a specific model
 
 USAGE:
@@ -717,7 +722,7 @@ In some cases, we need to associate additional metadata with the geometry of a m
 pcli help upload-model-meta
 ```
 ```
-pcli-upload-model-meta 1.6.8
+pcli-upload-model-meta 1.6.9
 Reads metadata from an input CSV file and uploads it. 
 
 USAGE:
@@ -753,7 +758,7 @@ With this function, we do not cascade from top-level assembly into all of its su
 try to determine if this model may be a component of another assembly. 
 
 ```
-pcli-match-model 1.6.8
+pcli-match-model 1.6.9
 Matches all models to the specified one
 
 USAGE:
@@ -803,7 +808,7 @@ Sometimes, we need to execute match models in bulk. With the commands already pr
 achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute "match-model". It will combine the responses into a single output. The input arguments are the same as the previous command.
 
 ```
-pcli-match-folder 1.6.8
+pcli-match-folder 1.6.9
 Matches all models in a folder to other models
 
 USAGE:
@@ -932,39 +937,54 @@ In this case, we have one model with score of 0.98, which is very close match.
 
 ### Model Labeling
 
-While the classification altorithm we described in the previous section is a component of Physna's backed logic, the PCLI client also provides its
-own (much simpler) mechanism for classification. This is implemented in the *label-folder" command.
+While the classification altorithm we described in the previous section is a component of Physna's backend logic, 
+the PCLI client also provides its own (much simpler) mechanism for label propagation. 
+This is implemented in the *label-folder" command. 
+It is based entirely on geometric match scores provided by Physna. 
 
-It is based entirely on geometric match scores provided by Physna. For the curious, it uses  
-(k-nearest neighbors)[https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm] ML algorithm (e.k.a. KNN) where the distance function is the Physna
-part-to-part match score and the decission radius is the confidence threshold value.
-
-Theory aside, it is a very simple logic. The user provides 3 input arguments:
+The user provides 3 mandatory and one optional input arguments:
 
 * "folder" - the target folder identifier in your tenant
 * "classification" - the name of a metadata property that will be used for classification
 * "threshold" - the confidence threshold value
+* "exclusive" - this is a flag and does not take a value. If present, only the models found in the source fodler will be considered for matching. The default is to consider all models in the tenenat regardless of their parent folder.
 
-When executed, PLCI will read the contents of the folder and for each of the models in it, it will perform part-to-part match as in the "match-model" command.
-The match will be done with specified threshold. It will then rank the matches by their scores and starting from the highest to the lowest will check if
-the matching models contain a value for the metadata property specified. If they do, the model will also be assigned that same metadata property and value.
+When executed, PLCI will read the contents of the folder and for each of the models in it, 
+it will perform part-to-part match as in the "match-model" command.
+The match will be done with the specified threshold. 
+It will then rank the matches by their scores and starting from the highest to the lowest will check if
+the matching models contain a value for the metadata property specified. 
+If they do, the model will also be assigned that same metadata property and value.
 
-The assumption is that if for example model "A" has metadata property of "classification" with value of "apple" and model "B" is 98.5% geometrically the same as model "A", we can say with
-98.5% confidence that model "B" is also an "apple". We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"
+The assumption is that if model "A" has metadata property of "classification" with value of "apple" and model "B" is 98.5% geometrically the same as model "A", we can say with
+98.5% confidence that model "B" is also an "apple". 
+We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"
 
 ```
-pcli-label-folder 1.6.7
+pcli-label-folder 1.6.9
 Labels models in a folder based on KNN algorithm and geometric match score as distance
 
 USAGE:
-    pcli --tenant <tenant> label-folder --folder <folder> --threshold <threshold> --classification <classification>
+    pcli --tenant <tenant> label-folder [OPTIONS] --folder <folder> --threshold <threshold> --classification <classification>
 
 OPTIONS:
-    -c, --classification <classification>    The name for the classification metadata property
-    -d, --folder <folder>                    Folder ID (e.g. --folder=1)
-    -h, --help                               Print help information
-    -t, --threshold <threshold>              Match threshold percentage (e.g. '96.5')
-    -V, --version                            Print version information
+    -c, --classification <classification>
+            The name for the classification metadata property
+
+    -d, --folder <folder>
+            Folder ID (e.g. --folder=1)
+
+    -e, --exclusive
+            If specified, the output will include only models that belong to the input folder
+
+    -h, --help
+            Print help information
+
+    -t, --threshold <threshold>
+            Match threshold percentage (e.g. '96.5')
+
+    -V, --version
+            Print version information
 ```
 
 Example:
@@ -981,10 +1001,12 @@ you may need to run this command multiple times for best results.
 **NOTE:** If a model does not have any geometric matches that contain the required metadata property, its own property by that name will be deleted. 
 Be careful what property name you use for classification. On another hand, you can run this command by specifying different property names if so desired.
 
-**NOTE:** Although you target models in specific folder for labeling, PCLI will match any model in any folder. As long as they are labeled, they
-will be used. In other words, the label values may come from any folder in your tenant.
+Although the user may target models in specific folder for labeling, PCLI will match any model in any folder
+unless the user adds the --exclusive command line argument. It that is specified, only the model in the target
+folder will be used for matching. 
+In other words, the label values may come from any folder in your tenant unless you specify --exclusive.
 
-For the initial labeling of some models, you can use the "upload-model-meta" command.
+For the initial labeling of models, you can use the "upload-model-meta" command.
 
 ## Advanced Use
 

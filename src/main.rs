@@ -359,6 +359,14 @@ fn main() {
                         .takes_value(true)
                         .help("The name for the classification metadata property")
                         .required(true)
+                )
+                .arg(
+                    Arg::new("exclusive")
+                        .short('e')
+                        .long("exclusive")
+                        .takes_value(false)
+                        .help("If specified, the output will include only models that belong to the input folder")
+                        .required(false)
                 ),
         )
         .subcommand(
@@ -1039,6 +1047,8 @@ fn main() {
             };
                         
             let classification = validate_string_argument("classification", sub_matches.value_of("classification"));
+
+            let exclusive = sub_matches.contains_id("exclusive");
             
             let mut folders_list: Vec<u32> = Vec::new();
             folders_list.push(folder_id);
@@ -1095,42 +1105,44 @@ fn main() {
                                     debug!("Found matches for model {}, Checking for classification labels {}...", master_model_uuid, classification);
                                     
                                     for matched_model in item.matches {
-                                        let model = matched_model.model;
-                                        let meta = match model_meta_cache.get(&model.uuid) {
-                                            Some(meta) => meta.clone(),
-                                            None => {
-                                                let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
-                                                model_meta_cache.insert(model.uuid, meta.clone());
-                                                meta
-                                            },
-                                        };
-                                        let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
+                                        if !exclusive || (exclusive && matched_model.model.folder_id.eq(&folder_id)) {
+                                            let model = matched_model.model;
+                                            let meta = match model_meta_cache.get(&model.uuid) {
+                                                Some(meta) => meta.clone(),
+                                                None => {
+                                                    let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
+                                                    model_meta_cache.insert(model.uuid, meta.clone());
+                                                    meta
+                                                },
+                                            };
+                                            let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
                                     
-                                        let classification_value = meta.get(&classification.clone());
-                                        match classification_value {
-                                            Some(classification_value) => {
-                                                // set the classification value for the master model and exit the loop
-                                                //let value = classification_value.value.clone();
+                                            let classification_value = meta.get(&classification.clone());
+                                            match classification_value {
+                                                Some(classification_value) => {
+                                                    // set the classification value for the master model and exit the loop
+                                                    //let value = classification_value.value.clone();
 
-                                                debug!("Matching model {} has {}={:?}", model.uuid, classification, classification_value);
+                                                    debug!("Matching model {} has {}={:?}", model.uuid, classification, classification_value);
 
-                                                if !classification_value.value.eq_ignore_ascii_case("unclassified") {
-                                                    let meta_item = ModelMetadataItem::new(
-                                                        master_model_uuid.clone(),
-                                                        String::from(classification.clone()),
-                                                        String::from(classification_value.value.clone()),
-                                                    );
+                                                    if !classification_value.value.eq_ignore_ascii_case("unclassified") {
+                                                        let meta_item = ModelMetadataItem::new(
+                                                            master_model_uuid.clone(),
+                                                            String::from(classification.clone()),
+                                                            String::from(classification_value.value.clone()),
+                                                        );
 
-                                                    debug!("Assigning {}={:?} for model {}...", classification, classification_value, master_model_uuid);
-                                                    api.set_model_property(&property.id, &meta_item).unwrap();
-                                                    break;
-                                                } else {
-                                                    debug!("Ignoring the matching model's classification value.");
-                                                }
-                                            },
-                                            None => {
-                                                ();
-                                            },
+                                                        debug!("Assigning {}={:?} for model {}...", classification, classification_value, master_model_uuid);
+                                                        api.set_model_property(&property.id, &meta_item).unwrap();
+                                                        break;
+                                                    } else {
+                                                        debug!("Ignoring the matching model's classification value.");
+                                                    }
+                                                },
+                                                None => {
+                                                    ();
+                                                },
+                                            }
                                         }
                                     }
                                 } else {
