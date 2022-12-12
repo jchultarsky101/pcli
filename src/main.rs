@@ -361,6 +361,14 @@ fn main() {
                         .required(true)
                 )
                 .arg(
+                    Arg::new("search")
+                        .short('s')
+                        .long("search")
+                        .takes_value(true)
+                        .help("Search clause to further filter output (optional: e.g. a model name)")
+                        .required(false)
+                )
+                .arg(
                     Arg::new("exclusive")
                         .short('e')
                         .long("exclusive")
@@ -1053,12 +1061,20 @@ fn main() {
             let mut folders_list: Vec<u32> = Vec::new();
             folders_list.push(folder_id);
             let folders_list = Some(folders_list);
+
+            let search: Option<String> = match sub_matches.get_one("search") {
+                Some(search) => {
+                    let search: &String = &*search;
+                    Some(search.to_owned())
+                },
+                None => None,
+            };
             
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
 
             debug!("Running NKK labeling for folder {}...", folder_id);
             
-            match api.list_all_models(folders_list.clone(), None) {
+            match api.list_all_models(folders_list.clone(), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
