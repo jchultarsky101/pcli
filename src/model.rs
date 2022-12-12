@@ -389,17 +389,38 @@ impl ToCsv for ListOfModels {
             .terminator(Terminator::CRLF)
             .from_writer(buf);
 
+        let mut columns: HashSet<String> = HashSet::new();
+        let standard_columns = vec![
+            "ID",
+            "NAME",
+            "FOLDER_ID",
+            "IS_ASSEMBLY",
+            "FILE_TYPE",
+            "UNITS",
+            "STATE",
+        ];
+
+        // populate the column names with the names of all properties found in models
+        for model in &models {
+            let meta = model.metadata.clone();
+
+            match meta {
+                Some(meta) => {
+                    for property in &meta.properties {
+                        let name = property.name.to_owned();
+                        columns.insert(name);
+                    }
+                }
+                None => (),
+            }
+        }
+
+        let mut all_columns: Vec<&str> = standard_columns.clone();
+        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_columns.append(&mut all_property_columns);
+
         if pretty {
-            let columns = vec![
-                "ID",
-                "NAME",
-                "FOLDER_ID",
-                "IS_ASSEMBLY",
-                "FILE_TYPE",
-                "UNITS",
-                "STATE",
-            ];
-            writer.write_record(&columns)?;
+            writer.write_record(&all_columns)?;
         }
 
         for model in models {
@@ -412,6 +433,28 @@ impl ToCsv for ListOfModels {
             values.push(model.file_type.to_string());
             values.push(model.units);
             values.push(model.state);
+
+            let meta = model.metadata.clone();
+            let mut properties: HashMap<String, String> = HashMap::new();
+            match meta {
+                Some(meta) => {
+                    for property in meta.properties {
+                        let name = property.name;
+                        let value = property.value;
+                        properties.insert(name, value);
+                    }
+                }
+                None => (),
+            }
+
+            for column_name in &columns {
+                let value = match properties.get(column_name) {
+                    Some(value) => value.to_owned(),
+                    None => String::from(""),
+                };
+                values.push(value);
+            }
+
             writer.write_record(&values)?;
         }
 
