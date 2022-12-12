@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.10
+The latest version is 1.6.11
+
+### Version 1.6.11
+
+* Added metadata fields to the CSV formatted output of "models"
 
 ### Version 1.6.10
 
