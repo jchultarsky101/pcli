@@ -965,7 +965,7 @@ The assumption is that if model "A" has metadata property of "classification" wi
 We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"
 
 ```
-pcli-label-folder 1.6.9
+pcli-label-folder 1.6.10
 Labels models in a folder based on KNN algorithm and geometric match score as distance
 
 USAGE:
@@ -984,6 +984,9 @@ OPTIONS:
     -h, --help
             Print help information
 
+    -s, --search <search>
+            Search clause to further filter output (optional: e.g. a model name)
+
     -t, --threshold <threshold>
             Match threshold percentage (e.g. '96.5')
 
@@ -996,6 +999,9 @@ Example:
 ```bash
 pcli --tenant=mycompany label-folder --folder=1 --threshold=0.9 --classification="classification"
 ```
+
+The optional '--search' argument may be used to further refine the target list of models. Only models that match the search
+criteria will be labeled and all others ignored. The --search option works the same as for the "models" command.
 
 The command does not have any visible output, except returning success or error status. Once completed, your models should be labeled accordingly.
 
