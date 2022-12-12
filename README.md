@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.9
+The latest version is 1.6.10
+
+### Version 1.6.10
+
+* Added --search filder to the label-folder command
 
 ### Version 1.6.9
 
