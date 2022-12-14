@@ -462,6 +462,7 @@ impl ToCsv for ListOfModels {
             "STATE",
         ];
 
+        // populate the column names with the names of all properties found in models
         for model in &models {
             let meta = model.metadata.clone();
 
