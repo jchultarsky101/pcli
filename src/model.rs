@@ -196,7 +196,7 @@ pub struct Pair {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct PropertyCollection {
-    #[serde(rename = "properties")]
+    #[serde(rename = "metadataKeys")]
     pub properties: Vec<Property>,
 }
 
@@ -237,7 +237,30 @@ impl ToCsv for PropertyCollection {
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ModelMetadataItemShort {
+    #[serde(rename = "modelId")]
+    pub model_uuid: Uuid,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "value")]
+    pub value: String,
+}
+
+impl ModelMetadataItemShort {
+    pub fn to_item(&self, key_id: u64) -> ModelMetadataItem {
+        ModelMetadataItem {
+            key_id,
+            model_uuid: self.model_uuid.clone(),
+            name: self.name.clone(),
+            value: self.value.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ModelMetadataItem {
+    #[serde(rename = "metadataKeyId")]
+    pub key_id: u64,
     #[serde(rename = "modelId")]
     pub model_uuid: Uuid,
     #[serde(rename = "name")]
@@ -247,8 +270,9 @@ pub struct ModelMetadataItem {
 }
 
 impl ModelMetadataItem {
-    pub fn new(model_uuid: Uuid, name: String, value: String) -> ModelMetadataItem {
+    pub fn new(key_id: u64, model_uuid: Uuid, name: String, value: String) -> ModelMetadataItem {
         ModelMetadataItem {
+            key_id,
             model_uuid,
             name,
             value,

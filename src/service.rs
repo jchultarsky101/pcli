@@ -2,8 +2,9 @@ use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfClassificationScores, ListOfFolders,
     ListOfImageClassifiers, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch,
-    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelStatusRecord,
-    PartNodeDictionaryItem, Property, PropertyCollection, SimpleDuplicatesMatchReport,
+    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -164,7 +165,7 @@ impl Api {
 
         let mut has_more = true;
         let mut page: u32 = 1;
-        let per_page: u32 = 10;
+        let per_page: u32 = 50;
         while has_more {
             match self.client.get_list_of_models_page(
                 folders.to_owned(),
@@ -218,7 +219,7 @@ impl Api {
 
         let mut has_more = true;
         let mut page: u32 = 1;
-        let per_page: u32 = 30;
+        let per_page: u32 = 50;
         while has_more {
             match self
                 .client
@@ -246,11 +247,6 @@ impl Api {
 
                                 match classification {
                                     Some(classification) => {
-                                        let item = ModelMetadataItem::new(
-                                            model.uuid,
-                                            String::from(classification),
-                                            String::from(tag.unwrap()),
-                                        );
                                         let property =
                                             properties.as_ref().unwrap().properties.iter().find(
                                                 |p| p.name.eq_ignore_ascii_case(classification),
@@ -261,6 +257,13 @@ impl Api {
                                                 .client
                                                 .post_property(&String::from(classification))?,
                                         };
+
+                                        let item = ModelMetadataItem::new(
+                                            property.id.clone(),
+                                            model.uuid,
+                                            String::from(classification),
+                                            String::from(tag.unwrap()),
+                                        );
 
                                         debug!(
                                             "Setting property {} to value of {} for model {}",
@@ -592,13 +595,13 @@ impl Api {
         for record in rdr.records() {
             let (id, property) = match record {
                 Ok(record) => {
-                    let m: ModelMetadataItem = record.deserialize(None)?;
+                    let m: ModelMetadataItemShort = record.deserialize(None)?;
                     let case_insensitive_name: UniCase<String> = UniCase::new(m.name.to_owned());
                     match reverse_lookup.get(&case_insensitive_name) {
-                        Some(id) => (*id, m),
+                        Some(id) => (*id, m.to_item(*id)),
                         None => {
                             let p = self.client.post_property(&m.name)?;
-                            (p.id, m)
+                            (p.id, m.to_item(p.id))
                         }
                     }
                 }

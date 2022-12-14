@@ -1166,6 +1166,7 @@ fn main() {
 
                                                     if !classification_value.value.eq_ignore_ascii_case("unclassified") {
                                                         let meta_item = ModelMetadataItem::new(
+                                                            classification_value.key_id.clone(),
                                                             master_model_uuid.clone(),
                                                             String::from(classification.clone()),
                                                             String::from(classification_value.value.clone()),
