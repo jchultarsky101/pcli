@@ -144,7 +144,7 @@ impl ToCsv for ListOfFolders {
 impl From<Vec<Folder>> for ListOfFolders {
     fn from(folders: Vec<Folder>) -> Self {
         let folders = folders.into_iter().map(|f| Folder::from(f)).collect();
-        ListOfFolders { folders: folders }
+        ListOfFolders { folders }
     }
 }
 
@@ -342,17 +342,35 @@ impl ToCsv for Model {
             .terminator(Terminator::CRLF)
             .from_writer(buf);
 
+        let standard_columns = vec![
+            "ID",
+            "NAME",
+            "FOLDER_ID",
+            "IS_ASSEMBLY",
+            "FILE_TYPE",
+            "UNITS",
+            "STATE",
+        ];
+        let mut columns: HashSet<String> = HashSet::new();
+
+        let meta = self.metadata.clone();
+        match meta {
+            Some(meta) => {
+                for property in &meta.properties {
+                    let name = property.name.to_owned();
+                    columns.insert(name);
+                }
+            }
+            None => (),
+        }
+
+        let mut all_columns: Vec<&str> = standard_columns.clone();
+        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_property_columns.sort();
+        all_columns.append(&mut all_property_columns);
+
         if pretty {
-            let columns = vec![
-                "ID",
-                "NAME",
-                "FOLDER_ID",
-                "IS_ASSEMBLY",
-                "FILE_TYPE",
-                "UNITS",
-                "STATE",
-            ];
-            writer.write_record(&columns)?;
+            writer.write_record(&all_columns)?;
         }
 
         let mut values: Vec<String> = Vec::new();
@@ -364,8 +382,29 @@ impl ToCsv for Model {
         values.push(self.file_type.to_string());
         values.push(self.units.to_owned());
         values.push(self.state.to_owned());
-        writer.write_record(&values)?;
 
+        let mut properties: HashMap<String, String> = HashMap::new();
+        let meta = self.metadata.clone();
+        match meta {
+            Some(meta) => {
+                for property in meta.properties {
+                    let name = property.name;
+                    let value = property.value;
+                    properties.insert(name, value);
+                }
+            }
+            None => (),
+        }
+
+        for column_name in &columns {
+            let value = match properties.get(column_name) {
+                Some(value) => value.to_owned(),
+                None => String::from(""),
+            };
+            values.push(value);
+        }
+
+        writer.write_record(&values)?;
         writer.flush()?;
 
         let bytes = writer.into_inner()?.into_inner()?;
@@ -383,23 +422,43 @@ pub struct ListOfModels {
 impl ToCsv for ListOfModels {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
         let models = self.models.clone();
-
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
             .from_writer(buf);
 
+        let mut columns: HashSet<String> = HashSet::new();
+        let standard_columns = vec![
+            "ID",
+            "NAME",
+            "FOLDER_ID",
+            "IS_ASSEMBLY",
+            "FILE_TYPE",
+            "UNITS",
+            "STATE",
+        ];
+
+        for model in &models {
+            let meta = model.metadata.clone();
+
+            match meta {
+                Some(meta) => {
+                    for property in &meta.properties {
+                        let name = property.name.to_owned();
+                        columns.insert(name);
+                    }
+                }
+                None => (),
+            }
+        }
+
+        let mut all_columns: Vec<&str> = standard_columns.clone();
+        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_property_columns.sort();
+        all_columns.append(&mut all_property_columns);
+
         if pretty {
-            let columns = vec![
-                "ID",
-                "NAME",
-                "FOLDER_ID",
-                "IS_ASSEMBLY",
-                "FILE_TYPE",
-                "UNITS",
-                "STATE",
-            ];
-            writer.write_record(&columns)?;
+            writer.write_record(&all_columns)?;
         }
 
         for model in models {
@@ -412,6 +471,28 @@ impl ToCsv for ListOfModels {
             values.push(model.file_type.to_string());
             values.push(model.units);
             values.push(model.state);
+
+            let meta = model.metadata.clone();
+            let mut properties: HashMap<String, String> = HashMap::new();
+            match meta {
+                Some(meta) => {
+                    for property in meta.properties {
+                        let name = property.name;
+                        let value = property.value;
+                        properties.insert(name, value);
+                    }
+                }
+                None => (),
+            }
+
+            for column_name in &columns {
+                let value = match properties.get(column_name) {
+                    Some(value) => value.to_owned(),
+                    None => String::from(""),
+                };
+                values.push(value);
+            }
+
             writer.write_record(&values)?;
         }
 
@@ -440,7 +521,7 @@ impl From<Vec<Model>> for ListOfModels {
             .into_iter()
             .map(|m| Model::from(m))
             .collect();
-        ListOfModels { models: models }
+        ListOfModels { models }
     }
 }
 
@@ -727,6 +808,7 @@ impl ToCsv for ListOfModelMatches {
 
         let mut all_columns: Vec<&str> = standard_columns.clone();
         let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        all_property_columns.sort();
         all_columns.append(&mut all_property_columns);
 
         if pretty {
@@ -1037,7 +1119,7 @@ impl From<client::FolderListResponse> for ListOfFolders {
             .into_iter()
             .map(|f| Folder::from(f))
             .collect();
-        ListOfFolders { folders: folders }
+        ListOfFolders { folders }
     }
 }
 

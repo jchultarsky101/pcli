@@ -72,7 +72,7 @@ impl Api {
         Ok(())
     }
 
-    pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool) -> anyhow::Result<Model> {
+    pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool, meta: bool) -> anyhow::Result<Model> {
         if use_cache {
             let model_from_cache = self.model_cache.get(uuid);
             if let Some(model) = model_from_cache {
@@ -85,11 +85,15 @@ impl Api {
         match model {
             Ok(response) => {
                 let mut model = Model::from(response);
-                let metadata = self.get_model_metadata(uuid);
-                match metadata {
-                    Ok(metadata) => model.metadata = metadata.to_owned(),
-                    Err(_) => (),
+
+                if meta {
+                    let metadata = self.get_model_metadata(uuid);
+                    match metadata {
+                        Ok(metadata) => model.metadata = metadata.to_owned(),
+                        Err(_) => (),
+                    }
                 }
+
                 self.model_cache
                     .insert(model.uuid.to_owned(), model.to_owned());
                 Ok(model)
@@ -131,7 +135,7 @@ impl Api {
     ) -> anyhow::Result<ModelAssemblyTree> {
         trace!("Enhancing model data for {}...", uuid.to_string());
 
-        let model = self.get_model(uuid, true)?;
+        let model = self.get_model(uuid, true, false)?;
         let assembly_tree = match &tree.children {
             Some(tree_children) => {
                 let mut assembly_children: Vec<ModelAssemblyTree> = Vec::new();
@@ -152,8 +156,10 @@ impl Api {
         &mut self,
         folders: Option<Vec<u32>>,
         search: Option<String>,
+        meta: bool,
     ) -> Result<ListOfModels> {
         trace!("Listing all models for folders {:?}...", folders);
+
         let mut list_of_models: Vec<Model> = Vec::new();
 
         let mut has_more = true;
@@ -172,7 +178,16 @@ impl Api {
                         if !models.is_empty() {
                             for m in models {
                                 let mut normalized_model = Model::from(m);
-                                let metadata = self.get_model_metadata(&normalized_model.uuid)?;
+
+                                let metadata;
+                                if meta {
+                                    trace!("Will include metadata in the output.");
+                                    metadata = self.get_model_metadata(&normalized_model.uuid)?;
+                                } else {
+                                    trace!("Will not include metadata in the output.");
+                                    metadata = None;
+                                }
+
                                 normalized_model.metadata = metadata;
                                 list_of_models.push(normalized_model);
                             }
@@ -333,7 +348,7 @@ impl Api {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         for uuid in uuids {
-            let model = self.get_model(&uuid, true)?;
+            let model = self.get_model(&uuid, true, with_meta)?;
             if model.state.eq("finished") {
                 let matches = self.match_model(&uuid, threshold, with_meta, None, None)?;
 
@@ -446,7 +461,7 @@ impl Api {
         let all_folders: HashMap<u32, Folder> =
             all_folders.folders.into_iter().map(|f| (f.id, f)).collect();
 
-        let models = self.list_all_models(folders.to_owned(), None)?;
+        let models = self.list_all_models(folders.to_owned(), None, false)?;
         let models = models.models.to_owned();
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
