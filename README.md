@@ -9,7 +9,15 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.10
+The latest version is 1.6.11
+
+### Version 1.6.11
+
+* Modified commands to consistently use the optional --meta flag:
+    - model
+    - models
+    - match-folder
+* Updated the client to use the new metadata API end points
 
 ### Version 1.6.10
 
@@ -233,7 +241,7 @@ For example:
 $ pcli help
 ```
 ```
-pcli 1.6.9
+pcli 1.6.11
 Julian Chultarsky <jchultarsky@physna.com>
 CLI client utility to the Physna public API/V2
 
@@ -292,14 +300,15 @@ $ pcli help model
 Produces the following output:
 
 ```
-pcli-model 1.6.9
+pcli-model 1.6.11
 Reads data for a specific model
 
 USAGE:
-    pcli --tenant <tenant> model --uuid <uuid>
+    pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
 
 OPTIONS:
     -h, --help           Print help information
+    -m, --meta           Enhance output with model's metadata
     -u, --uuid <uuid>    The model UUID
     -V, --version        Print version information
 ```
@@ -539,9 +548,10 @@ Example:
 ```bash
 pcli help models
 ```
+
 ```
-pcli-models 1.6.9
-Lists all available models
+pcli-models 1.6.11
+Lists all available models in a folder
 
 USAGE:
     pcli --tenant <tenant> models [OPTIONS] --folder <folder>
@@ -549,6 +559,7 @@ USAGE:
 OPTIONS:
     -d, --folder <folder>    Folder ID (e.g. --folder=1)
     -h, --help               Print help information
+    -m, --meta               Enhance output with model's metadata
     -s, --search <search>    Search clause to further filter output (optional: e.g. a model name)
     -V, --version            Print version information
 ```
@@ -570,11 +581,30 @@ $ pcli --tenant="delta" models --folder="3" --search="mypart"
 
 As with the "folder" command, you can specify CSV as the output format, use "--pretty" and colors.
 
+The --meta flag is optional. When provided, it will also query for and add the metadata to the output.
+
 ### Querying for a Specific Model
 
 The "model" command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.
 
+```
+pcli-model 1.6.11
+Reads data for a specific model
+
+USAGE:
+    pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
+
+OPTIONS:
+    -h, --help           Print help information
+    -m, --meta           Enhance output with model's metadata
+    -u, --uuid <uuid>    The model UUID
+    -V, --version        Print version information
+```
+
+* uuid - is the models UUID
+* meta - is an optional flag. When provided, it will query and add the metadata of the model to the output
+    
 ```bash
 pcli --tenant="delta" model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 ```
@@ -587,6 +617,7 @@ The "upload" command assists you with uploading new 3D models to Physna. It take
 
 ```bash
 $ pcli help upload
+
 ```
 ```
 pcli-upload 1.6.9

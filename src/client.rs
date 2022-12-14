@@ -166,8 +166,8 @@ pub struct SingleModelResponse {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ModelMetadataResponse {
-    #[serde(rename = "modelProperties")]
-    pub properties: Option<Vec<ModelMetadataItem>>,
+    #[serde(rename = "metadata")]
+    pub metadata: Vec<ModelMetadataItem>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
@@ -540,24 +540,30 @@ impl ApiClient {
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ClientError> {
         let url = format!(
-            "{}/v2/models/{id}/properties",
+            "{}/v2/models/{id}/metadata",
             self.base_url,
             id = urlencode(uuid.to_string())
         );
 
-        let json = self.get(url.as_str(), None)?;
+        let mut query_parameters: HashMap<String, String> = HashMap::new();
+        let per_page = 10000;
+        let page = 1;
+        query_parameters.insert("perPage".to_string(), per_page.to_string());
+        query_parameters.insert("page".to_string(), page.to_string());
+
+        let json = self.get(url.as_str(), Some(query_parameters))?;
         //trace!("{}", &json);
         let response: Option<ModelMetadataResponse> = serde_json::from_str(&json)?;
 
         match response {
             Some(response) => {
-                if response.properties.is_some() {
+                if !response.metadata.is_empty() {
                     let props: Vec<ModelMetadataItem> = response
-                        .properties
-                        .unwrap()
+                        .metadata
                         .into_iter()
                         .map(|property| {
                             ModelMetadataItem::new(
+                                property.key_id,
                                 property.model_uuid,
                                 property.name,
                                 property.value,
@@ -697,7 +703,7 @@ impl ApiClient {
     }
 
     pub fn get_list_of_properties(&self) -> Result<PropertyCollection, ClientError> {
-        let url = format!("{}/v2/properties", self.base_url);
+        let url = format!("{}/v2/metadata-keys", self.base_url);
         trace!("GET {}", url.to_string());
 
         let json = self.get(url.as_str(), None)?;
@@ -708,7 +714,7 @@ impl ApiClient {
     }
 
     pub fn post_property(&self, name: &String) -> Result<Property> {
-        let url = format!("{}/v2/properties", self.base_url);
+        let url = format!("{}/v2/metadata-keys", self.base_url);
         let bearer: String = format!("Bearer {}", self.access_token);
 
         trace!("POST {}", url);
