@@ -174,6 +174,14 @@ fn main() {
                         .takes_value(true)
                         .help("The model UUID")
                         .required(true)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
                 ),
         )
         .subcommand(
@@ -230,6 +238,14 @@ fn main() {
                         .long("search")
                         .takes_value(true)
                         .help("Search clause to further filter output (optional: e.g. a model name)")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .takes_value(false)
+                        .help("Enhance output with model's metadata")
                         .required(false)
                 ),
         )
@@ -822,9 +838,10 @@ fn main() {
             }
         },        
         Some(("model", sub_matches)) => {
+            let meta: bool = sub_matches.is_present("meta");
             if sub_matches.is_present("uuid") {
                 let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-                match api.get_model(&uuid, false) {
+                match api.get_model(&uuid, false, meta) {
                     Ok(model) => {
                         let output = format::format_model(&model, &output_format, pretty, color).unwrap();
                         println!("{}", output);
@@ -910,7 +927,9 @@ fn main() {
                 folders = None;
             }
 
-            match api.list_all_models(folders, search) {
+            let meta: bool = sub_matches.is_present("meta");
+
+            match api.list_all_models(folders, search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let output = format::format_list_of_models(&models, &output_format, pretty, color);
@@ -1008,7 +1027,9 @@ fn main() {
             folders_list.push(folder_id);
             let folders_list = Some(folders_list);
 
-            match api.list_all_models(folders_list.clone(), search) {
+            let meta: bool = sub_matches.is_present("meta");
+
+            match api.list_all_models(folders_list.clone(), search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -1072,9 +1093,11 @@ fn main() {
             
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
 
+            let meta: bool = sub_matches.is_present("meta");
+
             debug!("Running NKK labeling for folder {}...", folder_id);
             
-            match api.list_all_models(folders_list.clone(), search) {
+            match api.list_all_models(folders_list.clone(), search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -1143,6 +1166,7 @@ fn main() {
 
                                                     if !classification_value.value.eq_ignore_ascii_case("unclassified") {
                                                         let meta_item = ModelMetadataItem::new(
+                                                            classification_value.key_id.clone(),
                                                             master_model_uuid.clone(),
                                                             String::from(classification.clone()),
                                                             String::from(classification_value.value.clone()),
@@ -1292,7 +1316,7 @@ fn main() {
                                         let m: model::Model = match metadata_file {
                                                         Some(metadata_file) => {
                                                             let _meta_response = api.upload_model_metadata(metadata_file);
-                                                            let m2 = api.get_model(&model.uuid, false);
+                                                            let m2 = api.get_model(&model.uuid, false, false);
                                                             m2.unwrap()
                                                         },
                                                         None => model.clone(),
@@ -1311,7 +1335,7 @@ fn main() {
                                                     ::std::process::exit(exitcode::TEMPFAIL);
                                                 }
             
-                                                match api.get_model(&m.uuid, false) {
+                                                match api.get_model(&m.uuid, false, false) {
                                                     Ok(verified_model) => {
                                                         state = verified_model.state.clone();
                                                     },

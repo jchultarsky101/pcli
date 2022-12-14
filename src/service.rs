@@ -2,8 +2,9 @@ use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfClassificationScores, ListOfFolders,
     ListOfImageClassifiers, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch,
-    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelStatusRecord,
-    PartNodeDictionaryItem, Property, PropertyCollection, SimpleDuplicatesMatchReport,
+    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -72,7 +73,7 @@ impl Api {
         Ok(())
     }
 
-    pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool) -> anyhow::Result<Model> {
+    pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool, meta: bool) -> anyhow::Result<Model> {
         if use_cache {
             let model_from_cache = self.model_cache.get(uuid);
             if let Some(model) = model_from_cache {
@@ -85,11 +86,15 @@ impl Api {
         match model {
             Ok(response) => {
                 let mut model = Model::from(response);
-                let metadata = self.get_model_metadata(uuid);
-                match metadata {
-                    Ok(metadata) => model.metadata = metadata.to_owned(),
-                    Err(_) => (),
+
+                if meta {
+                    let metadata = self.get_model_metadata(uuid);
+                    match metadata {
+                        Ok(metadata) => model.metadata = metadata.to_owned(),
+                        Err(_) => (),
+                    }
                 }
+
                 self.model_cache
                     .insert(model.uuid.to_owned(), model.to_owned());
                 Ok(model)
@@ -131,7 +136,7 @@ impl Api {
     ) -> anyhow::Result<ModelAssemblyTree> {
         trace!("Enhancing model data for {}...", uuid.to_string());
 
-        let model = self.get_model(uuid, true)?;
+        let model = self.get_model(uuid, true, false)?;
         let assembly_tree = match &tree.children {
             Some(tree_children) => {
                 let mut assembly_children: Vec<ModelAssemblyTree> = Vec::new();
@@ -152,13 +157,15 @@ impl Api {
         &mut self,
         folders: Option<Vec<u32>>,
         search: Option<String>,
+        meta: bool,
     ) -> Result<ListOfModels> {
         trace!("Listing all models for folders {:?}...", folders);
+
         let mut list_of_models: Vec<Model> = Vec::new();
 
         let mut has_more = true;
         let mut page: u32 = 1;
-        let per_page: u32 = 10;
+        let per_page: u32 = 50;
         while has_more {
             match self.client.get_list_of_models_page(
                 folders.to_owned(),
@@ -172,7 +179,16 @@ impl Api {
                         if !models.is_empty() {
                             for m in models {
                                 let mut normalized_model = Model::from(m);
-                                let metadata = self.get_model_metadata(&normalized_model.uuid)?;
+
+                                let metadata;
+                                if meta {
+                                    trace!("Will include metadata in the output.");
+                                    metadata = self.get_model_metadata(&normalized_model.uuid)?;
+                                } else {
+                                    trace!("Will not include metadata in the output.");
+                                    metadata = None;
+                                }
+
                                 normalized_model.metadata = metadata;
                                 list_of_models.push(normalized_model);
                             }
@@ -203,7 +219,7 @@ impl Api {
 
         let mut has_more = true;
         let mut page: u32 = 1;
-        let per_page: u32 = 30;
+        let per_page: u32 = 50;
         while has_more {
             match self
                 .client
@@ -231,11 +247,6 @@ impl Api {
 
                                 match classification {
                                     Some(classification) => {
-                                        let item = ModelMetadataItem::new(
-                                            model.uuid,
-                                            String::from(classification),
-                                            String::from(tag.unwrap()),
-                                        );
                                         let property =
                                             properties.as_ref().unwrap().properties.iter().find(
                                                 |p| p.name.eq_ignore_ascii_case(classification),
@@ -246,6 +257,13 @@ impl Api {
                                                 .client
                                                 .post_property(&String::from(classification))?,
                                         };
+
+                                        let item = ModelMetadataItem::new(
+                                            property.id.clone(),
+                                            model.uuid,
+                                            String::from(classification),
+                                            String::from(tag.unwrap()),
+                                        );
 
                                         debug!(
                                             "Setting property {} to value of {} for model {}",
@@ -333,7 +351,7 @@ impl Api {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         for uuid in uuids {
-            let model = self.get_model(&uuid, true)?;
+            let model = self.get_model(&uuid, true, with_meta)?;
             if model.state.eq("finished") {
                 let matches = self.match_model(&uuid, threshold, with_meta, None, None)?;
 
@@ -446,7 +464,7 @@ impl Api {
         let all_folders: HashMap<u32, Folder> =
             all_folders.folders.into_iter().map(|f| (f.id, f)).collect();
 
-        let models = self.list_all_models(folders.to_owned(), None)?;
+        let models = self.list_all_models(folders.to_owned(), None, false)?;
         let models = models.models.to_owned();
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
@@ -577,13 +595,13 @@ impl Api {
         for record in rdr.records() {
             let (id, property) = match record {
                 Ok(record) => {
-                    let m: ModelMetadataItem = record.deserialize(None)?;
+                    let m: ModelMetadataItemShort = record.deserialize(None)?;
                     let case_insensitive_name: UniCase<String> = UniCase::new(m.name.to_owned());
                     match reverse_lookup.get(&case_insensitive_name) {
-                        Some(id) => (*id, m),
+                        Some(id) => (*id, m.to_item(*id)),
                         None => {
                             let p = self.client.post_property(&m.name)?;
-                            (p.id, m)
+                            (p.id, m.to_item(p.id))
                         }
                     }
                 }
