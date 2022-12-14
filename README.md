@@ -11,13 +11,17 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 The latest version is 1.6.11
 
-### Version 1.6.11
+### Version 1.6.12
 
 * Modified commands to consistently use the optional --meta flag:
     - model
     - models
     - match-folder
 * Updated the client to use the new metadata API end points
+
+### Version 1.6.11
+
+* Added label-folder command
 
 ### Version 1.6.10
 
