@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.12
+The latest version is 1.6.13
+
+### Version 1.6.13
+
+* Added new OIDC scope to support upcoming RBAC changes in the API
 
 ### Version 1.6.12
 
