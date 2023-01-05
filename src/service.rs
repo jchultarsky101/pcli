@@ -178,7 +178,9 @@ impl Api {
                         let models = result.models;
                         if !models.is_empty() {
                             for m in models {
-                                let mut normalized_model = Model::from(m);
+                                let mut normalized_model = Model::from(m.clone());
+
+                                trace!("Normalizing: {}", m.uuid.clone());
 
                                 let metadata;
                                 if meta {
@@ -450,8 +452,8 @@ impl Api {
 
         Ok(ModelMatchReport {
             duplicates: simple_match_report,
-            dictionary: dictionary,
-            graph: graph,
+            dictionary,
+            graph,
             //matrix: matrix,
         })
     }

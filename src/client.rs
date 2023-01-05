@@ -290,7 +290,7 @@ impl ApiClient {
             .unwrap();
 
         ApiClient {
-            client: client,
+            client,
             base_url: base_url.to_owned(),
             tenant: tenant.to_owned(),
             access_token: access_token.to_owned(),
@@ -552,6 +552,7 @@ impl ApiClient {
         query_parameters.insert("page".to_string(), page.to_string());
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
+
         //trace!("{}", &json);
         let response: Option<ModelMetadataResponse> = serde_json::from_str(&json)?;
 
@@ -620,8 +621,12 @@ impl ApiClient {
         query_parameters.insert("page".to_string(), page.to_string());
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
+
+        //problem?
         //trace!("{}", json);
         let result: ModelListResponse = serde_json::from_str(&json)?;
+
+        trace!("Parsed OK");
         Ok(result)
     }
 

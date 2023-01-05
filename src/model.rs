@@ -283,6 +283,7 @@ impl ModelMetadataItem {
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ModelMetadata {
     #[serde(rename = "metadata")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub properties: Vec<ModelMetadataItem>,
 }
 
