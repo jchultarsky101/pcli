@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.13
+The latest version is 1.6.14
+
+### Version 1.6.14
+
+* Fixed a bug when parsing empty JSON vector in the latest version of serde
 
 ### Version 1.6.13
 
