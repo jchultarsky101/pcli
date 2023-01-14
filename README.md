@@ -9,7 +9,13 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.14
+The latest version is 1.6.15
+
+### Version 1.6.15
+
+* Fixed bugs related to the new version of the API
+* Optimized performance when reading metadata
+* Updated README.md
 
 ### Version 1.6.14
 
@@ -30,144 +36,6 @@ The latest version is 1.6.14
 ### Version 1.6.11
 
 * Added label-folder command
-
-### Version 1.6.10
-
-* Added --search filder to the label-folder command
-
-### Version 1.6.9
-
-* Added --exclusive flag to the label-folder command
-* Updated README.md
-
-### Version 1.6.8
-
-* Modified the upload-model-meta command to delete metadata property when the value is emty string. This is to eliminate undesirable side effect when searching
-* Added label-folder command that uses KNN for automatic classification of models
-
-### Version 1.6.7
-
-* Added optional arguments to the match-model command allowing the user to set a metadata property for all models that match the source model. This in turn enables automated way to train the classification machine learning algorithm by specifying that tag. The user can also use that tag in the --search argument
-
-### Version 1.6.6
-
-* Added installation and build instructions to README.md
-
-### Version 1.6.5
-
-* Bug fixes
-* Added content to the README.md
-
-### Version 1.6.4
-
-* Now displaying the list of metadata properties in the CSV output of match-folder, model-match
-* Added optional argument --meta to selectively include the metadata in the output
-
-### Version 1.6.0
-
-* Added create-image-classifier, classifiers, classification-predictions
-
-### Version 1.5.0
-
-* Added create-folder command
-* Modified the upload-model-meta command to use the same CSV file format as the output of model-meta. That includes now the UUID of the model as first column. Therefore, I removed the --uuid argument from the command. There are two reasons for this:
-  * One can first query a model, make a small modification and then use that same file to upload
-  * One could concatenate the metadata from multiple model-meta commands into a single master file. Similar file could be created by database extraction methods, etc.
-
-### Version 1.4.5
-
-* Documentation and help fixes
-
-### Version 1.4.3
-
-* Fixed a bug when handling a response from the delete command.
-
-### Version 1.4.2
-
-* Enabled Source ID argument when uploading files
-
-#### Version 1.4.1
-
-* Updated the CSV writer to terminate on CRLF instead of just CR
-
-#### Version 1.3.5
-
-* Added delete-model command
-
-#### Version 1.3.5
-
-* Fixed a bug causing output to be suppressed when using CSV format in model-match
-
-#### Version 1.3.4
-
-* Enhanced the upload function. The user can now provide a wild card to upload multiple files in one operation
-
-#### Version 1.3.3
-
-* Enhanced the upload process. Added optional flag --validate with a related optional arguument --timeout
-
-#### Version 1.3.2
-
-* Using the new comparison URL
-
-#### Version 1.3.1
-
-* Upgraded the versions of some libraries as per Renovate issue
-
-#### Version 1.3.0
-
-* Added reprocess command
-
-#### Version 1.2.6
-
-* Added exclusive flag to match-folder
-* Added columns SOURCE_UUID, MATCH_UUID, SOURCE_FOLDER_ID, MATCH_FOLDER_ID to the match-folder command CSV output
-* Removed the in-memory encryption - the crate is not supported for Windows yet
-
-#### Version 1.2.5
-
-* Implemented local token encryption
-
-#### Version 1.2.4
-
-* Bug fix: Removed automatic token retry. It was casung side effects
-
-#### Version 1.2.3
-
-* Removed unused command and argument: match-matrix, quiet
-
-#### Version 1.2.2
-
-* Printing the list of currently configured tenants if unknown tenant is specified
-* Bug fix: Comparison URL in match-report was incomplete
-* Bug fix: Thumbnail URL included unnecessary parameters
-
-#### Version 1.1.1
-
-* Fixed a bug when retrying to validate a token
-
-#### Version 1.1.0
-
-* Removed the "verbose" argument
-* Added new command "properties" to list all properties that are defined for a tenant
-* Added new command "model-meta" to retrieve the list of all metadata properties for a model
-* Enhanced all commands that return model data to include the metadata properties for each model by default
-* Added new command "upload-meta" to upload metadata for a model
-* Refactored the handling of invalid/expired tokens
-* Improved the logic when token is provided in the configuration
-
-#### Version 1.0.7
-
-* Removed special filtering logic when creating match-report
-* Added model-meta command to read metadata for a specific model UUID
-* Enhanced the model command to include the metadata in the response
-* Optimized the match-report logic
-* Added CSV output capability for all sub-commands
-* Added thumbnails URLs in the CSV output for match-model and match-report
-* Now using more human-readable tracing messages (including ANSI color)
-* Implemented a workaround for situations where the assembly tree reports child models that no longer exist in the database
-* Implemented local cache for model requests to improve performance of large data operations
-* Updated the README.md
 
 ## Installation
 

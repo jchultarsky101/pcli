@@ -4,7 +4,7 @@ use clap::{
     Arg, 
     Command
 };
-use model::{ModelMetadata, ModelMetadataItem};
+use model::{ModelMetadata, ModelMetadataItem, ModelExtendedMetadataItem};
 use std::path::Path;
 use std::fs::read_to_string;
 use serde::{
@@ -864,7 +864,7 @@ fn main() {
                     Ok(meta) => {
                         match meta {
                             Some(meta) => {
-                                let output = format::format_model_metadata(&meta, &output_format, pretty, color).unwrap();
+                                let output = format::format_model_metadata(&uuid, &meta, &output_format, pretty, color).unwrap();
                                 println!("{}", output);
                                 ::std::process::exit(exitcode::OK);
                             },
@@ -1165,15 +1165,15 @@ fn main() {
                                                     debug!("Matching model {} has {}={:?}", model.uuid, classification, classification_value);
 
                                                     if !classification_value.value.eq_ignore_ascii_case("unclassified") {
-                                                        let meta_item = ModelMetadataItem::new(
-                                                            classification_value.key_id.clone(),
+                                                        let meta_item = ModelExtendedMetadataItem::new(
                                                             master_model_uuid.clone(),
+                                                            classification_value.key_id.clone(),
                                                             String::from(classification.clone()),
                                                             String::from(classification_value.value.clone()),
                                                         );
 
                                                         debug!("Assigning {}={:?} for model {}...", classification, classification_value, master_model_uuid);
-                                                        api.set_model_property(&property.id, &meta_item).unwrap();
+                                                        api.set_model_property(&meta_item.model_uuid, &property.id, &meta_item.to_item()).unwrap();
                                                         break;
                                                     } else {
                                                         debug!("Ignoring the matching model's classification value.");

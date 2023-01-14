@@ -7,6 +7,7 @@ use anyhow::{anyhow, Result};
 use colored::*;
 use ptree::print_tree;
 use std::str::FromStr;
+use uuid::Uuid;
 
 #[derive(Debug, PartialEq)]
 pub enum Format {
@@ -76,6 +77,7 @@ pub fn format_model(
 }
 
 pub fn format_model_metadata(
+    uuid: &Uuid,
     meta: &ModelMetadata,
     format: &Format,
     pretty: bool,
@@ -83,7 +85,10 @@ pub fn format_model_metadata(
 ) -> anyhow::Result<colored::ColoredString> {
     match format {
         Format::Json => Ok(color_string(meta.to_json(pretty)?.as_str(), color)),
-        Format::Csv => Ok(color_string(meta.to_csv(pretty)?.as_str(), color)),
+        Format::Csv => Ok(color_string(
+            meta.to_enhanced_csv(uuid, pretty)?.as_str(),
+            color,
+        )),
         _ => Err(anyhow!("Unsupported format {:?}", format)),
     }
 }

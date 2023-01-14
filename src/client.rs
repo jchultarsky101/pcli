@@ -206,7 +206,7 @@ pub struct ModelListResponse {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 struct PropertyRequest {
-    #[serde(rename = "propertyName")]
+    #[serde(rename = "metadataKeyName")]
     name: String,
 }
 
@@ -229,7 +229,7 @@ impl PropertyValueRequest {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 struct PropertyResponse {
-    #[serde(rename = "property")]
+    #[serde(rename = "metadataKey")]
     property: Property,
 }
 
@@ -563,12 +563,7 @@ impl ApiClient {
                         .metadata
                         .into_iter()
                         .map(|property| {
-                            ModelMetadataItem::new(
-                                property.key_id,
-                                property.model_uuid,
-                                property.name,
-                                property.value,
-                            )
+                            ModelMetadataItem::new(property.key_id, property.name, property.value)
                         })
                         .collect();
                     return Ok(Some(ModelMetadata::new(props)));
@@ -622,11 +617,10 @@ impl ApiClient {
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
 
-        //problem?
-        //trace!("{}", json);
-        let result: ModelListResponse = serde_json::from_str(&json)?;
+        //std::fs::write("./dump.json", &json).expect("Unable to write file");
+        let result: ModelListResponse = serde_json::from_str::<ModelListResponse>(&json)?;
 
-        trace!("Parsed OK");
+        //trace!("Parsed OK");
         Ok(result)
     }
 
@@ -709,8 +703,6 @@ impl ApiClient {
 
     pub fn get_list_of_properties(&self) -> Result<PropertyCollection, ClientError> {
         let url = format!("{}/v2/metadata-keys", self.base_url);
-        trace!("GET {}", url.to_string());
-
         let json = self.get(url.as_str(), None)?;
         //trace!("{}", json);
         let result: PropertyCollection = serde_json::from_str(&json)?;
@@ -722,7 +714,14 @@ impl ApiClient {
         let url = format!("{}/v2/metadata-keys", self.base_url);
         let bearer: String = format!("Bearer {}", self.access_token);
 
+        trace!(
+            "Registering a new property with name of \"{}\"...",
+            name.clone()
+        );
         trace!("POST {}", url);
+
+        let request = PropertyRequest::new(name.to_owned());
+        trace!("Request: {:?}", &request);
 
         let response = self
             .client
@@ -734,7 +733,7 @@ impl ApiClient {
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
             //.header("Content-Range", range_value.to_owned())
-            .json(&PropertyRequest::new(name.to_owned()))
+            .json(&request)
             .send()?;
 
         let status = self.evaluate_satus(response.status());
@@ -752,13 +751,11 @@ impl ApiClient {
 
     pub fn put_model_property(
         &self,
+        model_uuid: &Uuid,
         id: &u64,
         item: &ModelMetadataItem,
     ) -> Result<ModelMetadataItem> {
-        let url = format!(
-            "{}/v2/models/{}/metadata/{}",
-            self.base_url, item.model_uuid, id
-        );
+        let url = format!("{}/v2/models/{}/metadata/{}", self.base_url, model_uuid, id);
         let bearer: String = format!("Bearer {}", self.access_token);
 
         trace!("PUT {}", url);
@@ -900,5 +897,84 @@ impl ApiClient {
         let result: ListOfClassificationScores = serde_json::from_str(&json)?;
 
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_deserialization_of_model_with_metadata() {
+        let json = r#"
+ {
+   "models": [
+    {
+      "thumbnail": "https://localhost/images/test.svg",
+      "createdAt": "2022-11-03T14:54:57.801Z",
+      "fileType": ".STL",
+      "folderId": 1,
+      "id": "9438bec9-eaff-4802-839f-ff9ca029debb",
+      "isAssembly": false,
+      "metadata": [
+        {
+          "metadataKeyId": 1,
+          "name": "name1",
+          "value": "value1"
+        },
+        {
+          "metadataKeyId": 2,
+          "name": "name2",
+          "value": "value2"
+        },
+        {
+          "metadataKeyId": 3,
+          "name": "name3",
+          "value": "value3"
+        },
+        {
+          "metadataKeyId": 4,
+          "name": "name4",
+          "value": "value4"
+        },
+        {
+          "metadataKeyId": 5,
+          "name": "name5",
+          "value": "value5"
+        },
+        {
+          "metadataKeyId": 6,
+          "name": "",
+          "value": "8"
+        },
+        {
+          "metadataKeyId": 7,
+          "name": "name7",
+          "value": "value7"
+        }
+      ],
+      "name": "Some Part",
+      "ownerId": "1e9caaf7-2ab1-408f-adc0-f32776f2ab26",
+      "state": "finished",
+      "units": "mm"
+    }
+  ],
+  "pageData": {
+     "total": 1,
+     "perPage": 50,
+     "currentPage": 1,
+     "lastPage": 1,
+     "startIndex": 0,
+     "endIndex": 600
+  }
+}
+        "#;
+
+        let result = serde_json::from_str::<ModelListResponse>(&json);
+        match result {
+            Ok(_models) => (),
+            Err(e) => panic!("Parsing of JSON failed: {}", e),
+        }
     }
 }

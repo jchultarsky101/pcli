@@ -174,8 +174,8 @@ pub struct Model {
     pub attachment_url: Option<String>,
     #[serde(rename = "shortId")]
     pub short_id: Option<u64>,
-    #[serde(rename = "metadata")]
-    pub metadata: Option<ModelMetadata>,
+    #[serde(rename = "metadata", skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Vec<ModelMetadataItem>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -247,10 +247,10 @@ pub struct ModelMetadataItemShort {
 }
 
 impl ModelMetadataItemShort {
-    pub fn to_item(&self, key_id: u64) -> ModelMetadataItem {
-        ModelMetadataItem {
+    pub fn to_item(&self, key_id: u64) -> ModelExtendedMetadataItem {
+        ModelExtendedMetadataItem {
+            model_uuid: self.model_uuid,
             key_id,
-            model_uuid: self.model_uuid.clone(),
             name: self.name.clone(),
             value: self.value.clone(),
         }
@@ -261,6 +261,26 @@ impl ModelMetadataItemShort {
 pub struct ModelMetadataItem {
     #[serde(rename = "metadataKeyId")]
     pub key_id: u64,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "value")]
+    pub value: String,
+}
+
+impl ModelMetadataItem {
+    pub fn new(key_id: u64, name: String, value: String) -> ModelMetadataItem {
+        ModelMetadataItem {
+            key_id,
+            name,
+            value,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ModelExtendedMetadataItem {
+    #[serde(rename = "metadataKeyId")]
+    pub key_id: u64,
     #[serde(rename = "modelId")]
     pub model_uuid: Uuid,
     #[serde(rename = "name")]
@@ -269,13 +289,26 @@ pub struct ModelMetadataItem {
     pub value: String,
 }
 
-impl ModelMetadataItem {
-    pub fn new(key_id: u64, model_uuid: Uuid, name: String, value: String) -> ModelMetadataItem {
-        ModelMetadataItem {
-            key_id,
+impl ModelExtendedMetadataItem {
+    pub fn new(
+        model_uuid: Uuid,
+        key_id: u64,
+        name: String,
+        value: String,
+    ) -> ModelExtendedMetadataItem {
+        ModelExtendedMetadataItem {
             model_uuid,
+            key_id,
             name,
             value,
+        }
+    }
+
+    pub fn to_item(&self) -> ModelMetadataItem {
+        ModelMetadataItem {
+            key_id: self.key_id,
+            name: self.name.clone(),
+            value: self.value.clone(),
         }
     }
 }
@@ -290,6 +323,31 @@ pub struct ModelMetadata {
 impl ModelMetadata {
     pub fn new(properties: Vec<ModelMetadataItem>) -> ModelMetadata {
         ModelMetadata { properties }
+    }
+
+    pub fn to_enhanced_csv(&self, uuid: &Uuid, pretty: bool) -> anyhow::Result<String> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec!["MODEL_UUID", "NAME", "VALUE"];
+            writer.write_record(&columns)?;
+        }
+
+        for property in &self.properties {
+            let mut values: Vec<String> = Vec::new();
+            values.push(uuid.to_string());
+            values.push(property.name.to_owned());
+            values.push(property.value.to_owned());
+            writer.write_record(&values)?;
+        }
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
     }
 }
 
@@ -311,13 +369,12 @@ impl ToCsv for ModelMetadata {
             .from_writer(buf);
 
         if pretty {
-            let columns = vec!["MODEL_UUID", "NAME", "VALUE"];
+            let columns = vec!["NAME", "VALUE"];
             writer.write_record(&columns)?;
         }
 
         for property in &self.properties {
             let mut values: Vec<String> = Vec::new();
-            values.push(property.model_uuid.to_string());
             values.push(property.name.to_owned());
             values.push(property.value.to_owned());
             writer.write_record(&values)?;
@@ -381,7 +438,7 @@ impl ToCsv for Model {
         let meta = self.metadata.clone();
         match meta {
             Some(meta) => {
-                for property in &meta.properties {
+                for property in &meta {
                     let name = property.name.to_owned();
                     columns.insert(name);
                 }
@@ -412,7 +469,7 @@ impl ToCsv for Model {
         let meta = self.metadata.clone();
         match meta {
             Some(meta) => {
-                for property in meta.properties {
+                for property in meta {
                     let name = property.name;
                     let value = property.value;
                     properties.insert(name, value);
@@ -469,7 +526,7 @@ impl ToCsv for ListOfModels {
 
             match meta {
                 Some(meta) => {
-                    for property in &meta.properties {
+                    for property in &meta {
                         let name = property.name.to_owned();
                         columns.insert(name);
                     }
@@ -502,7 +559,7 @@ impl ToCsv for ListOfModels {
             let mut properties: HashMap<String, String> = HashMap::new();
             match meta {
                 Some(meta) => {
-                    for property in meta.properties {
+                    for property in meta {
                         let name = property.name;
                         let value = property.value;
                         properties.insert(name, value);
@@ -823,7 +880,7 @@ impl ToCsv for ListOfModelMatches {
 
             match meta {
                 Some(meta) => {
-                    for property in &meta.properties {
+                    for property in &meta {
                         let name = property.name.to_owned();
                         columns.insert(name);
                     }
@@ -859,7 +916,7 @@ impl ToCsv for ListOfModelMatches {
             let mut properties: HashMap<String, String> = HashMap::new();
             match meta {
                 Some(meta) => {
-                    for property in meta.properties {
+                    for property in meta {
                         let name = property.name;
                         let value = property.value;
                         properties.insert(name, value);
@@ -962,7 +1019,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
 
                 match meta {
                     Some(meta) => {
-                        for property in &meta.properties {
+                        for property in &meta {
                             let name = property.name.to_owned();
                             columns.insert(name);
                         }
@@ -1013,7 +1070,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
                 let mut properties: HashMap<String, String> = HashMap::new();
                 match meta {
                     Some(meta) => {
-                        for property in meta.properties {
+                        for property in meta {
                             let name = property.name;
                             let value = property.value;
                             properties.insert(name, value);
