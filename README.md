@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.16
+The latest version is 1.6.17
+
+### Version 1.6.17
+
+* Fixed a bug when producing CSV metadata output in cases of the backend reporting duplicate property names
 
 ### Version 1.6.16
 

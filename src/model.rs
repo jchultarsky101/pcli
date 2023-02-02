@@ -1,6 +1,7 @@
 use crate::client;
 use anyhow::Result;
 use csv::{Terminator, WriterBuilder};
+use log::trace;
 use petgraph::matrix_graph::MatrixGraph;
 use ptree::style::Style;
 use ptree::TreeItem;
@@ -419,6 +420,8 @@ impl ToJson for Model {
 
 impl ToCsv for Model {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+        trace!("Preparing CSV output for a model...");
+
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -447,9 +450,14 @@ impl ToCsv for Model {
         }
 
         let mut all_columns: Vec<&str> = standard_columns.clone();
-        let mut all_property_columns: Vec<&str> = columns.iter().map(|n| n.as_str()).collect();
+        // using a HashSet first to guard against the backend returning duplicate property names
+        let all_property_columns: HashSet<&str> = columns.iter().map(|n| n.as_str()).collect();
+        let mut all_property_columns: Vec<&str> =
+            all_property_columns.iter().map(|name| *name).collect();
         all_property_columns.sort();
         all_columns.append(&mut all_property_columns);
+
+        trace!("Columns: {:?}", all_columns);
 
         if pretty {
             writer.write_record(&all_columns)?;
@@ -467,22 +475,31 @@ impl ToCsv for Model {
 
         let mut properties: HashMap<String, String> = HashMap::new();
         let meta = self.metadata.clone();
+
+        trace!("Preparing the name/value pairs for metadata properties...");
         match meta {
             Some(meta) => {
                 for property in meta {
                     let name = property.name;
                     let value = property.value;
+
+                    trace!("{}={}", &name, &value);
+
                     properties.insert(name, value);
                 }
             }
             None => (),
         }
 
-        for column_name in &columns {
+        let number_of_columns = all_columns.len();
+        for i in 7..number_of_columns {
+            let column_name = all_columns[i];
             let value = match properties.get(column_name) {
                 Some(value) => value.to_owned(),
                 None => String::from(""),
             };
+
+            trace!("Set {}={}", &column_name, &value);
             values.push(value);
         }
 
@@ -568,7 +585,9 @@ impl ToCsv for ListOfModels {
                 None => (),
             }
 
-            for column_name in &columns {
+            let number_of_columns = all_columns.len();
+            for i in 7..number_of_columns {
+                let column_name = all_columns[i];
                 let value = match properties.get(column_name) {
                     Some(value) => value.to_owned(),
                     None => String::from(""),
