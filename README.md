@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.15
+The latest version is 1.6.16
+
+### Version 1.6.16
+
+* Fixed a bug when handling duplicate metadata property names provided in the input file
 
 ### Version 1.6.15
 

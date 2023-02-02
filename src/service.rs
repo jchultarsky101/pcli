@@ -599,7 +599,7 @@ impl Api {
     pub fn upload_model_metadata(&self, input_file: &str) -> Result<()> {
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
-        let reverse_lookup: HashMap<UniCase<String>, u64> = properties
+        let mut reverse_lookup: HashMap<UniCase<String>, u64> = properties
             .properties
             .into_iter()
             .map(|p| (UniCase::new(p.name.to_owned()), p.id))
@@ -615,6 +615,7 @@ impl Api {
                         Some(id) => (*id, m.to_item(*id)),
                         None => {
                             let p = self.client.post_property(&m.name)?;
+                            reverse_lookup.insert(case_insensitive_name.clone(), p.id);
                             (p.id, m.to_item(p.id))
                         }
                     }
