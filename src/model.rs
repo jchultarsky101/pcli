@@ -171,19 +171,27 @@ pub struct Model {
     pub units: String,
     #[serde(rename = "state")]
     pub state: String,
-    #[serde(rename = "attachmentUrl")]
+    #[serde(rename = "attachmentUrl", skip_serializing_if = "Option::is_none")]
     pub attachment_url: Option<String>,
-    #[serde(rename = "shortId")]
+    #[serde(rename = "shortId", skip_serializing_if = "Option::is_none")]
     pub short_id: Option<u64>,
     #[serde(rename = "metadata", skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Vec<ModelMetadataItem>>,
+}
+
+use serde::de::Deserializer;
+fn deserialize_with_nullable_name<'de, D>(d: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Deserialize::deserialize(d).map(|x: Option<_>| x.unwrap_or("invalid".to_string()))
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct Property {
     #[serde(rename = "id")]
     pub id: u64,
-    #[serde(rename = "name")]
+    #[serde(rename = "name", deserialize_with = "deserialize_with_nullable_name")]
     pub name: String,
 }
 
@@ -818,11 +826,11 @@ pub struct ModelMatch {
     pub model: Model,
     #[serde(rename = "percentage")]
     pub percentage: f64,
-    #[serde(rename = "comparisonUrl")]
+    #[serde(rename = "comparisonUrl", skip_serializing_if = "Option::is_none")]
     pub comparison_url: Option<String>,
-    #[serde(rename = "modelOneThumbnail")]
+    #[serde(rename = "modelOneThumbnail", skip_serializing_if = "Option::is_none")]
     pub model_one_thumbnail: Option<String>,
-    #[serde(rename = "modelTwoThumbnail")]
+    #[serde(rename = "modelTwoThumbnail", skip_serializing_if = "Option::is_none")]
     pub model_two_thumbnail: Option<String>,
 }
 

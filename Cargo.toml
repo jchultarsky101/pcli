@@ -1,6 +1,6 @@
 [package]
 name = "pcli"
-version = "1.6.17"
+version = "1.6.18"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"
@@ -9,7 +9,7 @@ description = "CLI client utility to the Physna public API/V2"
 log = "0.4"
 pretty_env_logger = "0.4"
 futures = "0.3"
-clap = { version = "3.2", features = ["derive"] }
+clap = { version = "4.1", features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking", "multipart", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"

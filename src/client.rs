@@ -13,8 +13,8 @@ use reqwest::{
     StatusCode,
 };
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::time::Duration;
-use std::{collections::HashMap, path::Path};
 use substring::Substring;
 use url;
 use uuid::Uuid;
@@ -378,7 +378,7 @@ impl ApiClient {
     pub fn get(
         &self,
         url: &str,
-        query_parameters: Option<HashMap<String, String>>,
+        query_parameters: Option<Vec<(String, String)>>,
     ) -> Result<String, ClientError> {
         let mut builder = self
             .client
@@ -422,10 +422,10 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
-        let mut query_parameters: HashMap<String, String> = HashMap::new();
-        query_parameters.insert("threshold".to_string(), threshold.to_string());
-        query_parameters.insert("perPage".to_string(), per_page.to_string());
-        query_parameters.insert("page".to_string(), page.to_string());
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+        query_parameters.push(("threshold".to_string(), threshold.to_string()));
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
         //trace!("{}", json);
@@ -545,11 +545,11 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
-        let mut query_parameters: HashMap<String, String> = HashMap::new();
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
         let per_page = 10000;
         let page = 1;
-        query_parameters.insert("perPage".to_string(), per_page.to_string());
-        query_parameters.insert("page".to_string(), page.to_string());
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
 
@@ -590,30 +590,25 @@ impl ApiClient {
 
     pub fn get_list_of_models_page(
         &self,
-        folders: Option<Vec<u32>>,
-        search: Option<String>,
+        folders: Vec<u32>,
+        search: Option<&String>,
         per_page: u32,
         page: u32,
     ) -> Result<ModelListResponse, ClientError> {
         let url = format!("{}/v2/models", self.base_url);
 
-        let mut query_parameters: HashMap<String, String> = HashMap::new();
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
 
-        if folders.is_some() {
-            let folder_ids_str = folders
-                .unwrap()
-                .into_iter()
-                .map(|folder_id| folder_id.to_string())
-                .collect::<Vec<String>>()
-                .join(",")
-                .to_string();
-            query_parameters.insert("folderIds".to_string(), folder_ids_str);
+        for folder in folders {
+            query_parameters.push(("folderIds".to_string(), folder.to_string()));
         }
+
         if search.is_some() {
-            query_parameters.insert("search".to_string(), search.unwrap().to_owned());
+            query_parameters.push(("search".to_string(), search.unwrap().to_owned()));
         }
-        query_parameters.insert("perPage".to_string(), per_page.to_string());
-        query_parameters.insert("page".to_string(), page.to_string());
+
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
 

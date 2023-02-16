@@ -113,6 +113,7 @@ impl Api {
     }
 
     pub fn reprocess_model(&self, uuid: &Uuid) -> anyhow::Result<()> {
+        trace!("Reprocessing {}...", uuid.to_string());
         self.client.reprocess_model(uuid)?;
         Ok(())
     }
@@ -160,8 +161,8 @@ impl Api {
 
     pub fn list_all_models(
         &mut self,
-        folders: Option<Vec<u32>>,
-        search: Option<String>,
+        folders: Vec<u32>,
+        search: Option<&String>,
         meta: bool,
     ) -> Result<ListOfModels> {
         trace!("Listing all models for folders {:?}...", folders);
@@ -173,7 +174,7 @@ impl Api {
         let per_page: u32 = 50;
         while has_more {
             match self.client.get_list_of_models_page(
-                folders.to_owned(),
+                folders.clone(),
                 search.to_owned(),
                 per_page,
                 page,
@@ -210,8 +211,8 @@ impl Api {
         uuid: &Uuid,
         threshold: f64,
         with_meta: bool,
-        classification: Option<&str>,
-        tag: Option<&str>,
+        classification: Option<&String>,
+        tag: Option<&String>,
     ) -> anyhow::Result<ListOfModelMatches> {
         trace!("Matching model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
@@ -246,10 +247,14 @@ impl Api {
 
                                 match classification {
                                     Some(classification) => {
-                                        let property =
-                                            properties.as_ref().unwrap().properties.iter().find(
-                                                |p| p.name.eq_ignore_ascii_case(classification),
-                                            );
+                                        let property = properties
+                                            .as_ref()
+                                            .unwrap()
+                                            .properties
+                                            .iter()
+                                            .find(|p| {
+                                                p.name.eq_ignore_ascii_case(classification.as_str())
+                                            });
                                         let property = match property {
                                             Some(property) => property.clone(),
                                             None => self
@@ -352,8 +357,8 @@ impl Api {
     pub fn generate_simple_model_match_report(
         &mut self,
         uuids: Vec<Uuid>,
-        threshold: f64,
-        folders: Option<Vec<u32>>,
+        threshold: &f64,
+        folders: Vec<u32>,
         exclusive: bool,
         with_meta: bool,
     ) -> anyhow::Result<SimpleDuplicatesMatchReport> {
@@ -364,15 +369,14 @@ impl Api {
             match model {
                 Ok(model) => {
                     if model.state.eq("finished") {
-                        let matches = self.match_model(&uuid, threshold, with_meta, None, None)?;
+                        let matches =
+                            self.match_model(&uuid, threshold.clone(), with_meta, None, None)?;
 
                         let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
+
                         for m in *matches.inner {
                             if !exclusive
-                                || folders.is_none()
-                                || (exclusive
-                                    && folders.clone().is_some()
-                                    && folders.clone().unwrap().contains(&m.model.folder_id))
+                                || (exclusive && folders.contains(&m.model.folder_id))
                                     && (!model.name.eq(&m.model.name)
                                         && !simple_duplicate_matches.contains(&m))
                             {
@@ -443,10 +447,11 @@ impl Api {
             .keys()
             .map(|uuid| Uuid::parse_str(uuid.as_str()).unwrap())
             .collect();
+
         let simple_match_report = self.generate_simple_model_match_report(
             target_uuids,
-            threshold,
-            None,
+            &threshold,
+            vec![],
             false,
             with_meta,
         )?;
@@ -470,10 +475,7 @@ impl Api {
         })
     }
 
-    pub fn tenant_stats(
-        &mut self,
-        folders: Option<Vec<u32>>,
-    ) -> anyhow::Result<EnvironmentStatusReport> {
+    pub fn tenant_stats(&mut self, folders: Vec<u32>) -> anyhow::Result<EnvironmentStatusReport> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
             all_folders.folders.into_iter().map(|f| (f.id, f)).collect();
