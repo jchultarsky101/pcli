@@ -26,6 +26,7 @@ However, it was not popular and the users never used it. Removing it will simpli
 * Fixed a bug where the output JSON for model was showing inconsistency when working with NULL values
 * Implemented a workaround when the API returns metadata keys with NULL names
 * Various performance improvements
+* Updated README.md
 
 ### Version 1.6.17
 
