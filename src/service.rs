@@ -475,7 +475,11 @@ impl Api {
         })
     }
 
-    pub fn tenant_stats(&mut self, folders: Vec<u32>) -> anyhow::Result<EnvironmentStatusReport> {
+    pub fn tenant_stats(
+        &mut self,
+        folders: Vec<u32>,
+        force_fix: bool,
+    ) -> anyhow::Result<EnvironmentStatusReport> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
             all_folders.folders.into_iter().map(|f| (f.id, f)).collect();
@@ -485,6 +489,10 @@ impl Api {
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
         for model in models {
+            if force_fix && model.state.eq_ignore_ascii_case("FINISHED") {
+                let _ = self.reprocess_model(&model.uuid);
+            }
+
             let folder_id = model.folder_id;
             let folder_name = all_folders.get(&folder_id).unwrap().name.to_owned();
             let folder_name2 = folder_name.to_owned();
