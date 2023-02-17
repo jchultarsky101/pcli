@@ -11,6 +11,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 The latest version is 1.7.0
 
+### Version 1.7.1
+
+* Added "--repair" flag to the "status" command to force reprocessing of any models that are not in "FINISHED" state
+* Implemented a workaround for situations where the backend reports NULL metadata name
+* Updated README.md
+
 ### Version 1.7.0
 
 This release features many changes. Some of which modify the behaviour of commands to allow for multi-value arguments.
@@ -870,6 +876,15 @@ per type of file and status.
 ```bash
 $ pcli --tenant="mytenant" --format="csv" --pretty status --folder="1"
 ```
+
+It will produce a summary report with stats of model types and their processing states. A state of "FIISHED" means that all is well and
+the model is ready for use. Status of "FAILED" indicates that there is a data issue with the model or perhaps the file does not 
+contain any valid geometry.
+
+The "status" command takes an optional flag "--repair". When specified, PCLI will automatically issue "reprocess" command for any model
+that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline process in Physna. 
+Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the "status" command until all
+background processing completed.
 
 ### Classifiers
 

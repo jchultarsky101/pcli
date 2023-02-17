@@ -404,6 +404,14 @@ fn main() {
                         .help("Folder ID (e.g. --folder=1)")
                         .required(true)
                         .value_parser(clap::value_parser!(u32))
+                )
+                .arg(
+                    Arg::new("repair")
+                        .short('r')
+                        .long("repair")
+                        .num_args(0)
+                        .help("Forces repair operation on any model that is not in status FINISHED")
+                        .required(false)
                 ),
         )
         .subcommand(
@@ -1095,7 +1103,8 @@ fn main() {
         },
         Some(("status", sub_matches)) => {
             let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
-            let result = api.tenant_stats(folders);
+            let repair = sub_matches.get_flag("repair");
+            let result = api.tenant_stats(folders, repair);
             match result {
                 Ok(result) => {
                     let output = format::format_environment_status_report(&result, &output_format, pretty, color);

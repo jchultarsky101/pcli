@@ -270,7 +270,7 @@ impl ModelMetadataItemShort {
 pub struct ModelMetadataItem {
     #[serde(rename = "metadataKeyId")]
     pub key_id: u64,
-    #[serde(rename = "name")]
+    #[serde(rename = "name", deserialize_with = "deserialize_with_nullable_name")]
     pub name: String,
     #[serde(rename = "value")]
     pub value: String,
