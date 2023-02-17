@@ -90,7 +90,12 @@ impl Api {
                 if meta {
                     let metadata = self.get_model_metadata(uuid);
                     match metadata {
-                        Ok(metadata) => model.metadata = metadata.to_owned(),
+                        Ok(metadata) => match metadata {
+                            Some(metadata) => {
+                                model.metadata = Some(metadata.properties.to_owned());
+                            }
+                            None => model.metadata = None,
+                        },
                         Err(_) => (),
                     }
                 }
@@ -108,6 +113,7 @@ impl Api {
     }
 
     pub fn reprocess_model(&self, uuid: &Uuid) -> anyhow::Result<()> {
+        trace!("Reprocessing {}...", uuid.to_string());
         self.client.reprocess_model(uuid)?;
         Ok(())
     }
@@ -155,8 +161,8 @@ impl Api {
 
     pub fn list_all_models(
         &mut self,
-        folders: Option<Vec<u32>>,
-        search: Option<String>,
+        folders: Vec<u32>,
+        search: Option<&String>,
         meta: bool,
     ) -> Result<ListOfModels> {
         trace!("Listing all models for folders {:?}...", folders);
@@ -168,7 +174,7 @@ impl Api {
         let per_page: u32 = 50;
         while has_more {
             match self.client.get_list_of_models_page(
-                folders.to_owned(),
+                folders.clone(),
                 search.to_owned(),
                 per_page,
                 page,
@@ -178,18 +184,11 @@ impl Api {
                         let models = result.models;
                         if !models.is_empty() {
                             for m in models {
-                                let mut normalized_model = Model::from(m);
+                                let mut normalized_model = Model::from(m.clone());
 
-                                let metadata;
-                                if meta {
-                                    trace!("Will include metadata in the output.");
-                                    metadata = self.get_model_metadata(&normalized_model.uuid)?;
-                                } else {
-                                    trace!("Will not include metadata in the output.");
-                                    metadata = None;
+                                if !meta {
+                                    normalized_model.metadata = None;
                                 }
-
-                                normalized_model.metadata = metadata;
                                 list_of_models.push(normalized_model);
                             }
                         }
@@ -202,6 +201,7 @@ impl Api {
         }
 
         let result = ListOfModels::from(list_of_models);
+
         //trace!("List of Models: {:?}", result);
         Ok(result)
     }
@@ -211,8 +211,8 @@ impl Api {
         uuid: &Uuid,
         threshold: f64,
         with_meta: bool,
-        classification: Option<&str>,
-        tag: Option<&str>,
+        classification: Option<&String>,
+        tag: Option<&String>,
     ) -> anyhow::Result<ListOfModelMatches> {
         trace!("Matching model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
@@ -247,10 +247,14 @@ impl Api {
 
                                 match classification {
                                     Some(classification) => {
-                                        let property =
-                                            properties.as_ref().unwrap().properties.iter().find(
-                                                |p| p.name.eq_ignore_ascii_case(classification),
-                                            );
+                                        let property = properties
+                                            .as_ref()
+                                            .unwrap()
+                                            .properties
+                                            .iter()
+                                            .find(|p| {
+                                                p.name.eq_ignore_ascii_case(classification.as_str())
+                                            });
                                         let property = match property {
                                             Some(property) => property.clone(),
                                             None => self
@@ -260,7 +264,6 @@ impl Api {
 
                                         let item = ModelMetadataItem::new(
                                             property.id.clone(),
-                                            model.uuid,
                                             String::from(classification),
                                             String::from(tag.unwrap()),
                                         );
@@ -271,12 +274,22 @@ impl Api {
                                             tag.unwrap(),
                                             model.uuid
                                         );
-                                        self.client.put_model_property(&property.id, &item)?;
+                                        self.client.put_model_property(
+                                            &uuid,
+                                            &property.id,
+                                            &item,
+                                        )?;
                                     }
                                     None => (),
                                 }
 
-                                model_match.model.metadata = metadata;
+                                match metadata {
+                                    Some(metadata) => {
+                                        model_match.model.metadata =
+                                            Some(metadata.properties.to_owned())
+                                    }
+                                    None => model_match.model.metadata = None,
+                                }
                                 list_of_matches.push(model_match);
                             }
                         }
@@ -297,10 +310,11 @@ impl Api {
 
     pub fn set_model_property(
         &self,
+        model_uuid: &Uuid,
         id: &u64,
         item: &ModelMetadataItem,
     ) -> Result<ModelMetadataItem> {
-        self.client.put_model_property(&id, &item)
+        self.client.put_model_property(model_uuid, id, item)
     }
 
     fn generate_graph_from_assembly_tree(
@@ -343,58 +357,62 @@ impl Api {
     pub fn generate_simple_model_match_report(
         &mut self,
         uuids: Vec<Uuid>,
-        threshold: f64,
-        folders: Option<Vec<u32>>,
+        threshold: &f64,
+        folders: Vec<u32>,
         exclusive: bool,
         with_meta: bool,
     ) -> anyhow::Result<SimpleDuplicatesMatchReport> {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         for uuid in uuids {
-            let model = self.get_model(&uuid, true, with_meta)?;
-            if model.state.eq("finished") {
-                let matches = self.match_model(&uuid, threshold, with_meta, None, None)?;
+            let model = self.get_model(&uuid, true, with_meta);
+            match model {
+                Ok(model) => {
+                    if model.state.eq("finished") {
+                        let matches =
+                            self.match_model(&uuid, threshold.clone(), with_meta, None, None)?;
 
-                let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
-                for m in *matches.inner {
-                    if !exclusive
-                        || folders.is_none()
-                        || (exclusive
-                            && folders.clone().is_some()
-                            && folders.clone().unwrap().contains(&m.model.folder_id))
-                            && (!model.name.eq(&m.model.name)
-                                && !simple_duplicate_matches.contains(&m))
-                    {
-                        let mut m1 = m.clone();
-                        let comparison_url: String = format!(
-                            "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
-                            self.client.tenant,
-                            uuid.to_string(),
-                            m1.model.uuid.to_string()
+                        let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
+
+                        for m in *matches.inner {
+                            if !exclusive
+                                || (exclusive && folders.contains(&m.model.folder_id))
+                                    && (!model.name.eq(&m.model.name)
+                                        && !simple_duplicate_matches.contains(&m))
+                            {
+                                let mut m1 = m.clone();
+                                let comparison_url: String = format!(
+                                    "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
+                                    self.client.tenant,
+                                    uuid.to_string(),
+                                    m1.model.uuid.to_string()
+                                );
+
+                                m1.comparison_url = Some(comparison_url);
+                                m1.model_one_thumbnail = m.model_one_thumbnail.to_owned();
+                                m1.model_two_thumbnail = m.model_two_thumbnail.to_owned();
+                                simple_duplicate_matches.push(m1.to_owned());
+                            }
+                        }
+
+                        if !simple_duplicate_matches.is_empty() {
+                            let item = ModelMatchReportItem {
+                                uuid: uuid.to_string(),
+                                name: model.name.to_owned(),
+                                folder_id: model.folder_id.to_owned(),
+                                matches: simple_duplicate_matches,
+                            };
+
+                            simple_match_report.inner.insert(uuid.to_string(), item);
+                        }
+                    } else {
+                        warn!(
+                            "Model {} has state of {}. Skipping model match!",
+                            uuid, model.state
                         );
-
-                        m1.comparison_url = Some(comparison_url);
-                        m1.model_one_thumbnail = m.model_one_thumbnail.to_owned();
-                        m1.model_two_thumbnail = m.model_two_thumbnail.to_owned();
-                        simple_duplicate_matches.push(m1.to_owned());
                     }
                 }
-
-                if !simple_duplicate_matches.is_empty() {
-                    let item = ModelMatchReportItem {
-                        uuid: uuid.to_string(),
-                        name: model.name.to_owned(),
-                        folder_id: model.folder_id.to_owned(),
-                        matches: simple_duplicate_matches,
-                    };
-
-                    simple_match_report.inner.insert(uuid.to_string(), item);
-                }
-            } else {
-                warn!(
-                    "Model {} has state of {}. Skipping model match!",
-                    uuid, model.state
-                );
+                Err(e) => warn!("Failed to query for model {}, because of: {}", uuid, e),
             }
         }
 
@@ -429,10 +447,11 @@ impl Api {
             .keys()
             .map(|uuid| Uuid::parse_str(uuid.as_str()).unwrap())
             .collect();
+
         let simple_match_report = self.generate_simple_model_match_report(
             target_uuids,
-            threshold,
-            None,
+            &threshold,
+            vec![],
             false,
             with_meta,
         )?;
@@ -450,15 +469,16 @@ impl Api {
 
         Ok(ModelMatchReport {
             duplicates: simple_match_report,
-            dictionary: dictionary,
-            graph: graph,
+            dictionary,
+            graph,
             //matrix: matrix,
         })
     }
 
     pub fn tenant_stats(
         &mut self,
-        folders: Option<Vec<u32>>,
+        folders: Vec<u32>,
+        force_fix: bool,
     ) -> anyhow::Result<EnvironmentStatusReport> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
@@ -469,6 +489,10 @@ impl Api {
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
         for model in models {
+            if force_fix && model.state.eq_ignore_ascii_case("FINISHED") {
+                let _ = self.reprocess_model(&model.uuid);
+            }
+
             let folder_id = model.folder_id;
             let folder_name = all_folders.get(&folder_id).unwrap().name.to_owned();
             let folder_name2 = folder_name.to_owned();
@@ -585,7 +609,7 @@ impl Api {
     pub fn upload_model_metadata(&self, input_file: &str) -> Result<()> {
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
-        let reverse_lookup: HashMap<UniCase<String>, u64> = properties
+        let mut reverse_lookup: HashMap<UniCase<String>, u64> = properties
             .properties
             .into_iter()
             .map(|p| (UniCase::new(p.name.to_owned()), p.id))
@@ -601,6 +625,7 @@ impl Api {
                         Some(id) => (*id, m.to_item(*id)),
                         None => {
                             let p = self.client.post_property(&m.name)?;
+                            reverse_lookup.insert(case_insensitive_name.clone(), p.id);
                             (p.id, m.to_item(p.id))
                         }
                     }
@@ -612,7 +637,8 @@ impl Api {
                 self.client
                     .delete_model_property(&property.model_uuid, &id)?;
             } else {
-                self.client.put_model_property(&id, &property)?;
+                self.client
+                    .put_model_property(&property.model_uuid, &id, &property.to_item())?;
             }
         }
 

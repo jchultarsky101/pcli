@@ -9,7 +9,48 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.6.13
+The latest version is 1.7.0
+
+### Version 1.7.1
+
+* Added "--repair" flag to the "status" command to force reprocessing of any models that are not in "FINISHED" state
+* Implemented a workaround for situations where the backend reports NULL metadata name
+* Updated README.md
+
+### Version 1.7.0
+
+This release features many changes. Some of which modify the behaviour of commands to allow for multi-value arguments.
+
+* Upgraded to version 4.1 of the clap library with number of improvements in command line argument parsing
+* Updated the look of the help output
+* Removed parameter --config. This parameter was designed to allow the user to provide an alterhative configuration file on case-by-case basis.
+However, it was not popular and the users never used it. Removing it will simplify operations
+* Implement option to use multiple parameter values. Please, see the changes for specific commands
+* Command 'models' now allows for multiple values for the 'folder' parameter
+* Command 'delete-model' now allows for multiple values for 'uuid'. Added command alias 'delete'
+* Command 'reprocess' now allows for multiple values for 'uuid'. Added command alias 'reprocess-model'
+* Fixed a bug where the output JSON for model was showing inconsistency when working with NULL values
+* Implemented a workaround when the API returns metadata keys with NULL names
+* Various performance improvements
+* Updated README.md
+
+### Version 1.6.17
+
+* Fixed a bug when producing CSV metadata output in cases of the backend reporting duplicate property names
+
+### Version 1.6.16
+
+* Fixed a bug when handling duplicate metadata property names provided in the input file
+
+### Version 1.6.15
+
+* Fixed bugs related to the new version of the API
+* Optimized performance when reading metadata
+* Updated README.md
+
+### Version 1.6.14
+
+* Fixed a bug when parsing empty JSON vector in the latest version of serde
 
 ### Version 1.6.13
 
@@ -26,144 +67,6 @@ The latest version is 1.6.13
 ### Version 1.6.11
 
 * Added label-folder command
-
-### Version 1.6.10
-
-* Added --search filder to the label-folder command
-
-### Version 1.6.9
-
-* Added --exclusive flag to the label-folder command
-* Updated README.md
-
-### Version 1.6.8
-
-* Modified the upload-model-meta command to delete metadata property when the value is emty string. This is to eliminate undesirable side effect when searching
-* Added label-folder command that uses KNN for automatic classification of models
-
-### Version 1.6.7
-
-* Added optional arguments to the match-model command allowing the user to set a metadata property for all models that match the source model. This in turn enables automated way to train the classification machine learning algorithm by specifying that tag. The user can also use that tag in the --search argument
-
-### Version 1.6.6
-
-* Added installation and build instructions to README.md
-
-### Version 1.6.5
-
-* Bug fixes
-* Added content to the README.md
-
-### Version 1.6.4
-
-* Now displaying the list of metadata properties in the CSV output of match-folder, model-match
-* Added optional argument --meta to selectively include the metadata in the output
-
-### Version 1.6.0
-
-* Added create-image-classifier, classifiers, classification-predictions
-
-### Version 1.5.0
-
-* Added create-folder command
-* Modified the upload-model-meta command to use the same CSV file format as the output of model-meta. That includes now the UUID of the model as first column. Therefore, I removed the --uuid argument from the command. There are two reasons for this:
-  * One can first query a model, make a small modification and then use that same file to upload
-  * One could concatenate the metadata from multiple model-meta commands into a single master file. Similar file could be created by database extraction methods, etc.
-
-### Version 1.4.5
-
-* Documentation and help fixes
-
-### Version 1.4.3
-
-* Fixed a bug when handling a response from the delete command.
-
-### Version 1.4.2
-
-* Enabled Source ID argument when uploading files
-
-#### Version 1.4.1
-
-* Updated the CSV writer to terminate on CRLF instead of just CR
-
-#### Version 1.3.5
-
-* Added delete-model command
-
-#### Version 1.3.5
-
-* Fixed a bug causing output to be suppressed when using CSV format in model-match
-
-#### Version 1.3.4
-
-* Enhanced the upload function. The user can now provide a wild card to upload multiple files in one operation
-
-#### Version 1.3.3
-
-* Enhanced the upload process. Added optional flag --validate with a related optional arguument --timeout
-
-#### Version 1.3.2
-
-* Using the new comparison URL
-
-#### Version 1.3.1
-
-* Upgraded the versions of some libraries as per Renovate issue
-
-#### Version 1.3.0
-
-* Added reprocess command
-
-#### Version 1.2.6
-
-* Added exclusive flag to match-folder
-* Added columns SOURCE_UUID, MATCH_UUID, SOURCE_FOLDER_ID, MATCH_FOLDER_ID to the match-folder command CSV output
-* Removed the in-memory encryption - the crate is not supported for Windows yet
-
-#### Version 1.2.5
-
-* Implemented local token encryption
-
-#### Version 1.2.4
-
-* Bug fix: Removed automatic token retry. It was casung side effects
-
-#### Version 1.2.3
-
-* Removed unused command and argument: match-matrix, quiet
-
-#### Version 1.2.2
-
-* Printing the list of currently configured tenants if unknown tenant is specified
-* Bug fix: Comparison URL in match-report was incomplete
-* Bug fix: Thumbnail URL included unnecessary parameters
-
-#### Version 1.1.1
-
-* Fixed a bug when retrying to validate a token
-
-#### Version 1.1.0
-
-* Removed the "verbose" argument
-* Added new command "properties" to list all properties that are defined for a tenant
-* Added new command "model-meta" to retrieve the list of all metadata properties for a model
-* Enhanced all commands that return model data to include the metadata properties for each model by default
-* Added new command "upload-meta" to upload metadata for a model
-* Refactored the handling of invalid/expired tokens
-* Improved the logic when token is provided in the configuration
-
-#### Version 1.0.7
-
-* Removed special filtering logic when creating match-report
-* Added model-meta command to read metadata for a specific model UUID
-* Enhanced the model command to include the metadata in the response
-* Optimized the match-report logic
-* Added CSV output capability for all sub-commands
-* Added thumbnails URLs in the CSV output for match-model and match-report
-* Now using more human-readable tracing messages (including ANSI color)
-* Implemented a workaround for situations where the assembly tree reports child models that no longer exist in the database
-* Implemented local cache for model requests to improve performance of large data operations
-* Updated the README.md
 
 ## Installation
 
@@ -209,9 +112,8 @@ NOTE: If you specify a tenant that is unknown (not in the configuration file), t
 
 ## Configuration
 
-The tool uses a single configuration file. The default location for this file is your home directory
-and the default file name is ~/.pcli.conf. However, if you so desire, the tool does provide a command line
-argument to allow you to specify alternative configuration at another location.
+The tool uses a single configuration file. The location for this file is your home directory
+and the file name is ~/.pcli.conf.
 
 Here is an example contents of .pcli.conf:
 
@@ -249,52 +151,44 @@ For example:
 $ pcli help
 ```
 ```
-pcli 1.6.11
-Julian Chultarsky <jchultarsky@physna.com>
 CLI client utility to the Physna public API/V2
 
-USAGE:
-    pcli [OPTIONS] --tenant <tenant> <SUBCOMMAND>
+Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
-OPTIONS:
-    -c, --config <config>    Configuration file [default: /Users/julian/.pcli.conf]
-        --color <color>      Adds color to the output (optional: e.g. 'black', 'red', 'green',
-                             'yellow', 'blue', 'magenta', 'cyan', 'white')
-    -f, --format <format>    Output data format (optional: e.g. 'json', 'csv', or 'tree') [default:
-                             json]
-    -h, --help               Print help information
-    -p, --pretty             Produces pretty output (optional: default is 'false')
-    -t, --tenant <tenant>    Your tenant ID (check with your Physna admin if not sure)
-    -V, --version            Print version information
+Commands:
+  sysinfo                     Prints details of the current host system
+  token                       Obtains security access token from the provider
+  invalidate                  Invalidates the current access token
+  model                       Reads data for a specific model
+  reprocess                   Reprocesses a specific model
+  delete-model                Deletes a specific model
+  model-meta                  Reads the metadata (properties) for a specific model
+  models                      Lists all available models in a folder
+  assembly-tree               Reads the model's assembly tree
+  match-model                 Matches all models to the specified one
+  match-folder                Matches all models in a folder to other models
+  label-folder                Labels models in a folder based on KNN algorithm and geometric match score as distance
+  assembly-bom                Generates flat BoM of model IDs for model
+  status                      Generates a tenant's environment status summary
+  upload                      Uploads a file to Physna
+  upload-model-meta           Reads metadata from an input CSV file and uploads it for a model specified by UUID
+  match-report                Generates a match report for the specified models
+  folders                     Lists all available folders
+  create-folder               Creates a new folder
+  properties                  Lists all available metadata propertie names and their IDs
+  create-image-classifier     Creates a new image classifier
+  classifiers                 Lists all available image classifiers
+  classification-predictions  Read the list of classification predictions for an image by given classifier
+  help                        Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    assembly-bom                  Generates flat BoM of model IDs for model
-    assembly-tree                 Reads the model's assembly tree
-    classification-predictions    Read the list of classification predictions for an image by
-                                      given classifier
-    classifiers                   Lists all available image classifiers
-    create-folder                 Creates a new folder
-    create-image-classifier       Creates a new image classifier
-    delete-model                  Deletes a specific model
-    folders                       Lists all available folders
-    help                          Print this message or the help of the given subcommand(s)
-    invalidate                    Invalidates the current access token
-    label-folder                  Labels models in a folder based on KNN algorithm and geometric
-                                      match score as distance
-    match-folder                  Matches all models in a folder to other models
-    match-model                   Matches all models to the specified one
-    match-report                  Generates a match report for the specified models
-    model                         Reads data for a specific model
-    model-meta                    Reads the metadata (properties) for a specific model
-    models                        Lists all available models in a folder
-    properties                    Lists all available metadata propertie names and their IDs
-    reprocess                     Reprocesses a specific model
-    status                        Generates a tenant's environment status summary
-    sysinfo                       Prints details of the current host system
-    token                         Obtains security access token from the provider
-    upload                        Uploads a file to Physna
-    upload-model-meta             Reads metadata from an input CSV file and uploads it for a
-                                      model specified by UUID
+Options:
+  -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
+  -f, --format <format>  Output data format (optional: e.g. 'json', 'csv', or 'tree') [default: json] [possible values: json, csv, tree, table]
+  -p, --pretty           Produces pretty output (optional: default is 'false')
+      --color <color>    Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white') [possible values
+: black, red, green, yellow, blue, magenta, cyan, white]
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
 The application supports sub-commands. To get more detailed help for a
@@ -308,17 +202,15 @@ $ pcli help model
 Produces the following output:
 
 ```
-pcli-model 1.6.11
 Reads data for a specific model
 
-USAGE:
-    pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
+Usage: pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
 
-OPTIONS:
-    -h, --help           Print help information
-    -m, --meta           Enhance output with model's metadata
-    -u, --uuid <uuid>    The model UUID
-    -V, --version        Print version information
+Options:
+  -u, --uuid <uuid>  The model UUID
+  -m, --meta         Enhance output with model's metadata
+  -h, --help         Print help
+  -V, --version      Print version
 ```
 
 As you can see, here the "model" sub-command takes "--uuid" as an argument
@@ -329,7 +221,7 @@ in this case, we need to provide the following (just an example):
 $ pcli --tenant="beta" model --uuid="82cb38ce-c3e4-4a07-b605-5177602a6d8f"
 ```
 
-The command flags support both short and long names. For example, for tenant we can
+Most, but not all command flags support both short and long names. For example, for tenant we can
 specify the full name "--tenant" or the short name "-t". Those two are be equivalent. Not all arguments
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.
@@ -356,8 +248,8 @@ Here are few examples:
 $ pcli help models
 ```
 
-In this case, "help" is the subcommand. There are zero generic arguments we need to provide to it. We provide one argument "models" to identify the command
-for which we need specific help.
+In this case, "help" is the subcommand. There are zero generic arguments we need to provide to it.
+We provide one argument "models" to identify the command for which we need specific help.
 
 That was a very simple example. Here is a more complicated one:
 
@@ -365,8 +257,9 @@ That was a very simple example. Here is a more complicated one:
 $ pcli --tenant="mycompany" --format="cvs" --pretty models --folder="1" --search="part_name"
 ```
 
-In this case, "tenant", "format", and "pretty" are all generic arguments that may apply accross all sub-commands in a similar way. On another hand
-"folder" and "search" are arguments that are specific to the "models" command. Of course "models" is the sub-command itself.
+In this case, "tenant", "format", and "pretty" are all generic arguments that may apply accross many sub-commands in a similar way.
+On another hand "folder" and "search" are arguments that are specific to the "models" command.
+Of course "models" is the sub-command itself.
 
 ###### How do I know which arguments are generic and which are specific?
 
@@ -392,14 +285,14 @@ and
 $ pcli --tenant="mycompany" folders
 ```
 
-In other words, you can provide either the equal character ('=') or a space as the separator between argument and its value. The recommended way is to use
-the equal character (example #2) without any spaces between the '=' on either side.
+In other words, you can provide either the equal character ('=') or a space as the separator between argument and its value. 
+The recommended way is to use the equal character (example #2) without any spaces between the '=' on either side.
 
-If a value does not contain spaces or any other characters that my cause confusion, you can type it without surrounding it with quotes. The best practice is
-to always wrap it in double quotes.
+If a value does not contain spaces or any other characters that my cause confusion, you can type it without surrounding it with quotes.
+The best practice is to always wrap it in double quotes.
 
-In general, it is considered O.K. to not surround numbers with double quotes. It is a bit more typing, but I recommend to be consistent and wrap all values
-as a matter of good habit.
+In general, it is considered O.K. to not surround numbers with double quotes. 
+It is a bit more typing, but I recommend to be consistent and wrap all values as a matter of good habit.
 
 ###### Arguments with multiple values
 
@@ -410,8 +303,18 @@ For example, in an example you will see further down again:
 $ pcli --tenant="beta" --format="csv" --pretty match-folder --folder="4" --folder="6" --threshold="0.99"
 ```
 
-This means that the "match-folder" command will search simultaneously in two folders (i.e. 4 and 5) and combine the output 
+This means that the "match-folder" command will search simultaneously in two folders (i.e. foler #4 and folder #5) and combine the output 
 for both. This way, you can widen the search in one command.
+
+For connvenience, we provide an alternative method of specifying multiple values. 
+You can use a single parameter name and a comma-separated list of values.
+The following is equivalent to the example above:
+
+```bash
+$ pcli --tenant="beta" --format="csv" --pretty match-folder --folder="4,6" --threshold="0.99"
+```
+
+That can come handy when using PCLI in conjusction with a custom business logic, which prefers to use comma-separated values.
 
 ###### Arguments without a value
 
@@ -451,13 +354,18 @@ $ pcli --tenant="beta" invalidate
 
 This will invalidate your current token and delete the token file from your system.
 
+This operation causes PCLI to start a new session next time it is executed by requesting a ne token.
+
 #### Displaying Your Token
 
 Your token data is encrypted. It does not reveal anything about yourself or your system.
 In the vast majority of cases, you would not care what it is. However, there may be some
 special use cases where knowing your token is handy. One such case is if you are trying to
 access the Physna's API in other ways than via this CLI. For example, this may be with cURL,
-Postman, or some other client. 
+Postman, or some other client.
+
+You do not need to execute this command just to get a new token. Every command you execute will attempt to obtain one if
+none currently exist.
 
 The following command will print the current token for your tenant (here is "beta") to the terminal:
 
@@ -547,9 +455,11 @@ The default output format is "json". The available options are "json", "csv", "t
 
 Adding "--pretty" in this case will add header row to the CSV output containing the column names.
 
-### Listing Available Models
+### Listing Models
 
-To obtain a list of models in your tenant environment, use the "models" sub-command. Please, note that there is also "model" (singular) command, which is used for querying a single model. The "models" command takes a mandatory argument "--folder", which is the folder ID of interest and limits the search.
+To obtain a list of models currently present in your tenant environment, use the "models" sub-command.
+Please, note that there is also "model" (singular) command, which is used for querying a single model.
+The "models" command takes a mandatory argument "--folder", which is the folder ID of interest and limits the search.
 
 Example:
 
@@ -558,18 +468,16 @@ pcli help models
 ```
 
 ```
-pcli-models 1.6.11
 Lists all available models in a folder
 
-USAGE:
-    pcli --tenant <tenant> models [OPTIONS] --folder <folder>
+Usage: pcli --tenant <tenant> models [OPTIONS] --folder <folder>...
 
-OPTIONS:
-    -d, --folder <folder>    Folder ID (e.g. --folder=1)
-    -h, --help               Print help information
-    -m, --meta               Enhance output with model's metadata
-    -s, --search <search>    Search clause to further filter output (optional: e.g. a model name)
-    -V, --version            Print version information
+Options:
+  -d, --folder <folder>...  Folder ID (e.g. --folder=1)
+  -s, --search <search>     Search clause to further filter output (optional: e.g. a model name)
+  -m, --meta                Enhance output with model's metadata
+  -h, --help                Print help
+  -V, --version             Print version
 ```
 
 Example for listing all available models in folder 1 (the Default folder):
@@ -587,9 +495,24 @@ all models in folder 3 with model name containing the string "mypart", you can e
 $ pcli --tenant="delta" models --folder="3" --search="mypart"
 ```
 
-As with the "folder" command, you can specify CSV as the output format, use "--pretty" and colors.
+As with the "folders" command, you can specify CSV as the output format, use "--pretty" and colors.
 
 The --meta flag is optional. When provided, it will also query for and add the metadata to the output.
+
+The model command accepts multiple values for the folder ID. You can query for the combined list of models from several folders in one command.
+In the following example, you will get all models belonging in either folder 1 or folder 2:
+
+```bash
+$ pcli --tenant="delta" models --folder="1" --folder="2"
+```
+
+You can use the alternative notation using a comma-separated values to achieve the same result:
+
+```bash
+$ pcli --tenant="delta" models --folder="1,2"
+```
+
+In this case, the search parameter will apply across the folders.
 
 ### Querying for a Specific Model
 
@@ -597,17 +520,15 @@ The "model" command takes as mandatory argument the unique identifier (the UUID)
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.
 
 ```
-pcli-model 1.6.11
 Reads data for a specific model
 
-USAGE:
-    pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
+Usage: pcli --tenant <tenant> model [OPTIONS] --uuid <uuid>
 
-OPTIONS:
-    -h, --help           Print help information
-    -m, --meta           Enhance output with model's metadata
-    -u, --uuid <uuid>    The model UUID
-    -V, --version        Print version information
+Options:
+  -u, --uuid <uuid>  The model UUID
+  -m, --meta         Enhance output with model's metadata
+  -h, --help         Print help
+  -V, --version      Print version
 ```
 
 * uuid - is the models UUID
@@ -628,24 +549,21 @@ $ pcli help upload
 
 ```
 ```
-pcli-upload 1.6.9
 Uploads a file to Physna
 
-USAGE:
-    pcli --tenant <tenant> upload [OPTIONS] --folder <folder> --input <input> --units <units>
+Usage: pcli --tenant <tenant> upload [OPTIONS] --folder <folder> --input <input> --units <units>
 
-OPTIONS:
-    -b, --batch <batch>        Batch UUID (Optional, if not provided new one will be generated)
-    -d, --folder <folder>      Folder ID (e.g. --folder=1)
-    -h, --help                 Print help information
-    -i, --input <input>        Path to the input file
-    -m, --meta <meta>          Input CSV file name containing additional metadata associated with
-                               this model
-        --source <source>      Specifies the Source ID to be used
-        --timeout <timeout>    When validating, specifies the timeout in seconds
-        --units <units>        The unit of measure for the model (e.g. 'inch', 'mm', etc.)
-    -V, --version              Print version information
-        --validate             Blocks until the model is in its final state
+Options:
+  -d, --folder <folder>    Folder ID (e.g. --folder=1)
+  -i, --input <input>      Path to the input file
+  -m, --meta               Input CSV file name containing additional metadata associated with this model
+  -b, --batch <batch>      Batch UUID (Optional, if not provided new one will be generated)
+      --units <units>      The unit of measure for the model (e.g. 'inch', 'mm', etc.)
+      --validate           Blocks until the model is in its final state
+      --timeout <timeout>  When validating, specifies the timeout in seconds
+      --source <source>    Specifies the Source ID to be used
+  -h, --help               Print help
+  -V, --version            Print version
 ```
 
 * "input" is the path to the file you would like to upload in your local file system
@@ -689,9 +607,7 @@ The above command will upload all files with STL extension in directory "/path".
 ### Reprocessing a Model
 
 The "reprocess" command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
-in Physna has not completed normally. It only takes a single mandatory parameter: the UUID of the model we want to reprocess.
-
-NOTE: You can combine this operation with a loop in your own script to reprocess any models that show status other than "finished" in a specific folder if you wish.
+in Physna has not completed normally. It takes mandatory parameter: the UUID of the model we want to reprocess.
 
 ```bash
 $ pcli help reprocess
@@ -707,6 +623,21 @@ This will cause the status of the model to be reset to "reprocessing" and the mo
 
 The command produces no output.
 
+The reprocess command has an alias reprocess-model. The following is equivalent to the above:
+
+```bash
+pcli --tenant="delta" reprocess-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
+```
+
+The reprocess command takes multiple values for the parameter --uuid. Therefore, you can reproces multiple models in one operation:
+
+
+```bash
+pcli --tenant="delta" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --uuid="95ac73f8-c086-4bec-a8f6-de6ceazzzzzz"
+```
+
+Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
+
 ### Deleting a model
 
 This command will delete a model and all related metadata from the Physna database. Please, be careful when using this function.
@@ -717,26 +648,43 @@ Example:
 pcli --tenant="delta" delete-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 ```
 
+The same command has an alias "delete". The same operation can be performed this way:
+
+```bash
+pcli --tenant="delta" delete --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
+```
+
+As with the "reprocess" command, it takes multiple values for --uuid to allow you to delete many models in one execution.
+
+**NOTE:** Please, be extra careful when running bulk delete operations. Once deleted, a model cannot be recovered by Physna.
+You would have to upload it again.
+
 ### Reading Metadata
 
-In addition to the 3D geometry data, additional metadata can be associated with the model. The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings. The metadata is returned as part of the model data when using the commands "model" or "models". However, PCLI offers an additional specialized command to only retrieve the metadata and not the rest of the model data. This is useful when scripting more sophisticated solutions. 
+In addition to the 3D geometry data, additional metadata can be associated with the model.
+The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings.
+The metadata is returned as part of the model data when using the commands "model" or "models".
+However, PCLI offers an additional specialized command to only retrieve the metadata and not the rest of the model data.
+This is useful when scripting more sophisticated solutions. 
 
 The command is:
 
 ```
-pcli-model-meta 1.6.9
+pcli help model-meta
+````
+```
 Reads the metadata (properties) for a specific model
 
-USAGE:
-    pcli --tenant <tenant> model-meta --uuid <uuid>
+Usage: pcli --tenant <tenant> model-meta --uuid <uuid>
 
-OPTIONS:
-    -h, --help           Print help information
-    -u, --uuid <uuid>    The model UUID
-    -V, --version        Print version information
+Options:
+  -u, --uuid <uuid>  The model UUID
+  -h, --help         Print help
+  -V, --version      Print version
 ```
 
-It takes one mandatory argument - the model's UUID. The output by default is JSON, but when we specify CSV, the output contains the following columns:
+It takes one mandatory argument - the model's UUID.
+The output by default is JSON, but when we specify CSV, the output contains the following columns:
 
 * MODEL_UUID - the UUID of the model
 * NAME - the property name
@@ -765,23 +713,28 @@ In some cases, we need to associate additional metadata with the geometry of a m
 pcli help upload-model-meta
 ```
 ```
-pcli-upload-model-meta 1.6.9
-Reads metadata from an input CSV file and uploads it. 
+Reads metadata from an input CSV file and uploads it for a model specified by UUID
 
-USAGE:
-    pcli upload-model-meta --input <input>
+Usage: pcli --tenant <tenant> upload-model-meta --input <input>
 
-OPTIONS:
-    -h, --help             Print help information
-    -i, --input <input>    Path to the input file
-    -V, --version          Print version information
+Options:
+  -i, --input <input>  Path to the input file
+  -h, --help           Print help
+  -V, --version        Print version
 ```
 
-The file format is the same as the output produced by the command "model-meta". It is the same format used by the 'upload' command earlier. The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
+The file format is the same as the CSV-formatted output produced by the command "model-meta".
 
-The required argument is "input" - the name of the CSV formatted input file.
+**NOTE:** This command only works with the CSV format. It does not work with JSON. We may implement that option in a future release.
 
-If a property with this name already exists for the model, its value will be overridden with the new value provided. If the property does not exist, a new property with the provided (but capitalized) name will be created.
+It is the same format used by the 'upload' command earlier.
+The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
+
+The required argument is "input" - the name of the CSV formatted input file. There is no need for --uuid here because the UUID is included
+in the input file as the first column.
+
+If a property with this name already exists for the model, its value will be overridden with the new value provided.
+If the property does not exist, a new property with the provided (but capitalized) name will be created.
 
 **NOTE:** If the metadata property value is an empty string, this command will delete the property for the model. In other words, if you want to delete a property, upload the same with value of an empty string in the input CSV file.
 
@@ -800,25 +753,26 @@ part-to-part match. This means that a model is matched as a unit to all other mo
 With this function, we do not cascade from top-level assembly into all of its sub-assemblies, nor we 
 try to determine if this model may be a component of another assembly. 
 
+```bash
+pcli help match-model
+````
 ```
-pcli-match-model 1.6.9
 Matches all models to the specified one
 
-USAGE:
-    pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <threshold>
+Usage: pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <threshold>
 
-OPTIONS:
-        --classification <classification>    The name for the classification metadata property
-    -h, --help                               Print help information
-    -m, --meta                               Enhance output with model's metadata
-    -t, --threshold <threshold>              Match threshold percentage (e.g. '96.5')
-        --tag <tag>                          The value for the classification metadata property
-    -u, --uuid <uuid>                        The model UUID
-    -V, --version                            Print version information
+Options:
+  -u, --uuid <uuid>                      The model UUID
+  -t, --threshold <threshold>            Match threshold percentage (e.g. '96.5')
+  -m, --meta                             Enhance output with model's metadata
+      --classification <classification>  The name for the classification metadata property
+      --tag <tag>                        The value for the classification metadata property
+  -h, --help                             Print help
+  -V, --version                          Print version
 ```
 
 * "uuid" is the UUID of the model we are trying to match.
-* "threshold" is the match level. This is a value between [0..1]. For example, 80% match would be 0.8.
+* "threshold" is the match level. This is a floating point value between [0..1]. For example, 80% match would be 0.8.
 * "meta" is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
 * "classification" is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.
 * "tag" requirest that the classification argument is present. It is the value to be associated with the "classification" property.
@@ -829,7 +783,8 @@ Example:
 pcli --tenant="delta" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="97.5"
 ```
 
-The output contains the list of models that matched the criteria and a value between zero and one indicating the fit. A value of 1 means 100% match.
+The output contains the list of models that matched the criteria and a value between zero and one indicating the fit.
+A value of 1 means 100% match.
 
 As with the other commands, you can choose to output in JSON or CSV format.
 
@@ -850,23 +805,22 @@ You can also use the metadata to automate the ML learning for data classificatio
 Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
 achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute "match-model". It will combine the responses into a single output. The input arguments are the same as the previous command.
 
+```bash
+pcli help match-folder
 ```
-pcli-match-folder 1.6.9
+```
 Matches all models in a folder to other models
 
-USAGE:
-    pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold> --folder <folder>
+Usage: pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold> --folder <folder>
 
-OPTIONS:
-    -d, --folder <folder>          Folder ID (e.g. --folder=1)
-    -e, --exclusive                If specified, the output will include only models that belong to
-                                   the input folder
-    -h, --help                     Print help information
-    -m, --meta                     Enhance output with model's metadata
-    -s, --search <search>          Search clause to further filter output (optional: e.g. a model
-                                   name)
-    -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5'
-    -V, --version                  Print version information
+Options:
+  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5'
+  -d, --folder <folder>        Folder ID (e.g. --folder=1)
+  -s, --search <search>        Search clause to further filter output (optional: e.g. a model name)
+  -e, --exclusive              If specified, the output will include only models that belong to the input folder
+  -m, --meta                   Enhance output with model's metadata
+  -h, --help                   Print help
+  -V, --version                Print version
 ```
 
 Example:
@@ -887,7 +841,7 @@ could be used as input for further post processing. For example, machine learnin
 outputs and therefore it requires the user to specify file names for each output.
 
 ```bash
-$ pcli --tenant="whirlpool" match-report \
+$ pcli --tenant="mytenant" match-report \
 --duplicates="./my_duplicates.csv" \
 --graph="./my_graph.graphviz" \
 --dictionary="./my_dictionary.json" \
@@ -923,6 +877,15 @@ per type of file and status.
 $ pcli --tenant="mytenant" --format="csv" --pretty status --folder="1"
 ```
 
+It will produce a summary report with stats of model types and their processing states. A state of "FIISHED" means that all is well and
+the model is ready for use. Status of "FAILED" indicates that there is a data issue with the model or perhaps the file does not 
+contain any valid geometry.
+
+The "status" command takes an optional flag "--repair". When specified, PCLI will automatically issue "reprocess" command for any model
+that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline process in Physna. 
+Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the "status" command until all
+background processing completed.
+
 ### Classifiers
 
 In addition to geometric search and comparison functions, Physna offers AI technology capable of automatic classification of images into 3D models. If you have uploaded sufficient number of models in your environment and have created and trained an image classifier, you could upload a 2D image of a part (e.g. digital picture taken with your phone) and Physna can recognize the object and retrieve the 3D model that corresponds to it.
@@ -948,18 +911,15 @@ You will need the classifier UUID in order to be able to execute the next comman
 As I mentioned above, you can take a 2D picture of a part and upload that image as input. Physna's AI will analyze the image and produce a list of predictions to what 3D models this image belongs. The command to do this is:
 
 ```
-pcli help classification-predictions
-pcli-classification-predictions 1.6.8
 Read the list of classification predictions for an image by given classifier
 
-USAGE:
-    pcli --tenant <tenant> classification-predictions --uuid <uuid> --input <input>
+Usage: pcli --tenant <tenant> classification-predictions --uuid <uuid>... --input <input>
 
-OPTIONS:
-    -h, --help             Print help information
-    -i, --input <input>    Path to the input file
-    -u, --uuid <uuid>      Classifier UUID
-    -V, --version          Print version information
+Options:
+  -u, --uuid <uuid>...  Classifier UUID
+  -i, --input <input>   Path to the input file
+  -h, --help            Print help
+  -V, --version         Print version
 ```
 
 The required arguments are:
@@ -1003,34 +963,29 @@ The assumption is that if model "A" has metadata property of "classification" wi
 98.5% confidence that model "B" is also an "apple". 
 We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"
 
+```bash
+pcli help label-folder
+````
 ```
-pcli-label-folder 1.6.10
 Labels models in a folder based on KNN algorithm and geometric match score as distance
 
-USAGE:
-    pcli --tenant <tenant> label-folder [OPTIONS] --folder <folder> --threshold <threshold> --classification <classification>
+Usage: pcli --tenant <tenant> label-folder [OPTIONS] --folder <folder> --threshold <threshold> --classification <classification>
 
-OPTIONS:
-    -c, --classification <classification>
-            The name for the classification metadata property
-
-    -d, --folder <folder>
-            Folder ID (e.g. --folder=1)
-
-    -e, --exclusive
-            If specified, the output will include only models that belong to the input folder
-
-    -h, --help
-            Print help information
-
-    -s, --search <search>
-            Search clause to further filter output (optional: e.g. a model name)
-
-    -t, --threshold <threshold>
-            Match threshold percentage (e.g. '96.5')
-
-    -V, --version
-            Print version information
+Options:
+  -d, --folder <folder>
+          Folder ID (e.g. --folder=1)
+  -t, --threshold <threshold>
+          Match threshold percentage (e.g. '96.5')
+  -c, --classification <classification>
+          The name for the classification metadata property
+  -s, --search <search>
+          Search clause to further filter output (optional: e.g. a model name)
+  -e, --exclusive
+          If specified, the output will include only models that belong to the input folder
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 
 Example:

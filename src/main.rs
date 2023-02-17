@@ -4,7 +4,7 @@ use clap::{
     Arg, 
     Command
 };
-use model::{ModelMetadata, ModelMetadataItem};
+use model::{ModelMetadata, ModelMetadataItem, ModelExtendedMetadataItem};
 use std::path::Path;
 use std::fs::read_to_string;
 use serde::{
@@ -97,36 +97,6 @@ pub struct ClientConfiguration {
     tenants: HashMap<String, Tenant>,
 }
 
-fn validate_uuid_argument(uuid: Option<&str>) -> Uuid {
-    let uuid = match uuid {
-        Some(uuid) => uuid,
-        None => {
-            eprintln!("Error: {}", "The argument --uuid is mandatory");
-            ::std::process::exit(exitcode::DATAERR);                        
-        }
-    };
-    let uuid = Uuid::from_str(uuid);
-    let uuid = match uuid {
-        Ok(uuid) => uuid,
-        Err(e) => {
-            eprintln!("Error: Invalid UUID format: {}", e);
-            ::std::process::exit(exitcode::DATAERR);
-        },
-    };
-    uuid
-}
-
-fn validate_string_argument(name: &str, value: Option<&str>) -> String {
-    let value = match value {
-        Some(value) => value.to_string(),
-        None => {
-            eprintln!("Error: The argument {} is mandatory", name);
-            ::std::process::exit(exitcode::DATAERR);
-        }
-    };
-    value
-}
-
 /// The main application entry point
 fn main() {
 
@@ -171,15 +141,16 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The model UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
                 ),
@@ -187,25 +158,33 @@ fn main() {
         .subcommand(
             Command::new("reprocess")
                 .about("Reprocesses a specific model")
+                .alias("reprocess-model")
                 .arg(
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append)
                         .help("The model UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 ),
         )
         .subcommand(
             Command::new("delete-model")
                 .about("Deletes a specific model")
+                .alias("delete")
                 .arg(
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
-                        .help("The model UUID")
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append)
+                        .num_args(1..)
+                        .help("The model UUID. You can specify multiple UUIDs to be deleted")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 ),
         )
         .subcommand(
@@ -215,10 +194,10 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The model UUID")
                         .required(true)
-                ),
+                        .value_parser(clap::value_parser!(Uuid))                ),
         )
         .subcommand(
             Command::new("models")
@@ -227,16 +206,18 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
                         .help("Folder ID (e.g. --folder=1)")
                         .required(true)
+                        .value_parser(clap::value_parser!(u32).range(1..))
                 )
                 .arg(
                     Arg::new("search")
                         .short('s')
                         .long("search")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Search clause to further filter output (optional: e.g. a model name)")
                         .required(false)
                 )
@@ -244,7 +225,7 @@ fn main() {
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
                 ),
@@ -256,9 +237,10 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The model UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 ),
         )
         .subcommand(
@@ -268,30 +250,32 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The model UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
                     Arg::new("threshold")
                         .short('t')
                         .long("threshold")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Match threshold percentage (e.g. '96.5')")
                         .required(true)
+                        .value_parser(clap::value_parser!(f64))
                 )
                 .arg(
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
                 )
                 .arg(
                     Arg::new("classification")
                         .long("classification")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The name for the classification metadata property")
                         .required(false)
                         .requires("meta")
@@ -300,7 +284,7 @@ fn main() {
                 .arg(
                     Arg::new("tag")
                         .long("tag")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The value for the classification metadata property")   
                 ),
         )
@@ -311,24 +295,25 @@ fn main() {
                     Arg::new("threshold")
                         .short('t')
                         .long("threshold")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Match threshold percentage (e.g. '96.5'")
                         .required(true)
+                        .value_parser(clap::value_parser!(f64))
                 )
                 .arg(
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Folder ID (e.g. --folder=1)")
                         .required(true)
+                        .value_parser(clap::value_parser!(u32))
                 )
                 .arg(
                     Arg::new("search")
                         .short('s')
                         .long("search")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Search clause to further filter output (optional: e.g. a model name)")
                         .required(false)
                 )
@@ -336,7 +321,7 @@ fn main() {
                     Arg::new("exclusive")
                         .short('e')
                         .long("exclusive")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("If specified, the output will include only models that belong to the input folder")
                         .required(false)
                 )
@@ -344,7 +329,7 @@ fn main() {
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
                 ),
@@ -356,23 +341,25 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Folder ID (e.g. --folder=1)")
-                        .required(true) 
+                        .required(true)                  
+                        .value_parser(clap::value_parser!(u32))
                 )
                 .arg(
                     Arg::new("threshold")
                         .short('t')
                         .long("threshold")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Match threshold percentage (e.g. '96.5')")
                         .required(true)
+                        .value_parser(clap::value_parser!(f64))
                 )
                 .arg(
                     Arg::new("classification")
                         .short('c')
                         .long("classification")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The name for the classification metadata property")
                         .required(true)
                 )
@@ -380,7 +367,7 @@ fn main() {
                     Arg::new("search")
                         .short('s')
                         .long("search")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Search clause to further filter output (optional: e.g. a model name)")
                         .required(false)
                 )
@@ -388,7 +375,7 @@ fn main() {
                     Arg::new("exclusive")
                         .short('e')
                         .long("exclusive")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("If specified, the output will include only models that belong to the input folder")
                         .required(false)
                 ),
@@ -400,9 +387,10 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("The model UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 ),
         )
         .subcommand(
@@ -412,10 +400,18 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Folder ID (e.g. --folder=1)")
                         .required(true)
+                        .value_parser(clap::value_parser!(u32))
+                )
+                .arg(
+                    Arg::new("repair")
+                        .short('r')
+                        .long("repair")
+                        .num_args(0)
+                        .help("Forces repair operation on any model that is not in status FINISHED")
+                        .required(false)
                 ),
         )
         .subcommand(
@@ -425,17 +421,16 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Folder ID (e.g. --folder=1)")
                         .required(true)
+                        .value_parser(clap::value_parser!(u32))
                 )
                 .arg(
                     Arg::new("input")
                         .short('i')
                         .long("input")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Path to the input file")
                         .required(true)
                 )
@@ -443,8 +438,7 @@ fn main() {
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(0)
                         .help("Input CSV file name containing additional metadata associated with this model")
                         .required(false)
                 )
@@ -452,38 +446,38 @@ fn main() {
                     Arg::new("batch")
                         .short('b')
                         .long("batch")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Batch UUID (Optional, if not provided new one will be generated)")
                         .required(false)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
                     Arg::new("units")
                         .long("units")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("The unit of measure for the model (e.g. 'inch', 'mm', etc.)")
                         .required(true)
                 )
                 .arg(
                     Arg::new("validate")
                         .long("validate")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Blocks until the model is in its final state")
                         .required(false)
                 )
                 .arg(
                     Arg::new("timeout")
                         .long("timeout")
-                        .takes_value(true)
+                        .num_args(1)
                         .requires("validate")
                         .help("When validating, specifies the timeout in seconds")
                         .required(false)
+                        .value_parser(clap::value_parser!(u32))
                 )
                 .arg(
                     Arg::new("source")
                         .long("source")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Specifies the Source ID to be used")
                         .required(false)
                 )
@@ -496,8 +490,7 @@ fn main() {
                     Arg::new("input")
                         .short('i')
                         .long("input")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Path to the input file")
                         .required(true)
                 )
@@ -509,8 +502,7 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
-                        .multiple_occurrences(true)
+                        .num_args(1)
                         .help("Top-level assembly UUID (you can provide multiple)")
                         .required(true)
                 )
@@ -518,7 +510,7 @@ fn main() {
                     Arg::new("threshold")
                         .short('t')
                         .long("threshold")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Match threshold percentage (e.g. '96.5')")
                         .required(true)
                 )
@@ -526,7 +518,7 @@ fn main() {
                     Arg::new("duplicates")
                         .short('d')
                         .long("duplicates")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Output file name to store the duplicate report in CSV format")
                         .required(true)
                 )
@@ -534,7 +526,7 @@ fn main() {
                     Arg::new("graph")
                         .short('g')
                         .long("graph")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Output file name to store the assembly graph in DOT Graphviz format")
                         .required(true)
                 )
@@ -542,7 +534,7 @@ fn main() {
                     Arg::new("dictionary")
                         .short('r')
                         .long("dictionary")
-                        .takes_value(true)
+                        .num_args(1)
                         .help("Output file name to store the index-name-uuid dictionary in JSON format")
                         .required(true)
                 )
@@ -550,7 +542,7 @@ fn main() {
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
-                        .takes_value(false)
+                        .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
                 ),    
@@ -566,7 +558,7 @@ fn main() {
                     Arg::new("name")
                         .short('n')
                         .long("name")
-                        .takes_value(true)
+                        .num_args(1)
                         .required(true)
                         .help("Name of the new folder")
                 )
@@ -582,7 +574,7 @@ fn main() {
                     Arg::new("name")
                         .short('n')
                         .long("name")
-                        .takes_value(true)
+                        .num_args(1)
                         .required(true)
                         .help("Name of the new image classifier")
                 )
@@ -590,10 +582,10 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .takes_value(true)
-                        .multiple_occurrences(true)
+                        .num_args(1..)
                         .help("Folder ID (you can provide multiple, e.g. --folder=1 --folder=2)")
                         .required(true)
+                        .value_parser(clap::value_parser!(u32))
                 )
         )
         .subcommand(
@@ -607,35 +599,25 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
-                        .takes_value(true)
-                        .multiple_occurrences(true)
+                        .num_args(1..)
                         .help("Classifier UUID")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
                     Arg::new("input")
                         .short('i')
                         .long("input")
-                        .takes_value(true)
-                        .multiple_occurrences(false)
+                        .num_args(1)
                         .help("Path to the input file")
                         .required(true)
                 ),
         )
         .arg(
-            Arg::new("config")
-                .short('c')
-                .long("config")
-                .takes_value(true)
-                .required(false)
-                .help("Configuration file")
-                .default_value(default_configuration_file_path.as_str())
-        )
-        .arg(
             Arg::new("tenant")
                 .short('t')
                 .long("tenant")
-                .takes_value(true)
+                .num_args(1)
                 .required(true)
                 .help("Your tenant ID (check with your Physna admin if not sure)")
         )
@@ -643,30 +625,32 @@ fn main() {
             Arg::new("format")
                 .short('f')
                 .long("format")
-                .takes_value(true)
+                .num_args(1)
                 .required(false)
                 .default_value("json")
                 .help("Output data format (optional: e.g. 'json', 'csv', or 'tree')")
+                .value_parser(["json", "csv", "tree", "table"])
         )
         .arg(
             Arg::new("pretty")
                 .short('p')
                 .long("pretty")
-                .takes_value(false)
+                .num_args(0)
                 .required(false)
                 .help("Produces pretty output (optional: default is 'false')")
         )
         .arg(
             Arg::new("color")
                 .long("color")
-                .takes_value(true)
+                .num_args(1)
                 .required(false)
                 .help("Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white')")
+                .value_parser(["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"])
         )        
         .get_matches();
 
-    let tenant = validate_string_argument("tenant", matches.value_of("tenant"));
-    let format_string = validate_string_argument("format", matches.value_of("format"));
+    let tenant = matches.get_one::<String>("tenant").unwrap();
+    let format_string = matches.get_one::<String>("format").unwrap();
     let format_string = format_string.to_uppercase();
     let output_format = match format::Format::from_str(format_string.as_str()) {
         Ok(format) => format,
@@ -675,8 +659,8 @@ fn main() {
             ::std::process::exit(exitcode::USAGE);
         },
     };
-    let pretty = matches.is_present("pretty");
-    let color = matches.value_of("color");
+    let pretty = matches.get_flag("pretty");
+    let color = matches.get_one::<String>("color");
 
     let color = match color {
         Some(color) => {
@@ -689,21 +673,12 @@ fn main() {
         None => None,
     };
 
-    let configuration = matches.value_of("config");
+
+    let configuration = initialize(&String::from(default_configuration_file_path));
     let configuration = match configuration {
-        Some(configuration) => {
-            trace!("Reading client configuration from {}...", configuration);
-            let configuration = initialize(&String::from(configuration));
-            match configuration {
-                Ok(configuration) => configuration,
-                Err(e) => {
-                    eprintln!("Cannot initialize process with the provided configuration: {}", e);
-                    ::std::process::exit(exitcode::CONFIG);
-                },
-            }
-        },
-        None => {
-            eprintln!("No valid configuration available");
+        Ok(configuration) => configuration,
+        Err(e) => {
+            eprintln!("Cannot initialize process with the provided configuration: {}", e);
             ::std::process::exit(exitcode::CONFIG);
         },
     };
@@ -786,7 +761,7 @@ fn main() {
             }
         },
         Some(("create-folder", sub_matches)) => {
-            let name = sub_matches.value_of("name");
+            let name = sub_matches.get_one::<String>("name");
             let name = match name {
                 Some(name) => name,
                 None => {
@@ -838,55 +813,45 @@ fn main() {
             }
         },        
         Some(("model", sub_matches)) => {
-            let meta: bool = sub_matches.is_present("meta");
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-                match api.get_model(&uuid, false, meta) {
-                    Ok(model) => {
-                        let output = format::format_model(&model, &output_format, pretty, color).unwrap();
-                        println!("{}", output);
-                        ::std::process::exit(exitcode::OK);
-                    },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        ::std::process::exit(exitcode::DATAERR); 
-                    }
-                };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
-            }
+            let meta: bool = sub_matches.get_flag("meta");
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap(); // it is safe to call unwrap() here because the argument is required
+            match api.get_model(&uuid, false, meta) {
+                Ok(model) => {
+                    let output = format::format_model(&model, &output_format, pretty, color).unwrap();
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR); 
+                }
+            };
         },
         Some(("model-meta", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-                match api.get_model_metadata(&uuid) {
-                    Ok(meta) => {
-                        match meta {
-                            Some(meta) => {
-                                let output = format::format_model_metadata(&meta, &output_format, pretty, color).unwrap();
-                                println!("{}", output);
-                                ::std::process::exit(exitcode::OK);
-                            },
-                            None => {
-                                println!("");
-                                ::std::process::exit(exitcode::OK);
-                            },
-                        }
-
-                    },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        ::std::process::exit(exitcode::DATAERR); 
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            match api.get_model_metadata(&uuid) {
+                Ok(meta) => {
+                    match meta {
+                        Some(meta) => {
+                            let output = format::format_model_metadata(&uuid, &meta, &output_format, pretty, color).unwrap();
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        None => {
+                            println!("");
+                            ::std::process::exit(exitcode::OK);
+                        },
                     }
-                };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
-            }
+
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR); 
+                }
+            };
         },
         Some(("upload-model-meta", sub_matches)) => {
-            let input_file = validate_string_argument("input", sub_matches.value_of("input"));
+            let input_file = sub_matches.get_one::<String>("input").unwrap();
             match api.upload_model_metadata(&input_file) {
                 Ok(_) => {
                     ::std::process::exit(exitcode::OK);
@@ -898,36 +863,20 @@ fn main() {
             };
         }, 
         Some(("assembly-tree", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-                let tree = api.get_model_assembly_tree(&uuid);
-                let proper_tree = model::ModelAssemblyTree::from(tree.unwrap());
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let tree = api.get_model_assembly_tree(&uuid);
+            let proper_tree = model::ModelAssemblyTree::from(tree.unwrap());
 
-                let output = format::format_enhanced_assembly_tree(&proper_tree, &output_format, pretty, color);
-                println!("{}", output.unwrap());
-                ::std::process::exit(exitcode::OK);
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
-            }
+            let output = format::format_enhanced_assembly_tree(&proper_tree, &output_format, pretty, color);
+            println!("{}", output.unwrap());
+            ::std::process::exit(exitcode::OK);
         },             
         Some(("models", sub_matches)) => {
-            let search: Option<String>;
-            if sub_matches.is_present("search") {
-                search = Some(String::from(sub_matches.value_of("search").unwrap()));
-            } else {
-                search = None;
-            }
+            let search = sub_matches.get_one::<String>("search");
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let meta: bool = sub_matches.get_flag("meta");
 
-            let folders: Option<Vec<u32>>;
-            if sub_matches.is_present("folder") {
-                let folder_id_strings = Some(String::from(sub_matches.value_of("folder").unwrap()));
-                folders = Some(folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect());
-            } else {
-                folders = None;
-            }
-
-            let meta: bool = sub_matches.is_present("meta");
+            trace!("List of folders: {:?}", folders);
 
             match api.list_all_models(folders, search, meta) {
                 Ok(physna_models) => {
@@ -943,97 +892,49 @@ fn main() {
             }
         },
         Some(("match-model", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-
-                let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
-                let threshold: f64 = match threshold.parse() {
-                    Ok(threshold) => threshold,
-                    Err(e) => {
-                        eprintln!("Error: Failed to parse the threshold value: {}", e);
-                        ::std::process::exit(exitcode::DATAERR);
-                    }
-                };
-
-                if (threshold > 1.0) || (threshold < 0.0) {
-                    eprintln!("Error: The threshold value must be between 0 and 1");
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let with_meta = sub_matches.get_flag("meta");
+            let classification = sub_matches.get_one::<String>("classification");
+            let tag = sub_matches.get_one::<String>("tag");
+            
+            let model_matches = match api.match_model(&uuid, threshold.to_owned(), with_meta, classification, tag) {
+                Ok(model_matches) => {
+                    trace!("We found {} match(es)!", model_matches.inner.len());
+                    model_matches
+                },
+                Err(e) => {
+                    warn!("No matches found.");
+                    eprintln!("{}", e);
                     ::std::process::exit(exitcode::DATAERR);
-                }
-                
-                let with_meta = sub_matches.is_present("meta");
+                },
+            };
 
-                let classification = sub_matches.value_of("classification");
-                let tag = sub_matches.value_of("tag");
-                
-                let model_matches = match api.match_model(&uuid, threshold, with_meta, classification, tag) {
-                    Ok(model_matches) => {
-                        trace!("We found {} match(es)!", model_matches.inner.len());
-                        model_matches
-                    },
-                    Err(e) => {
-                        warn!("No matches found.");
-                        eprintln!("{}", e);
-                        ::std::process::exit(exitcode::DATAERR);
-                    },
-                };
-
-                let output = format::format_list_of_model_matches(&model_matches, &output_format, pretty, color);
-                match output {
-                    Ok(output) => {
-                        println!("{}", output);
-                        ::std::process::exit(exitcode::OK);
-                    },
-                    Err(e) => {
-                        eprintln!("{}", e);
-                        ::std::process::exit(exitcode::DATAERR);
-                    },
-                };
+            let output = format::format_list_of_model_matches(&model_matches, &output_format, pretty, color);
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
             }
         },
         Some(("match-folder", sub_matches)) => {
-            let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
-            let threshold: f64 = match threshold.parse() {
-                Ok(threshold) => threshold,
-                Err(e) => {
-                    eprintln!("Error: Failed to parse the threshold value: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
-                }
-            };
-            
-            if (threshold > 1.0) || (threshold < 0.0) {
-                eprintln!("Error: The threshold value must be between 0 and 1");
-                ::std::process::exit(exitcode::DATAERR);
-            }
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let exclusive = sub_matches.get_flag("exclusive");
+            let with_meta = sub_matches.get_flag("meta");
+            let search = sub_matches.get_one::<String>("search");
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let meta = sub_matches.get_flag("meta");
 
-            let exclusive: bool = sub_matches.is_present("exclusive");
-            let with_meta: bool = sub_matches.is_present("meta");
-
-            let search: Option<String>;
-            if sub_matches.is_present("search") {
-                search = Some(String::from(sub_matches.value_of("search").unwrap()));
-            } else {
-                search = None;
-            }
-
-            let folder_id = validate_string_argument("folder", sub_matches.value_of("folder"));
-            let folder_id = match folder_id.parse::<u32>() {
-                Ok(folder_id) => folder_id,
-                Err(e) => {
-                    eprintln!("Error: Failed to parse the value for folder ID: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
-                }
-            };
-            let mut folders_list: Vec<u32> = Vec::new();
-            folders_list.push(folder_id);
-            let folders_list = Some(folders_list);
-
-            let meta: bool = sub_matches.is_present("meta");
-
-            match api.list_all_models(folders_list.clone(), search, meta) {
+            match api.list_all_models(folders.clone(), search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, exclusive, with_meta) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), exclusive, with_meta) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
                             println!("{}", output.unwrap());
@@ -1052,59 +953,22 @@ fn main() {
             }
         },
         Some(("label-folder", sub_matches)) => {
-            let threshold = validate_string_argument("threshold", sub_matches.value_of("threshold"));
-            let threshold: f64 = match threshold.parse() {
-                Ok(threshold) => threshold,
-                Err(e) => {
-                    eprintln!("Error: Failed to parse the threshold value: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
-                }
-            };
-            
-            if (threshold > 1.0) || (threshold < 0.0) {
-                eprintln!("Error: The threshold value must be between 0 and 1");
-                ::std::process::exit(exitcode::DATAERR);
-            }
-            
-            let folder_id = validate_string_argument("folder", sub_matches.value_of("folder"));
-            let folder_id = match folder_id.parse::<u32>() {
-                Ok(folder_id) => folder_id,
-                Err(e) => {
-                    eprintln!("Error: Failed to parse the value for folder ID: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
-                }
-            };
-                        
-            let classification = validate_string_argument("classification", sub_matches.value_of("classification"));
-
-            let exclusive = sub_matches.contains_id("exclusive");
-            
-            let mut folders_list: Vec<u32> = Vec::new();
-            folders_list.push(folder_id);
-            let folders_list = Some(folders_list);
-
-            let search: Option<String> = match sub_matches.get_one("search") {
-                Some(search) => {
-                    let search: &String = &*search;
-                    Some(search.to_owned())
-                },
-                None => None,
-            };
-            
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let classification = sub_matches.get_one::<String>("classification").unwrap();
+            let exclusive = sub_matches.get_flag("exclusive");
+            let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
+            let meta = sub_matches.get_flag("meta");
 
-            let meta: bool = sub_matches.is_present("meta");
-
-            debug!("Running NKK labeling for folder {}...", folder_id);
-            
-            match api.list_all_models(folders_list.clone(), search, meta) {
+            match api.list_all_models(folders.clone(), search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, folders_list, false, true) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true) {
                         Ok(report) => {
                             
                             // ensure that the classification property is available
@@ -1144,7 +1008,7 @@ fn main() {
                                     debug!("Found matches for model {}, Checking for classification labels {}...", master_model_uuid, classification);
                                     
                                     for matched_model in item.matches {
-                                        if !exclusive || (exclusive && matched_model.model.folder_id.eq(&folder_id)) {
+                                        if !exclusive || (exclusive && folders.contains(&&matched_model.model.folder_id)) {
                                             let model = matched_model.model;
                                             let meta = match model_meta_cache.get(&model.uuid) {
                                                 Some(meta) => meta.clone(),
@@ -1165,15 +1029,15 @@ fn main() {
                                                     debug!("Matching model {} has {}={:?}", model.uuid, classification, classification_value);
 
                                                     if !classification_value.value.eq_ignore_ascii_case("unclassified") {
-                                                        let meta_item = ModelMetadataItem::new(
-                                                            classification_value.key_id.clone(),
+                                                        let meta_item = ModelExtendedMetadataItem::new(
                                                             master_model_uuid.clone(),
+                                                            classification_value.key_id.clone(),
                                                             String::from(classification.clone()),
                                                             String::from(classification_value.value.clone()),
                                                         );
 
                                                         debug!("Assigning {}={:?} for model {}...", classification, classification_value, master_model_uuid);
-                                                        api.set_model_property(&property.id, &meta_item).unwrap();
+                                                        api.set_model_property(&meta_item.model_uuid, &property.id, &meta_item.to_item()).unwrap();
                                                         break;
                                                     } else {
                                                         debug!("Ignoring the matching model's classification value.");
@@ -1209,51 +1073,38 @@ fn main() {
             
         },
         Some(("reprocess", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
+            let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
+            trace!("Reprocess arguments: {:?}", uuids);
+            for uuid in uuids {
                 match api.reprocess_model(&uuid) {
                     Ok(()) => {
                         println!();
-                        ::std::process::exit(exitcode::OK);
                     },
                     Err(e) => {
                         eprintln!("Error: {}", e);
                         ::std::process::exit(exitcode::DATAERR); 
                     }
                 };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
             }
         },
         Some(("delete-model", sub_matches)) => {
-            if sub_matches.is_present("uuid") {
-                let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
+            let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
+            for uuid in uuids {
                 match api.delete_model(&uuid) {
                     Ok(()) => {
                         println!();
-                        ::std::process::exit(exitcode::OK);
                     },
                     Err(e) => {
                         eprintln!("Error: {}", e);
                         ::std::process::exit(exitcode::DATAERR); 
                     }
                 };
-            } else {
-                eprintln!("Model ID not specified!");
-                ::std::process::exit(exitcode::USAGE);
             }
         },
         Some(("status", sub_matches)) => {
-            let folders: Option<Vec<u32>>;
-            if sub_matches.is_present("folder") {
-                let folder_id_strings = Some(String::from(sub_matches.value_of("folder").unwrap()));
-                folders = Some(folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect());
-            } else {
-                folders = None;
-            }
-
-            let result = api.tenant_stats(folders);
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let repair = sub_matches.get_flag("repair");
+            let result = api.tenant_stats(folders, repair);
             match result {
                 Ok(result) => {
                     let output = format::format_environment_status_report(&result, &output_format, pretty, color);
@@ -1268,36 +1119,20 @@ fn main() {
         },
         Some(("upload", sub_matches)) => {
 
-            let folder_id = sub_matches.value_of("folder");
-            let folder_id = match folder_id {
-                Some(folder_id) => {
-                    match u32::from_str(&folder_id) {
-                        Ok(folder_id) => folder_id,
-                        Err(e) => {
-                            eprintln!("Error: Invalid number format for the folder ID: {}", e);
-                            ::std::process::exit(exitcode::DATAERR);
-                        }
-                    }
-                },
-                None => {
-                    eprintln!("Error: The folder ID argument is mandatory");
-                    ::std::process::exit(exitcode::DATAERR);
-                }
-            };
-
-            let file =  String::from(sub_matches.value_of("input").unwrap());
-            let metadata_file = sub_matches.value_of("meta");
-            let batch_uuid = match sub_matches.value_of("batch") {
-                Some(batch_uuid) => Uuid::from_str(&batch_uuid).unwrap(),
+            let folder = sub_matches.get_one::<u32>("folder").unwrap();
+            let file = sub_matches.get_one::<String>("input").unwrap();
+            let metadata_file = sub_matches.get_one::<String>("meta");
+            let batch_uuid = match sub_matches.get_one::<Uuid>("batch") {
+                Some(batch_uuid) => batch_uuid.to_owned(),
                 None => Uuid::new_v4(),
             };
-            let units =  String::from(sub_matches.value_of("units").unwrap());
-            let validate = sub_matches.is_present("validate");
-            let timeout: Option<u64> = match sub_matches.value_of("timeout") {
-                Some(duration) => Some(duration.parse::<u64>().unwrap()),
+            let units = sub_matches.get_one::<String>("units").unwrap();
+            let validate = sub_matches.get_flag("validate");
+            let timeout: Option<u64> = match sub_matches.get_one::<u64>("timeout") {
+                Some(duration) => Some(duration.clone()),
                 None => None,
             };
-            let source_id: Option<String> = match sub_matches.value_of("source") {
+            let source_id: Option<String> = match sub_matches.get_one::<String>("source") {
                 Some(id) => Some(id.to_string()),
                 None => None,
             };
@@ -1308,7 +1143,7 @@ fn main() {
                     let mut list_of_models: Vec<model::Model> = Vec::new();
                     for path in glob {
                         let file = path.unwrap().into_os_string().into_string().unwrap();
-                        let result = api.upload_file(folder_id, &file, batch_uuid, &units, source_id.clone());
+                        let result = api.upload_file(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
                         match result {
                             Ok(model) => {
                                 match model {
@@ -1366,66 +1201,55 @@ fn main() {
             }
         },
         Some(("match-report", sub_matches)) => {
-            let uuids = sub_matches.values_of("uuid");
-            let duplicates_file_name = sub_matches.value_of("duplicates").unwrap();
-            let graph_file_name = sub_matches.value_of("graph").unwrap();
-            let dictionary_file_name = sub_matches.value_of("dictionary").unwrap();
+            let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
+            let duplicates_file_name = sub_matches.get_one::<String>("duplicates").unwrap();
+            let graph_file_name = sub_matches.get_one::<String>("graph").unwrap();
+            let dictionary_file_name = sub_matches.get_one::<String>("dictionary").unwrap();
 
-            match uuids {
-                Some(uuids) => {
-                    let uuids: Vec<_> = uuids.collect();
-                    let uuids: Vec<Uuid> = uuids.into_iter().map(|u| Uuid::from_str(u).unwrap()).collect();
-                    trace!("Source UUIDs: {:?}", uuids);
+            trace!("Source UUIDs: {:?}", uuids);
 
-                    let threshold = sub_matches.value_of("threshold").unwrap();
-                    let threshold: f64 = threshold.parse().unwrap();
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
+            let with_meta = sub_matches.get_flag("meta");
 
-                    let with_meta: bool = sub_matches.is_present("meta");
-        
-                    match api.generate_model_match_report(uuids, threshold, with_meta) {
-                        Ok(report) => {
+            match api.generate_model_match_report(uuids, threshold, with_meta) {
+                Ok(report) => {
 
-                            let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
-                            match fs::write(duplicates_file_name, format!("{}", &output.unwrap().to_string())) {
-                                Ok(()) => (),
-                                Err(e) => {
-                                    error!("Failed to write duplicates report as {}, because of: {}", duplicates_file_name, e);
-                                    ::std::process::exit(exitcode::DATAERR);
-                                }
-                            }
-        
-                            match fs::write(graph_file_name, format!("{}", Dot::with_config(&report.graph, &[]))) {
-                                Ok(()) => (),
-                                Err(e) => {
-                                    error!("Failed to write graph as {}, because of: {}", graph_file_name, e);
-                                    ::std::process::exit(exitcode::DATAERR);
-                                }
-                            }
-
-                            match fs::write(dictionary_file_name, format!("{}", serde_json::to_string_pretty(&report.dictionary).unwrap())) {
-                                Ok(()) => (),
-                                Err(e) => {
-                                    error!("Failed to write dictionary as {}, because of: {}", dictionary_file_name, e);
-                                    ::std::process::exit(exitcode::DATAERR);
-                                }
-                            }
-                        },
+                    let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
+                    match fs::write(duplicates_file_name, format!("{}", &output.unwrap().to_string())) {
+                        Ok(()) => (),
                         Err(e) => {
-                            eprintln!("Failed to generate assembly graph: {}", e);
+                            error!("Failed to write duplicates report as {}, because of: {}", duplicates_file_name, e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+
+                    match fs::write(graph_file_name, format!("{}", Dot::with_config(&report.graph, &[]))) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            error!("Failed to write graph as {}, because of: {}", graph_file_name, e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+
+                    match fs::write(dictionary_file_name, format!("{}", serde_json::to_string_pretty(&report.dictionary).unwrap())) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            error!("Failed to write dictionary as {}, because of: {}", dictionary_file_name, e);
                             ::std::process::exit(exitcode::DATAERR);
                         }
                     }
                 },
-                None => {
-                    trace!("No list of UUIDs specified.");
-                },
+                Err(e) => {
+                    eprintln!("Failed to generate assembly graph: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
             }
         },  
         Some(("create-image-classifier", sub_matches)) => {
-            let name = sub_matches.value_of("name").unwrap();
+            let name = sub_matches.get_one::<String>("name").unwrap();
 
             let folders: Vec<u32>;
-            let folder_id_strings = Some(String::from(sub_matches.value_of("folder").unwrap()));
+            let folder_id_strings = sub_matches.get_one::<String>("folder");
             folders = folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect();
 
             let uuid = api.create_image_classifier(name.to_string(), folders);
@@ -1464,9 +1288,9 @@ fn main() {
         },
         Some(("classification-predictions", sub_matches)) => {
 
-            let uuid = validate_uuid_argument(sub_matches.value_of("uuid"));
-            let file =  String::from(sub_matches.value_of("input").unwrap());
-            let scores = api.get_classification_predictions(uuid, file.as_str());
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let file =  sub_matches.get_one::<String>("input").unwrap();
+            let scores = api.get_classification_predictions(uuid.clone(), file.as_str());
             match scores {
                 Ok(scores) => {
                     let output = format::format_list_of_classification_predictions(scores, &output_format, pretty, color);
