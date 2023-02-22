@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.1
+The latest version is 1.7.2
+
+### Version 1.7.2
+
+* Fixed a bug preventing proper triggering of --repair for the "status" command
 
 ### Version 1.7.1
 
