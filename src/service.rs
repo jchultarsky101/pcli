@@ -489,7 +489,7 @@ impl Api {
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
         for model in models {
-            if force_fix && model.state.eq_ignore_ascii_case("FINISHED") {
+            if force_fix && !model.state.eq_ignore_ascii_case("FINISHED") {
                 let _ = self.reprocess_model(&model.uuid);
             }
 
