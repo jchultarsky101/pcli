@@ -479,6 +479,7 @@ impl Api {
         &mut self,
         folders: Vec<u32>,
         force_fix: bool,
+        ignore_assemblies: bool,
     ) -> anyhow::Result<EnvironmentStatusReport> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
@@ -490,7 +491,9 @@ impl Api {
 
         for model in models {
             if force_fix && !model.state.eq_ignore_ascii_case("FINISHED") {
-                let _ = self.reprocess_model(&model.uuid);
+                if !model.is_assembly || !ignore_assemblies {
+                    let _ = self.reprocess_model(&model.uuid);
+                }
             }
 
             let folder_id = model.folder_id;
