@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.2
+The latest version is 1.7.3
+
+### Version 1.7.3 
+
+* Added --noasm flag to the "status" command to filter out assemblies when initiating automatic repair with the --repair flag
 
 ### Version 1.7.2
 
@@ -889,6 +893,8 @@ The "status" command takes an optional flag "--repair". When specified, PCLI wil
 that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline process in Physna. 
 Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the "status" command until all
 background processing completed.
+
+The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
 
 ### Classifiers
 
