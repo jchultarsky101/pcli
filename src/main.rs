@@ -412,6 +412,14 @@ fn main() {
                         .num_args(0)
                         .help("Forces repair operation on any model that is not in status FINISHED")
                         .required(false)
+                )
+                .arg(
+                    Arg::new("noasm")
+                        .long("noasm")
+                        .num_args(0)
+                        .help("When using --repair, this flag causes assmeblies to be ignored")
+                        .required(false)
+                        .requires("repair")
                 ),
         )
         .subcommand(
@@ -1104,7 +1112,8 @@ fn main() {
         Some(("status", sub_matches)) => {
             let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
             let repair = sub_matches.get_flag("repair");
-            let result = api.tenant_stats(folders, repair);
+            let noasm = sub_matches.get_flag("noasm");
+            let result = api.tenant_stats(folders, repair, noasm);
             match result {
                 Ok(result) => {
                     let output = format::format_environment_status_report(&result, &output_format, pretty, color);
