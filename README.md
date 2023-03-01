@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.3
+The latest version is 1.7.4
+
+### Version 1.7.4
+
+* Added "delete-folder" command
+* Renamed the --meta parameter of the "upload" command to --meta-input to prevent confusion
 
 ### Version 1.7.3 
 
