@@ -381,6 +381,26 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("delete-folder")
+                .about("Deletes a specific folder")
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .num_args(1)
+                        .help("Folder ID (e.g. --folder=1)")
+                        .required(true)                  
+                        .value_parser(clap::value_parser!(u32))
+                )
+                .arg(
+                    Arg::new("force")
+                        .long("force")
+                        .num_args(0)
+                        .help("If specified, all models in the folder will be deleted")
+                        .required(false)
+                ),
+        )
+        .subcommand(
             Command::new("assembly-bom")
                 .about("Generates flat BoM of model IDs for model")
                 .arg(
@@ -443,10 +463,9 @@ fn main() {
                         .required(true)
                 )
                 .arg(
-                    Arg::new("meta")
-                        .short('m')
-                        .long("meta")
-                        .num_args(0)
+                    Arg::new("meta-input")
+                        .long("meta-input")
+                        .num_args(1)
                         .help("Input CSV file name containing additional metadata associated with this model")
                         .required(false)
                 )
@@ -960,6 +979,42 @@ fn main() {
                 }
             }
         },
+        Some(("delete-folder", sub_matches)) => {
+            let force = sub_matches.get_flag("force");
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+
+            // delete all models in the folders if forced
+            if force {
+                match api.list_all_models(folders.clone(), None, false) {
+                    Ok(physna_models) => {
+                        let models = model::ListOfModels::from(physna_models);
+                        let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
+                        for uuid in uuids {
+                            match api.delete_model(&uuid) {
+                                Ok(()) => (),
+                                Err(e) => {
+                                    eprintln!("{}", e);
+                                    ::std::process::exit(exitcode::DATAERR);
+                                }
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        ::std::process::exit(exitcode::DATAERR);
+                    }
+                }
+            }
+
+            // attempt to delete the folder itself
+            match api.delete_folder(folders) {
+                Ok(()) => (),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            }
+        },
         Some(("label-folder", sub_matches)) => {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
@@ -1130,7 +1185,7 @@ fn main() {
 
             let folder = sub_matches.get_one::<u32>("folder").unwrap();
             let file = sub_matches.get_one::<String>("input").unwrap();
-            let metadata_file = sub_matches.get_one::<String>("meta");
+            let metadata_file = sub_matches.get_one::<String>("meta-input");
             let batch_uuid = match sub_matches.get_one::<Uuid>("batch") {
                 Some(batch_uuid) => batch_uuid.to_owned(),
                 None => Uuid::new_v4(),
