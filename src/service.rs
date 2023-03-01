@@ -64,6 +64,11 @@ impl Api {
         }
     }
 
+    pub fn delete_folder(&self, folders: Vec<u32>) -> anyhow::Result<()> {
+        self.client.delete_folder(&folders)?;
+        Ok(())
+    }
+
     pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
         Ok(self.client.get_model_metadata(uuid)?)
     }

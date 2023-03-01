@@ -443,6 +443,30 @@ impl ApiClient {
         Ok(result)
     }
 
+    pub fn delete_folder(&self, folders: &Vec<u32>) -> Result<(), ClientError> {
+        trace!("Deleting folder {:?}...", folders);
+        let url = format!("{}/v2/folders", self.base_url);
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+
+        for folder in folders {
+            query_parameters.push(("ids".to_string(), folder.to_string()));
+        }
+
+        let builder = self
+            .client
+            .request(reqwest::Method::DELETE, url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
+            .query(&query_parameters)
+            .json(&folders);
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        let response = self.client.execute(request)?;
+        self.evaluate_satus(response.status())?;
+        Ok(())
+    }
+
     pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
         let url = format!("{}/v1/{}/containers", self.base_url, self.tenant);
         let bearer: String = format!("Bearer {}", self.access_token);
