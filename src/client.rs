@@ -29,6 +29,7 @@ pub enum ClientError {
     Unauthorized,
     Forbidden,
     NotFound,
+    FailedToDeleteFolder(String),
     Unsupported(String),
 }
 
@@ -73,6 +74,7 @@ impl std::fmt::Display for ClientError {
             ),
             Self::Forbidden => write!(f, "Request is forbidden!"),
             Self::NotFound => write!(f, "Resource not found!"),
+            Self::FailedToDeleteFolder(message) => write!(f, "Error: {}", message),
             Self::Unsupported(message) => write!(f, "Error: {}", message),
         }
     }
@@ -463,20 +465,24 @@ impl ApiClient {
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
         let response = self.client.execute(request)?;
-        self.evaluate_satus(response.status())?;
+        let status = response.status();
+
+        if status.is_client_error() {
+            return Err(ClientError::FailedToDeleteFolder("Error deleting folder. Make sure the folder is empty first or use the --force flag".to_string()));
+        } else {
+            self.evaluate_satus(status)?;
+        }
+
         Ok(())
     }
 
     pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
-        let url = format!("{}/v1/{}/containers", self.base_url, self.tenant);
+        trace!("Creating folder {}...", &name);
+        let url = format!("{}/v2/folders", self.base_url);
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+        query_parameters.push(("name".to_string(), name.clone()));
+
         let bearer: String = format!("Bearer {}", self.access_token);
-
-        let form = Form::new()
-            .part("name", Part::text(name.clone()))
-            .part("sourceId", Part::text("".to_string()));
-
-        trace!("POST {}", url);
-
         let response = self
             .client
             .post(url)
@@ -486,10 +492,12 @@ impl ApiClient {
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
-            .multipart(form)
+            .header("Content-Length", 0)
+            .query(&query_parameters)
             .send()?;
 
-        self.evaluate_satus(response.status())?;
+        let status = response.status();
+        self.evaluate_satus(status)?;
         let json = response.text().unwrap();
         trace!("{}", json);
         let result: FolderCreateResponse = serde_json::from_str(&json)?;
@@ -538,7 +546,7 @@ impl ApiClient {
 
         let form = Form::new().part("uuid", Part::text(uuid.to_string()));
 
-        trace!("POST {}", url);
+        trace!("Reprocessing model {}", url);
 
         let response = self
             .client
