@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.4
+The latest version is 1.7.5
+
+### Version 1.7.5
+
+* Upgraded the create-folder command to use the new API endpoint in V2
+* Added more descriptive error message in the case when the user is trying to delete non-empty directory without --force
 
 ### Version 1.7.4
 
