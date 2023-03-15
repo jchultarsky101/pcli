@@ -55,7 +55,7 @@ impl Folder {
 
 impl From<FolderCreateResponse> for Folder {
     fn from(response: FolderCreateResponse) -> Self {
-        Folder::new(response.container_id, response.name)
+        Folder::new(response.folder.id, response.folder.name)
     }
 }
 
@@ -1309,10 +1309,8 @@ pub struct FileUploadResponse {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct FolderCreateResponse {
-    #[serde(rename = "ContainerId")]
-    pub container_id: u32,
-    #[serde(rename = "Name")]
-    pub name: String,
+    #[serde(rename = "folder")]
+    pub folder: Folder,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
