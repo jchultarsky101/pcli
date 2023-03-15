@@ -29,6 +29,7 @@ pub enum ClientError {
     Unauthorized,
     Forbidden,
     NotFound,
+    FailedToDeleteFolder(String),
     Unsupported(String),
 }
 
@@ -73,6 +74,7 @@ impl std::fmt::Display for ClientError {
             ),
             Self::Forbidden => write!(f, "Request is forbidden!"),
             Self::NotFound => write!(f, "Resource not found!"),
+            Self::FailedToDeleteFolder(message) => write!(f, "Error: {}", message),
             Self::Unsupported(message) => write!(f, "Error: {}", message),
         }
     }
@@ -463,7 +465,14 @@ impl ApiClient {
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
         let response = self.client.execute(request)?;
-        self.evaluate_satus(response.status())?;
+        let status = response.status();
+
+        if status.is_client_error() {
+            return Err(ClientError::FailedToDeleteFolder("Error deleting folder. Make sure the folder is empty first or use the --force flag".to_string()));
+        } else {
+            self.evaluate_satus(status)?;
+        }
+
         Ok(())
     }
 
