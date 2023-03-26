@@ -4,21 +4,10 @@ use clap::{
     Arg, 
     Command
 };
-use model::{ModelMetadata, ModelMetadataItem, ModelExtendedMetadataItem};
-use std::path::Path;
-use std::fs::read_to_string;
-use serde::{
-    Serialize, 
-    Deserialize
-};
+use pcli::{service, token, format, model::{self, ModelMetadata, ModelMetadataItem, ModelExtendedMetadataItem}};
 use std::str::FromStr;
-use serde_yaml;
 use dirs::home_dir;
 use uuid::Uuid;
-use anyhow::{
-    anyhow, 
-    Result
-};
 use exitcode;
 use log::{
     trace,
@@ -41,61 +30,6 @@ use std::{
 };
 use glob::glob;
 
-mod client;
-mod token;
-mod model;
-mod service;
-mod format;
-
-/// Returns a configuration object used for HTTP calls from the more generic configuration struct
-fn from_client_configuration(configuration: &ClientConfiguration, tenant: &String) -> Result<model::Configuration> {
-
-    let base_path = configuration.base_path.clone();
-    let token = token::get_token_for_tenant(configuration, tenant);
-
-    match token {
-        Ok(token) => {
-            Ok(model::Configuration {
-                base_url: base_path,
-                access_token: token.clone(),
-            })
-        },
-        Err(e) => return Err(e),
-    }
-}
-
-/// Reads the client configuration from a file 
-fn initialize(configuration: &String) -> Result<ClientConfiguration> {
-
-    let configuration = Path::new(configuration.as_str());
-    match read_to_string(configuration) {
-        Ok(configuration) => {
-            Ok(serde_yaml::from_str(&configuration)?)            
-        },
-        Err(message) => {
-           Err(anyhow!(format!("Cannot open configuration file {:?}, because of: {}", configuration, message)))
-        }
-    }
-}
-
-/// Represents a Physna tenant
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Tenant {
-    #[serde(default)]
-    client_id: String,
-    #[serde(default)]
-    client_secret: Option<String>,
-    #[serde(default)]
-    page_size: Option<u32>,
-}
-
-/// The client configuration contains the base path, URL to the identity provider and the currently selected tenant
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct ClientConfiguration {
-    base_path: String,
-    identity_provider_url: String,
-    tenants: HashMap<String, Tenant>,
-}
 
 /// The main application entry point
 fn main() {
@@ -701,7 +635,7 @@ fn main() {
     };
 
 
-    let configuration = initialize(&String::from(default_configuration_file_path));
+    let configuration = pcli::configuration::initialize(&String::from(default_configuration_file_path));
     let configuration = match configuration {
         Ok(configuration) => configuration,
         Err(e) => {
@@ -710,7 +644,7 @@ fn main() {
         },
     };
 
-    let api_configuration = from_client_configuration(&configuration, &tenant);
+    let api_configuration = pcli::configuration::from_client_configuration(&configuration, &tenant);
 
     let mut api: service::Api;
     match api_configuration {

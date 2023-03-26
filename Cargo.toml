@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"
 
+[[bin]]
+name = "pcli"
+
 [dependencies]
 log = "0.4"
 pretty_env_logger = "0.4"
