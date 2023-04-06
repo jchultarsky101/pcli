@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.5
+The latest version is 1.7.6
+
+### Version 1.7.6
+
+* Added match-scan command
+* Refactored the base functionality as a library to allow other projects to use the functionality (i.e. PTUI)
 
 ### Version 1.7.5
 
@@ -184,8 +189,10 @@ Commands:
   models                      Lists all available models in a folder
   assembly-tree               Reads the model's assembly tree
   match-model                 Matches all models to the specified one
+  match-scan                  Scan-match all models to the specified one
   match-folder                Matches all models in a folder to other models
   label-folder                Labels models in a folder based on KNN algorithm and geometric match score as distance
+  delete-folder               Deletes a specific folder
   assembly-bom                Generates flat BoM of model IDs for model
   status                      Generates a tenant's environment status summary
   upload                      Uploads a file to Physna
@@ -203,10 +210,10 @@ Options:
   -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
   -f, --format <format>  Output data format (optional: e.g. 'json', 'csv', or 'tree') [default: json] [possible values: json, csv, tree, table]
   -p, --pretty           Produces pretty output (optional: default is 'false')
-      --color <color>    Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white') [possible values
-: black, red, green, yellow, blue, magenta, cyan, white]
+      --color <color>    Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white') [possible values: black, red, green, yellow, blue, magenta, cyan, white]
   -h, --help             Print help
   -V, --version          Print version
+utility to the Physna public API/V2
 ```
 
 The application supports sub-commands. To get more detailed help for a
@@ -817,6 +824,9 @@ matches, we will create a new medata property with name provided as --classifica
 If --classification is not provided, no new metadata will be created. 
 This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
 You can also use the metadata to automate the ML learning for data classification.
+
+There is a variant of this command named "match-scan". The usage is identical, but the algorythm used to perform the match differs significantly. Instead of detailed tessellation comparison,
+it uses the bounding box and other surface properties. This match is better suited when comparing models produced by scanning technologies, such as photogrammetry, which result in very large number of polygons.
 
 ### Matching Entire Folders of Models
 

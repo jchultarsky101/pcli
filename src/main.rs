@@ -223,6 +223,51 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("match-scan")
+                .about("Scan-match all models to the specified one")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .num_args(1)
+                        .help("The model UUID")
+                        .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
+                )
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. '96.5')")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .num_args(0)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("classification")
+                        .long("classification")
+                        .num_args(1)
+                        .help("The name for the classification metadata property")
+                        .required(false)
+                        .requires("meta")
+                        .requires("tag")
+                )
+                .arg(
+                    Arg::new("tag")
+                        .long("tag")
+                        .num_args(1)
+                        .help("The value for the classification metadata property")   
+                ),
+        )
+        .subcommand(
             Command::new("match-folder")
                 .about("Matches all models in a folder to other models")
                 .arg(
@@ -860,6 +905,37 @@ fn main() {
             let tag = sub_matches.get_one::<String>("tag");
             
             let model_matches = match api.match_model(&uuid, threshold.to_owned(), with_meta, classification, tag) {
+                Ok(model_matches) => {
+                    trace!("We found {} match(es)!", model_matches.inner.len());
+                    model_matches
+                },
+                Err(e) => {
+                    warn!("No matches found.");
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            };
+
+            let output = format::format_list_of_model_matches(&model_matches, &output_format, pretty, color);
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            }
+        },
+        Some(("match-scan", sub_matches)) => {
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let with_meta = sub_matches.get_flag("meta");
+            let classification = sub_matches.get_one::<String>("classification");
+            let tag = sub_matches.get_one::<String>("tag");
+            
+            let model_matches = match api.match_scan_model(&uuid, threshold.to_owned(), with_meta, classification, tag) {
                 Ok(model_matches) => {
                     trace!("We found {} match(es)!", model_matches.inner.len());
                     model_matches
