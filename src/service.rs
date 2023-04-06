@@ -165,7 +165,7 @@ impl Api {
     }
 
     pub fn list_all_models(
-        &mut self,
+        &self,
         folders: Vec<u32>,
         search: Option<&String>,
         meta: bool,
