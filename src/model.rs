@@ -7,6 +7,7 @@ use ptree::style::Style;
 use ptree::TreeItem;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::io;
@@ -39,7 +40,7 @@ pub trait ToCsv {
     fn to_csv(&self, pretty: bool) -> anyhow::Result<String>;
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, Default, Serialize, Deserialize)]
 pub struct Folder {
     #[serde(rename = "id")]
     pub id: u32,
@@ -50,6 +51,24 @@ pub struct Folder {
 impl Folder {
     pub fn new(id: u32, name: String) -> Self {
         Folder { id, name }
+    }
+}
+
+impl Ord for Folder {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.name.cmp(&other.name)
+    }
+}
+
+impl PartialOrd for Folder {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.name.cmp(&other.name))
+    }
+}
+
+impl PartialEq for Folder {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
     }
 }
 

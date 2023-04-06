@@ -12,7 +12,7 @@ use std::io::Error;
 use std::time::Duration;
 
 pub fn get_token_for_tenant(
-    configuration: &super::ClientConfiguration,
+    configuration: &crate::configuration::ClientConfiguration,
     tenant: &String,
 ) -> Result<String> {
     trace!("Obtaining new token from the provider...");
@@ -56,14 +56,14 @@ pub fn get_token_for_tenant(
     }
 }
 
-fn validate_token(token: String) -> Result<String> {
+pub fn validate_token(token: String) -> Result<String> {
     match decode_header(&token) {
         Ok(_header) => return Ok(token),
         Err(e) => return Err(anyhow!("Failed to decode token: {}", e)),
     }
 }
 
-fn resolve_file_name(tenant: &String) -> String {
+pub fn resolve_file_name(tenant: &String) -> String {
     let home_directory = home_dir().unwrap();
     let home_directory = String::from(home_directory.to_str().unwrap());
     let default_token_file_path = home_directory;
@@ -125,7 +125,7 @@ fn read_client_secret_from_console() -> String {
 }
 
 fn request_new_token_from_provider(
-    configuration: &super::ClientConfiguration,
+    configuration: &crate::configuration::ClientConfiguration,
     tenant: &String,
 ) -> Result<String> {
     trace!("Requesting new token...");

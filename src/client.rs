@@ -435,6 +435,30 @@ impl ApiClient {
         Ok(result)
     }
 
+    pub fn get_model_scan_match_page(
+        &self,
+        uuid: &Uuid,
+        threshold: f64,
+        per_page: u32,
+        page: u32,
+    ) -> Result<PartToPartMatchResponse, ClientError> {
+        let url = format!(
+            "{}/v2/models/{id}/scan-matches",
+            self.base_url,
+            id = urlencode(uuid.to_string())
+        );
+
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+        query_parameters.push(("threshold".to_string(), threshold.to_string()));
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
+
+        let json = self.get(url.as_str(), Some(query_parameters))?;
+        //trace!("{}", json);
+        let result: PartToPartMatchResponse = serde_json::from_str(&json)?;
+        Ok(result)
+    }
+
     pub fn get_list_of_folders(&self) -> Result<FolderListResponse, ClientError> {
         trace!("Reading list of folders...");
         let url = format!("{}/v2/folders", self.base_url);

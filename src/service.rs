@@ -165,7 +165,7 @@ impl Api {
     }
 
     pub fn list_all_models(
-        &mut self,
+        &self,
         folders: Vec<u32>,
         search: Option<&String>,
         meta: bool,
@@ -220,6 +220,104 @@ impl Api {
         tag: Option<&String>,
     ) -> anyhow::Result<ListOfModelMatches> {
         trace!("Matching model {}...", uuid);
+        let mut list_of_matches: Vec<ModelMatch> = Vec::new();
+
+        let mut has_more = true;
+        let mut page: u32 = 1;
+        let per_page: u32 = 50;
+        while has_more {
+            match self
+                .client
+                .get_model_match_page(uuid, threshold, per_page, page)
+            {
+                Ok(result) => {
+                    if result.page_data.total > 0 {
+                        let matches = result.matches;
+                        if !matches.is_empty() {
+                            debug!("Reading the list of properties for model {}...", uuid);
+                            let properties = match classification {
+                                Some(_) => Some(self.client.get_list_of_properties()?),
+                                None => None,
+                            };
+
+                            for m in matches {
+                                let mut model_match = ModelMatch::from(m);
+                                let model = model_match.model.clone();
+                                let metadata: Option<ModelMetadata>;
+                                if with_meta {
+                                    metadata = self.get_model_metadata(&model.uuid)?;
+                                } else {
+                                    metadata = None;
+                                }
+
+                                match classification {
+                                    Some(classification) => {
+                                        let property = properties
+                                            .as_ref()
+                                            .unwrap()
+                                            .properties
+                                            .iter()
+                                            .find(|p| {
+                                                p.name.eq_ignore_ascii_case(classification.as_str())
+                                            });
+                                        let property = match property {
+                                            Some(property) => property.clone(),
+                                            None => self
+                                                .client
+                                                .post_property(&String::from(classification))?,
+                                        };
+
+                                        let item = ModelMetadataItem::new(
+                                            property.id.clone(),
+                                            String::from(classification),
+                                            String::from(tag.unwrap()),
+                                        );
+
+                                        debug!(
+                                            "Setting property {} to value of {} for model {}",
+                                            classification,
+                                            tag.unwrap(),
+                                            model.uuid
+                                        );
+                                        self.client.put_model_property(
+                                            &uuid,
+                                            &property.id,
+                                            &item,
+                                        )?;
+                                    }
+                                    None => (),
+                                }
+
+                                match metadata {
+                                    Some(metadata) => {
+                                        model_match.model.metadata =
+                                            Some(metadata.properties.to_owned())
+                                    }
+                                    None => model_match.model.metadata = None,
+                                }
+                                list_of_matches.push(model_match);
+                            }
+                        }
+                    }
+                    has_more = result.page_data.current_page < result.page_data.last_page;
+                    page = result.page_data.current_page + 1;
+                }
+                Err(e) => return Err(anyhow!("{}", e)),
+            };
+        }
+
+        Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
+    }
+
+    pub fn match_scan_model(
+        &self,
+        uuid: &Uuid,
+        threshold: f64,
+        with_meta: bool,
+        classification: Option<&String>,
+        tag: Option<&String>,
+    ) -> anyhow::Result<ListOfModelMatches> {
+        trace!("Scan match model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
 
         let mut has_more = true;
