@@ -1,0 +1,115 @@
+{"matches":[
+    {
+        "matchedModel":{
+            "thumbnail":"https://storage.googleapis.com",
+            "createdAt":"2022-07-08T06:18:42.190Z",
+            "fileType":".CATPART",
+            "folderId":172,
+            "id":"96bcc6cb-08bc-4be0-b1b2-92389ca52b4c",
+            "isAssembly":false,
+            "metadata":[],
+            "name":"Bevel Gear 1_2",
+            "ownerId":"954726ba-6c5a-44b5-9026-192cfbe2d062",
+            "state":"finished",
+            "units":"mm"
+        },
+        "matchPercentage":1
+    },
+    {
+        "matchedModel":{
+            "thumbnail":"https://storage.googleapis.com",
+            "createdAt":"2022-07-08T06:44:18.987Z",
+            "fileType":".CATPART",
+            "folderId":173,
+            "id":"96bcd91c-dbe6-4e23-a6be-8d6b77905016",
+            "isAssembly":false,
+            "metadata":[
+                {
+                    "metadataKeyId":108,
+                    "name":"20. Weight (D)",
+                    "value":"100g"
+                },
+                {
+                    "metadataKeyId":107,
+                    "name":"19. Revision (D)",
+                    "value":"3"
+                },
+                {
+                    "metadataKeyId":106,
+                    "name":"18. ID (D)",
+                    "value":"132"
+                },
+                {
+                    "metadataKeyId":104,
+                    "name":"16. Time taken (D)",
+                    "value":"120min"
+                },
+                {
+                    "metadataKeyId":105,
+                    "name":"17. Sequence (D)",
+                    "value":"#9"
+                },
+                {
+                    "metadataKeyId":103,
+                    "name":"15. Difficulty (D)",
+                    "value":"Low"
+                },
+                {
+                    "metadataKeyId":102,
+                    "name":"14. Size (D)",
+                    "value":"100MB"
+                },
+                {
+                    "metadataKeyId":101,
+                    "name":"13. Type (D)",
+                    "value":".catpart"
+                },
+                {
+                    "metadataKeyId":100,
+                    "name":"12. Site (D)",
+                    "value":"Nagoya"
+                },
+                {
+                    "metadataKeyId":99,
+                    "name":"11. Path (D)",
+                    "value":"C:\\Users\\win.htetswe\\Desktop\\New folder\\Yuyama"
+                },
+                {
+                    "metadataKeyId":98,
+                    "name":"10. Supplier (D)",
+                    "value":"Z"
+                },
+                {
+                    "metadataKeyId":97,
+                    "name":"9.Opacity (D)",
+                    "value":"100%"
+                },
+                {
+                    "metadataKeyId":96,
+                    "name":"8. Match (D)",
+                    "value":"88.89%"
+                },
+                {
+                    "metadataKeyId":95,
+                    "name":"7. Cost (D)",
+                    "value":"$500 "
+                },
+                {
+                    "metadataKeyId":94,
+                    "name":"6. Date (D)",
+                    "value":"22-Aug"
+                },
+                {
+                    "metadataKeyId":93,
+                    "name":"5. Material(D)",
+                    "value":"Steel (Grade C)"
+                },
+                {
+                    "metadataKeyId":92,
+                    "name":"4.Approved (D)",
+                    "value":"JPN"
+                },
+                {
+                    "meta:dataKeyId":91,"name":"3.Checked(D) ","value":"SID"},{"metadataKeyId":90,"name":"2.Drawn(D)","value":"SID"},{"metadataKeyId":89,"name":"1.Description(D)","value":"Physna is a company on a journey to empower human creativity by connecting thephysical and digital worlds. Physna was founded on the principle that computersshould be taught to accurately \"think\" in 3D - sorting and analyzing geometric objectslike written code. Physna is building a future where people have the tools they need todesign and analyze the parts and products that shape our world, to create and driveinnovation in product design, 3D printing, augmented and virtual reality, gaming,healthcare, and beyond.Physna Enterprise is a SaaS based solution that employs patented 3D geometry basedalgorithms and AI/ML neural networks to search, match and compare 3D models.Physna is not a CAD, PDM or PLM tool.Physna does, however, expose its functionality as consumable APIs that can be used tointegrate Physna's functionality into existing IT Applications to enhance yourcompanies business processes.Physna offers training, consulting and professional services through partnerorganizations for the customization of the Physna Base Connector that enables uni orbi-directional movement of model and metadata information between PLM Solutionsand Physna."},{"metadataKeyId":49,"name":"FILE NAME","value":"bevel gear 1_3.catpart"}],"name":"Bevel Gear 1_3","ownerId":"954726ba-6c5a-44b5-9026-192cfbe2d062","state":"finished","units":"mm"},"matchPercentage":1},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/969dfccb-ecd2-4454-b8a9-74d80e244d12_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191327Z&X-Goog-Expires=36001&X-Goog-SignedHeaders=host&X-Goog-Signature=e25f994a4cdf40089d2603e7c0bdc8493e324ff0381ef57eea1b63e2a85b9467411a3b81cd0a4224631e65669a1fb9971ea30cbf5b621d8d51d36b404c9955e5f33238bbf1a20961b1e3db688d2ccf446ddd8a0f34ae0311a0fec5191bc2c0c39d4adba16f84b62a7447efe06f3a0514cadfbfc84dc5d3635944e189decf87d79de1c0422c90ad2c9db72cefee23a8d27fe606320524c5bfac215dea8460df98ca79775322fa67f0c63ca0536e150efd99d07241bca2728751faf13d657b5614e55a9bf1cc77677c71d99b861ea635732a44974ed7955750c5b54d4a60a33b60ea4aa0bfe0932687dc1f37feaf9df50a1d72193b3c06e9b2ae8dac5bd7b1e0ca","createdAt":"2022-06-20T13:12:23.209Z","fileType":".SLDPRT","folderId":166,"id":"969dfccb-ecd2-4454-b8a9-74d80e244d12","isAssembly":false,"metadata":[],"name":"part13","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.999993139370386},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/98034817-410c-42be-af69-abedafcd5176_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191327Z&X-Goog-Expires=36001&X-Goog-SignedHeaders=host&X-Goog-Signature=c111e82b715d40f35410cf35fb9995c2ccd7aad2400bf9ed0423b1698a1fd30a81edd669eac198b7a2effb7ad7752b8debdeb8e5d971b8e3335c5022b7cbce02fa3f8b7f051809339b2beb926f7da86e1acc560b74a90149a143cac00a08a30520a1e012e2f7694229b3fe487600135749e0c17a6b19d0e72173569d97e967a09d86d95d817f28bf2117aa9c99a35bf67a564cca5c6b9314b7b7503102f353d8e2730248a86fdb3d60ccc97dd92654e1011390d77473441ccdefe81907a216f32cf7085f0f6db2694fcb73941273d2f0b1343f7768c0af1c2564d9216cfc7cf97449117833d05aec159a7cbe15272b4ad3884b1ae02e9d24bac3a104e2088fe4","createdAt":"2022-12-13T07:30:31.900Z","fileType":".CATPART","folderId":182,"id":"98034817-410c-42be-af69-abedafcd5176","isAssembly":false,"metadata":[],"name":"p2-116018-1","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9714535311426993},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96c429e6-6ff3-4503-ae8a-f0feaa67ee9d_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191328Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=449eaa8f85ba8cd5ef1702952242ebd7e9c953a57d9960aee917621a0699ec2839fe105ce7b5e10abe379299fa6be46f135a86e9eb21c54ea806de041c481e6b30b302b0daaf0902ce683a2a430482a90b716705c3cc6ab204193c0c5219b5db84005bf716a7628fe9babb907d096141f67a1b357dff5f0628af3e57c42fcee9d9746137e719d3859382cec03fd10c34e98509336caf7bb20f6160217bb9aaacc24bdb697e88f60c2cdfc8392058cb86ab7f6789841d8bcf3b842d6e58d2f1bfb2ea6c94eb135eeb3315a1b250269fa3d2db5bb3698ff9f8822fb99c1cd98e10761eaf917b66b7ff0141f52bbb048f108c7411be8b18eec77a035c317c68f5b5","createdAt":"2022-07-11T01:19:20.268Z","fileType":".CATPART","folderId":168,"id":"96c429e6-6ff3-4503-ae8a-f0feaa67ee9d","isAssembly":false,"metadata":[{"metadataKeyId":74,"name":null,"value":"Nagoya"},{"metadataKeyId":73,"name":null,"value":"Brass"},{"metadataKeyId":72,"name":null,"value":"2000"},{"metadataKeyId":49,"name":"FILE NAME","value":"p2-116018-1.catpart"},{"metadataKeyId":75,"name":null,"value":"A"},{"metadataKeyId":76,"name":null,"value":"2022"},{"metadataKeyId":77,"name":null,"value":"2000"},{"metadataKeyId":78,"name":null,"value":"B"},{"metadataKeyId":79,"name":null,"value":"Nagoya"},{"metadataKeyId":80,"name":null,"value":"2000"},{"metadataKeyId":81,"name":null,"value":"B"},{"metadataKeyId":82,"name":null,"value":"Nagoya"},{"metadataKeyId":85,"name":null,"value":"Nagoya"},{"metadataKeyId":84,"name":null,"value":"B"},{"metadataKeyId":83,"name":null,"value":"2000"},{"metadataKeyId":86,"name":null,"value":"2000"},{"metadataKeyId":87,"name":null,"value":"B"},{"metadataKeyId":88,"name":null,"value":"Nagoya"},{"metadataKeyId":109,"name":"Mapping data","value":"AAEE"},{"metadataKeyId":55,"name":"Part Number","value":"AA-108"},{"metadataKeyId":110,"name":"Y.Cost (Yen)","value":"2000"},{"metadataKeyId":111,"name":"Y.Supplier","value":"B"},{"metadataKeyId":112,"name":"Y.Site","value":"Nagoya"}],"name":"P2-116018-1","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9710307611495443},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96a5077d-7354-4e56-ba1f-41c58f06090c_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191328Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=381a61176895a442078ccf48d6052bf37e96caa153dce82973e2ab22ecdd4ccf94353e53bc174e101f42f5c1e2c01d876dcb920af56de315661b5a5e3cb00999e979c2a9dc120cb12b7a4edc4afb695f8b1911d0e37f1c778f2a0349cce007db47677846eecfe49920562a794a3bc402b8adf467984686121577b1a87e1611c501aa604780ad00117d626fac96d0fdd345c31c19ed9f79c1071f87c342dced187aa7c49662d822f4687089a26858ba2a278074cb0115e5848e62eb06b7fae59acc4524480b1b1f1459f2059c639def0c2b154cab0c62abe799daf1b289d42225ab207ba68858e60d81dc9b1145341be4bfb64b90857c76f49c0517bee59925ef","createdAt":"2022-06-22T07:13:29.491Z","fileType":".CATPART","folderId":164,"id":"96a5077d-7354-4e56-ba1f-41c58f06090c","isAssembly":false,"metadata":[],"name":"ABCD_14x14x14","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9707643886464998},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96c52fcb-67b0-4b27-8b8f-d7a48cd301a0_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191328Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=f90490e5a890546ef12cb99146e3eebfcd7333ad22b8f71957d204f645922ab0586d1fd9b15e868e81c2e03281c5492287a3e1816087e8c501f9975db9d7882157ba77fb0fd3b6041f8aa2b6ee48aa0e390b0f144b3f0384ba87cd1f59af60bfbe67f1bd8bf9aa81729698e0f5c27d553d34c7b5b342acee3a513ea9282818ab7bdba39011fbe1cfd55594a95b5a782a257b1f47d9e3b6adc6c61e38f3c0a1c30860ac69ace28081210207c5ac03a14f7091e7b33adfffce8443584e43d8101880de6cc27d1219cdc1216e1ffe84efc5d6f46b011359447d18743a4f5e1a62b6efe2ad615b46a8a469f3252ce43bd42a3cb1677e59d494d55b26668dba1c39f3","createdAt":"2022-07-11T07:25:28.273Z","fileType":".CATPART","folderId":169,"id":"96c52fcb-67b0-4b27-8b8f-d7a48cd301a0","isAssembly":false,"metadata":[{"metadataKeyId":49,"name":"FILE NAME","value":"p2-116018-2.catpart"},{"metadataKeyId":72,"name":null,"value":"2000"},{"metadataKeyId":73,"name":null,"value":"Brass"},{"metadataKeyId":74,"name":null,"value":"Nagoya"},{"metadataKeyId":75,"name":null,"value":"B"},{"metadataKeyId":76,"name":null,"value":"2022"},{"metadataKeyId":77,"name":null,"value":"2000"},{"metadataKeyId":78,"name":null,"value":"B"},{"metadataKeyId":79,"name":null,"value":"Nagoya"},{"metadataKeyId":80,"name":null,"value":"2000"},{"metadataKeyId":81,"name":null,"value":"B"},{"metadataKeyId":82,"name":null,"value":"Nagoya"},{"metadataKeyId":83,"name":null,"value":"2000"},{"metadataKeyId":84,"name":null,"value":"B"},{"metadataKeyId":85,"name":null,"value":"Nagoya"},{"metadataKeyId":86,"name":null,"value":"2000"},{"metadataKeyId":87,"name":null,"value":"B"},{"metadataKeyId":88,"name":null,"value":"Nagoya"},{"metadataKeyId":109,"name":"Mapping data","value":"AAEF"},{"metadataKeyId":55,"name":"Part Number","value":"AA-109"},{"metadataKeyId":110,"name":"Y.Cost (Yen)","value":"2000"},{"metadataKeyId":111,"name":"Y.Supplier","value":"B"},{"metadataKeyId":112,"name":"Y.Site","value":"Nagoya"}],"name":"P2-116018-2","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9700208050118927},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/980615fa-8f6c-48c2-a1f1-6438c8d5dab0_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191328Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=3d0c141da73ef01ff7bfe5301a27652ba77097b5d7f7ae00bddb8caf192059fa79c384b1aef9d8ddf1129e60f81a1eb4b44980f72f826fceab97f099ccbf0a7c120ed6ae47faef2ff949dca2737dc7c5b248e42b422cc5803c854331b1e515b4f6156cfd7e2d38ad7685e6735ef2aed2bf930fa9880d47e6db903fe3a02e9e9452bc2bb5d1f02cafd9182a9ca645561050028d67a4837e21c1071156f75098ae359c4f683991175a78868a891c3ab28d6eaee898aa4d861772996837b4397ba09f94516ce010b53f4ed315495c4d05b9ddece712de29cd22b0aac0d5b8e48a5e1e094544a4803789bdd6d655297e7e3227a27bcce3272bc1d0690825782f3dbe","createdAt":"2022-12-14T00:14:12.982Z","fileType":".CATPART","folderId":183,"id":"980615fa-8f6c-48c2-a1f1-6438c8d5dab0","isAssembly":false,"metadata":[],"name":"p2-116018-2","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9700208050118927},{"matchedModel":{"thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96a50779-e249-42c1-87d4-d771b4bc6cd4_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T191328Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=0055fc7fd7934663ea446ebe5de76126be5c85c251cbcab07430d884eebaabf656e9675fd74058b350e4f900a64e9b77426898ccd672581e6737f65fcbac628dbff87d7f943a6c8c00a0b29f86556f80405f991aaa9efbe9390b8b9e3f5b1cfd0b2c7d97b9e78a61906dcf95cc3dd81087ccd253e84cb81aa1ff28c13ceefed63b09e5a8b0087276524cbc00a564ea2ae944deeb3ccb6fbc0d44ff0225845a9ae42d0e09e3e97c20df819f19570ec07b6b4870d5b33897f889cf223c409c9918c5a057aaff1f9788f340eb462ec7d245eba5a0d37c1617b5298ab9907b123bfb043bd27c9c4313f0a35d2a7b8106ef8cbb37c48040e5eb397ec0b575c686f7ec","createdAt":"2022-06-22T07:13:07.019Z","fileType":".CATPART","folderId":164,"id":"96a50779-e249-42c1-87d4-d771b4bc6cd4","isAssembly":false,"metadata":[],"name":"ABCD_13x13x13","ownerId":"1e9caaf7-2ab1-408f-adc0-f32776f2ab26","state":"finished","units":"mm"},"matchPercentage":0.9015454649089278}],"filterData":{"createdAt":["2022-07-08T06:18:42.190Z","2022-07-08T06:44:18.987Z","2022-06-20T13:12:23.209Z","2022-12-13T07:30:31.900Z","2022-07-11T01:19:20.268Z","2022-06-22T07:13:29.491Z","2022-07-11T07:25:28.273Z","2022-12-14T00:14:12.982Z","2022-06-22T07:13:07.019Z"],"folders":[{"id":164,"name":"Smart tag test"},{"id":166,"name":"TEST _ 01"},{"id":168,"name":"Pen Liner 1"},{"id":169,"name":"Pen Liner 2"},{"id":172,"name":"Angle Grinder 2"},{"id":173,"name":"Angle Grinder 3"},{"id":182,"name":"Pen LIner 1 (Reupload)"},{"id":183,"name":"Pen Liner 2 (Reupload)"}],"isAssembly":[false],"metadata":[{"metadataKeyId":49,"name":"FILE NAME","values":["bevel gear 1_3.catpart","p2-116018-1.catpart","p2-116018-2.catpart"]},{"metadataKeyId":55,"name":"Part Number","values":["AA-108","AA-109"]},{"metadataKeyId":72,"name":null,"values":["2000"]},{"metadataKeyId":73,"name":null,"values":["Brass"]},{"metadataKeyId":74,"name":null,"values":["Nagoya"]},{"metadataKeyId":75,"name":null,"values":["A","B"]},{"metadataKeyId":76,"name":null,"values":["2022"]},{"metadataKeyId":77,"name":null,"values":["2000"]},{"metadataKeyId":78,"name":null,"values":["B"]},{"metadataKeyId":79,"name":null,"values":["Nagoya"]},{"metadataKeyId":80,"name":null,"values":["2000"]},{"metadataKeyId":81,"name":null,"values":["B"]},{"metadataKeyId":82,"name":null,"values":["Nagoya"]},{"metadataKeyId":83,"name":null,"values":["2000"]},{"metadataKeyId":84,"name":null,"values":["B"]},{"metadataKeyId":85,"name":null,"values":["Nagoya"]},{"metadataKeyId":86,"name":null,"values":["2000"]},{"metadataKeyId":87,"name":null,"values":["B"]},{"metadataKeyId":88,"name":null,"values":["Nagoya"]},{"metadataKeyId":89,"name":"1.Description(D)","values":["Physna is a company on a journey to empower human creativity by connecting thephysical and digital worlds. Physna was founded on the principle that computersshould be taught to accurately \"think\" in 3D - sorting and analyzing geometric objectslike written code. Physna is building a future where people have the tools they need todesign and analyze the parts and products that shape our world, to create and driveinnovation in product design, 3D printing, augmented and virtual reality, gaming,healthcare, and beyond.Physna Enterprise is a SaaS based solution that employs patented 3D geometry basedalgorithms and AI/ML neural networks to search, match and compare 3D models.Physna is not a CAD, PDM or PLM tool.Physna does, however, expose its functionality as consumable APIs that can be used tointegrate Physna's functionality into existing IT Applications to enhance yourcompanies business processes.Physna offers training, consulting and professional services through partnerorganizations for the customization of the Physna Base Connector that enables uni orbi-directional movement of model and metadata information between PLM Solutionsand Physna."]},{"metadataKeyId":90,"name":"2.Drawn(D)","values":["SID"]},{"metadataKeyId":91,"name":"3.Checked(D) ","values":["SID"]},{"metadataKeyId":92,"name":"4.Approved (D)","values":["JPN"]},{"metadataKeyId":93,"name":"5. Material(D)","values":["Steel (Grade C)"]},{"metadataKeyId":94,"name":"6. Date (D)","values":["22-Aug"]},{"metadataKeyId":95,"name":"7. Cost (D)","values":["$500 "]},{"metadataKeyId":96,"name":"8. Match (D)","values":["88.89%"]},{"metadataKeyId":97,"name":"9.Opacity (D)","values":["100%"]},{"metadataKeyId":98,"name":"10. Supplier (D)","values":["Z"]},{"metadataKeyId":99,"name":"11. Path (D)","values":["C:\\Users\\win.htetswe\\Desktop\\New folder\\Yuyama"]},{"metadataKeyId":100,"name":"12. Site (D)","values":["Nagoya"]},{"metadataKeyId":101,"name":"13. Type (D)","values":[".catpart"]},{"metadataKeyId":102,"name":"14. Size (D)","values":["100MB"]},{"metadataKeyId":103,"name":"15. Difficulty (D)","values":["Low"]},{"metadataKeyId":104,"name":"16. Time taken (D)","values":["120min"]},{"metadataKeyId":105,"name":"17. Sequence (D)","values":["#9"]},{"metadataKeyId":106,"name":"18. ID (D)","values":["132"]},{"metadataKeyId":107,"name":"19. Revision (D)","values":["3"]},{"metadataKeyId":108,"name":"20. Weight (D)","values":["100g"]},{"metadataKeyId":109,"name":"Mapping data","values":["AAEE","AAEF"]},{"metadataKeyId":110,"name":"Y.Cost (Yen)","values":["2000"]},{"metadataKeyId":111,"name":"Y.Supplier","values":["B"]},{"metadataKeyId":112,"name":"Y.Site","values":["Nagoya"]}],"fileType":[".CATPART",".SLDPRT"],"units":["mm"]},
+    
+    "pageData":{"total":9,"perPage":50,"currentPage":1,"lastPage":1,"startIndex":1,"endIndex":9}}

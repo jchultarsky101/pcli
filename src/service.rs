@@ -326,7 +326,7 @@ impl Api {
         while has_more {
             match self
                 .client
-                .get_model_match_page(uuid, threshold, per_page, page)
+                .get_model_scan_match_page(uuid, threshold, per_page, page)
             {
                 Ok(result) => {
                     if result.page_data.total > 0 {
