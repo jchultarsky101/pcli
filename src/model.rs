@@ -173,12 +173,14 @@ pub struct Model {
     #[serde(rename = "id")]
     pub uuid: Uuid,
     #[serde(rename = "isAssembly")]
+    #[serde(default)]
     pub is_assembly: bool,
     #[serde(rename = "name")]
     pub name: String,
     #[serde(rename = "folderId")]
     pub folder_id: u32,
     #[serde(rename = "ownerId")]
+    #[serde(default)]
     pub owner_id: String,
     #[serde(rename = "createdAt")]
     pub created_at: String,
@@ -187,8 +189,10 @@ pub struct Model {
     #[serde(rename = "thumbnail", skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<String>,
     #[serde(rename = "units")]
+    #[serde(default)]
     pub units: String,
     #[serde(rename = "state")]
+    #[serde(default)]
     pub state: String,
     #[serde(rename = "attachmentUrl", skip_serializing_if = "Option::is_none")]
     pub attachment_url: Option<String>,

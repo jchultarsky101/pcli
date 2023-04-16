@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.6
+The latest version is 1.7.7
+
+### Version 1.7.7
+
+* Fixed a bug in match-scan
 
 ### Version 1.7.6
 
