@@ -138,8 +138,10 @@ pub struct PartToPartMatchResponse {
     pub matches: Vec<PartToPartMatch>,
     #[serde(rename = "pageData")]
     pub page_data: PageData,
-    #[serde(rename = "filterData")]
-    pub filter_data: FilterData,
+    // The filder data is causing some kind of problem whle parsing
+    // I do not see any use for it, so I will ignore it for now
+    //#[serde(rename = "filterData")]
+    //pub filter_data: FilterData,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -454,8 +456,13 @@ impl ApiClient {
         query_parameters.push(("page".to_string(), page.to_string()));
 
         let json = self.get(url.as_str(), Some(query_parameters))?;
-        //trace!("{}", json);
+        // trace!("{}", json);
+
+        //trace!("Parsing JSON to PartToPartMatchResponse...");
+        //std::fs::write("scan.json", &json).expect("Unable to write file");
+
         let result: PartToPartMatchResponse = serde_json::from_str(&json)?;
+        trace!("Object deserialized");
         Ok(result)
     }
 
