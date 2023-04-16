@@ -1,0 +1,277 @@
+{
+    "matches":[
+        {
+            "matchedModel":{
+                "thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96bcc6cb-08bc-4be0-b1b2-92389ca52b4c_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T193631Z&X-Goog-Expires=36001&X-Goog-SignedHeaders=host&X-Goog-Signature=5b09a0e0687ce98665182114e45a8736c528d4c92859215c9f37aa8e81a7d4cbe85d59d54d4f117096e95a53ec85ba812ff64be7f6cb5ed3663558e441832704eccffd72dab89921a12b59bcb31545314ee7960e8663d5fa8daf23fc319d218ff7d33a1b1cc856cce964351215f12c834ee331254443fda33e94c92f236a0e828eac1db1cfd1b49d7a3b1f2e3b2589005dbf463111a08e88655ff3992cc19b4db5d4102ad48fa5b132c576e11219518f35bfe049f8213f1a6375d8acc33e207265be34176e01b79169eb9a8955a79b11c243de9480cc3629e0f923a3279cf6bdfe4436f7e31d6b0eab2bc8686db1c7bb023cb433ec96086b08ec5e7eddd15539",
+                "createdAt":"2022-07-08T06:18:42.190Z",
+                "fileType":".CATPART",
+                "folderId":172,"id":"96bcc6cb-08bc-4be0-b1b2-92389ca52b4c",
+                "isAssembly":false,
+                "metadata":[],
+                "name":"Bevel Gear 1_2",
+                "ownerId":"954726ba-6c5a-44b5-9026-192cfbe2d062",
+                "state":"finished",
+                "units":"mm"
+            },
+            "matchPercentage":1
+        },
+        {
+            "matchedModel":{
+                "thumbnail":"https://storage.googleapis.com/solize-phyndexer-headless-bucket/solize/thumbnails/solize/96bcd91c-dbe6-4e23-a6be-8d6b77905016_BackBottomRight_500x500.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=physna-public-api-prod%40appspot.gserviceaccount.com%2F20230416%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230416T193631Z&X-Goog-Expires=36001&X-Goog-SignedHeaders=host&X-Goog-Signature=d6f70d66d074af9f1e9a778df3d798e709fc9fb4501b70f14617051fd92f7564d58a8b309b52bab400f92165b231aaf56a87c0e0d95d2fee6d7dc1c18ace50f54aff68f1bf31783e1a1bb4ade0cbf23552fe8e75c4debdf9e8d58ca43c748fc4ce1c6f9dc42b317c5ab2e09380143d4206b60b6d22c4df48a1da9f71ed51cac576475380dea1ade02dbc18b2e69125511edce32906dfccad90814a84156057898bac3bbe9a8b9c708f1fed18fa4a34909e84be8925ba18de4526a5c1de7460b38a0eab151e5c7cdd4cdf228f102522f62a9c916a9d60f4b966c3b45a607d1812eb0db2af3ce2e2478ae0c83c3e32f7ab4451e9e4c521b8352160183021e96e2e",
+                "createdAt":"2022-07-08T06:44:18.987Z",
+                "fileType":".CATPART",
+                "folderId":173,
+                "id":"96bcd91c-dbe6-4e23-a6be-8d6b77905016",
+                "isAssembly":false,
+                "metadata":[
+                    {
+                        "metadataKeyId":108,
+                        "name":"20. Weight (D)",
+                        "value":"100g"
+                    },
+                    {
+                        "metadataKeyId":107,
+                        "name":"19. Revision (D)",
+                        "value":"3"
+                    },
+                    {
+                        "metadataKeyId":106,
+                        "name":"18. ID (D)",
+                        "value":"132"
+                    },
+                    {
+                        "metadataKeyId":104,
+                        "name":"16. Time taken (D)",
+                        "value":"120min"
+                    },
+                    {
+                        "metadataKeyId":105,
+                        "name":"17. Sequence (D)",
+                        "value":"#9"
+                    },
+                    {
+                        "metadataKeyId":103,
+                        "name":"15. Difficulty (D)",
+                        "value":"Low"
+                    },
+                    {
+                        "metadataKeyId":102,
+                        "name":"14. Size (D)",
+                        "value":"100MB"
+                    },
+                    {
+                        "metadataKeyId":101,
+                        "name":"13. Type (D)",
+                        "value":".catpart"
+                    },
+                    {
+                        "metadataKeyId":100,
+                        "name":"12. Site (D)",
+                        "value":"Nagoya"
+                    },
+                    {
+                        "metadataKeyId":99,
+                        "name":"11. Path (D)",
+                        "value":"C:\\Users\\win.htetswe\\Desktop\\New folder\\Yuyama"
+                    },
+                    {
+                        "metadataKeyId":98,
+                        "name":"10. Supplier (D)",
+                        "value":"Z"
+                    },
+                    {
+                        "metadataKeyId":97,
+                        "name":"9.Opacity (D)",
+                        "value":"100%"
+                    },
+                    {
+                        "metadataKeyId":96,
+                        "name":"8. Match (D)",
+                        "value":"88.89%"
+                    },
+                    {
+                        "metadataKeyId":95,
+                        "name":"7. Cost (D)",
+                        "value":"$500 "
+                    },
+                    {
+                        "metadataKeyId":94,
+                        "name":"6. Date (D)",
+                        "value":"22-Aug"
+                    },
+                    {
+                        "metadataKeyId":93,
+                        "name":"5. Material(D)",
+                        "value":"Steel (Grade C)"
+                    },
+                    {
+                        "metadataKeyId":92,
+                        "name":"4.Approved (D)",
+                        "value":"JPN"
+                    },
+                    {
+                        "metadataKeyId":91,
+                        "name":"3.Checked(D) ",
+                        "value":"SID"
+                    },
+                    {
+                        "metadataKeyId":90,
+                        "name":"2.Drawn(D)",
+                        "value":"SID"
+                    },
+                    {
+                        "metadataKeyId":89,
+                        "name":"1.Description(D)",
+                        "value":"Physna is a company on a journey to empower human creativity by connecting thephysical and digital worlds. Physna was founded on the principle that computersshould be taught to accurately \"think\" in 3D - sorting and analyzing geometric objectslike written code. Physna is building a future where people have the tools they need todesign and analyze the parts and products that shape our world, to create and driveinnovation in product design, 3D printing, augmented and virtual reality, gaming,healthcare, and beyond.Physna Enterprise is a SaaS based solution that employs patented 3D geometry basedalgorithms and AI/ML neural networks to search, match and compare 3D models.Physna is not a CAD, PDM or PLM tool.Physna does, however, expose its functionality as consumable APIs that can be used tointegrate Physna's functionality into existing IT Applications to enhance yourcompanies business processes.Physna offers training, consulting and professional services through partnerorganizations for the customization of the Physna Base Connector that enables uni orbi-directional movement of model and metadata information between PLM Solutionsand Physna."
+                    },
+                    {
+                        "metadataKeyId":49,
+                        "name":"FILE NAME",
+                        "value":"bevel gear 1_3.catpart"
+                    }
+                ],
+                "name":"Bevel Gear 1_3",
+                "ownerId":"954726ba-6c5a-44b5-9026-192cfbe2d062",
+                "state":"finished",
+                "units":"mm"
+            },
+            "matchPercentage":1
+        }
+    ],
+    "filterData":{
+        "createdAt":[
+            "2022-07-08T06:18:42.190Z",
+            "2022-07-08T06:44:18.987Z"
+        ],
+        "folders":[
+            {
+                "id":172,
+                "name":"Angle Grinder 2"
+            },
+            {
+                "id":173,
+                "name":"Angle Grinder 3"
+            }
+        ],
+        "isAssembly":[
+            false
+        ],
+        "metadata":[
+            {
+                "metadataKeyId":49,
+                "name":"FILE NAME",
+                "values":["bevel gear 1_3.catpart"]
+            },
+            {
+                "metadataKeyId":89,
+                "name":"1.Description(D)",
+                "values":["Physna is a company on a journey to empower human creativity by connecting thephysical and digital worlds. Physna was founded on the principle that computersshould be taught to accurately \"think\" in 3D - sorting and analyzing geometric objectslike written code. Physna is building a future where people have the tools they need todesign and analyze the parts and products that shape our world, to create and driveinnovation in product design, 3D printing, augmented and virtual reality, gaming,healthcare, and beyond.Physna Enterprise is a SaaS based solution that employs patented 3D geometry basedalgorithms and AI/ML neural networks to search, match and compare 3D models.Physna is not a CAD, PDM or PLM tool.Physna does, however, expose its functionality as consumable APIs that can be used tointegrate Physna's functionality into existing IT Applications to enhance yourcompanies business processes.Physna offers training, consulting and professional services through partnerorganizations for the customization of the Physna Base Connector that enables uni orbi-directional movement of model and metadata information between PLM Solutionsand Physna."]
+            },
+            {
+                "metadataKeyId":90,
+                "name":"2.Drawn(D)",
+                "values":["SID"]
+            },
+            {
+                "metadataKeyId":91,
+                "name":"3.Checked(D) ",
+                "values":["SID"]
+            },
+            {
+                "metadataKeyId":92,
+                "name":"4.Approved (D)",
+                "values":["JPN"]
+            },
+            {
+                "metadataKeyId":93,
+                "name":"5. Material(D)",
+                "values":["Steel (Grade C)"]
+            },
+            {
+                "metadataKeyId":94,
+                "name":"6. Date (D)",
+                "values":["22-Aug"]
+            },
+            {
+                "metadataKeyId":95,
+                "name":"7. Cost (D)",
+                "values":["$500 "]
+            },
+            {
+                "metadataKeyId":96,
+                "name":"8. Match (D)",
+                "values":["88.89%"]
+            },
+            {
+                "metadataKeyId":97,
+                "name":"9.Opacity (D)",
+                "values":["100%"]
+            },
+            {
+                "metadataKeyId":98,
+                "name":"10. Supplier (D)",
+                "values":["Z"]
+            },
+            {
+                "metadataKeyId":99,
+                "name":"11. Path (D)",
+                "values":["C:\\Users\\win.htetswe\\Desktop\\New folder\\Yuyama"]
+            },
+            {
+                "metadataKeyId":100,
+                "name":"12. Site (D)",
+                "values":["Nagoya"]
+            },
+            {
+                "metadataKeyId":101,
+                "name":"13. Type (D)",
+                "values":[".catpart"]
+            },
+            {
+                "metadataKeyId":102,
+                "name":"14. Size (D)",
+                "values":["100MB"]
+            },
+            {
+                "metadataKeyId":103,
+                "name":"15. Difficulty (D)",
+                "values":["Low"]
+            },
+            {
+                "metadataKeyId":104,
+                "name":"16. Time taken (D)",
+                "values":["120min"]
+            },
+            {
+                "metadataKeyId":105,
+                "name":"17. Sequence (D)",
+                "values":["#9"]
+            },
+            {
+                "metadataKeyId":106,
+                "name":"18. ID (D)",
+                "values":["132"]
+            },
+            {
+                "metadataKeyId":107,
+                "name":"19. Revision (D)",
+                "values":["3"]
+            },
+            {
+                "metadataKeyId":108,
+                "name":"20. Weight (D)",
+                "values":["100g"]
+            }
+        ],
+        "fileType":[".CATPART"],
+        "units":["mm"]
+    },
+    "pageData":{
+        "total":2,
+        "perPage":50,
+        "currentPage":1,
+        "lastPage":1,
+        "startIndex":1,
+        "endIndex":2
+    }
+}
