@@ -1321,11 +1321,7 @@ fn main() {
         },  
         Some(("create-image-classifier", sub_matches)) => {
             let name = sub_matches.get_one::<String>("name").unwrap();
-
-            let folders: Vec<u32>;
-            let folder_id_strings = sub_matches.get_one::<String>("folder");
-            folders = folder_id_strings.into_iter().map(|x| x.parse::<u32>().unwrap()).collect();
-
+            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().map(|f| f).collect();
             let uuid = api.create_image_classifier(name.to_string(), folders);
             match uuid {
                 Ok(uuid) => {
