@@ -1469,3 +1469,230 @@ impl ToCsv for ListOfClassificationScores {
         Ok(result)
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct GeoClassifier {
+    #[serde(rename = "id")]
+    pub id: u32,
+    #[serde(rename = "name")]
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ListOfGeoClassifiers {
+    #[serde(rename = "geoClassifiers")]
+    pub classifiers: Vec<GeoClassifier>,
+}
+
+impl ListOfGeoClassifiers {
+    pub fn new(classifiers: Vec<GeoClassifier>) -> Self {
+        ListOfGeoClassifiers { classifiers }
+    }
+}
+
+impl From<Vec<GeoClassifier>> for ListOfGeoClassifiers {
+    fn from(classifiers: Vec<GeoClassifier>) -> Self {
+        ListOfGeoClassifiers::new(classifiers)
+    }
+}
+
+impl ToJson for ListOfGeoClassifiers {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
+    }
+}
+
+impl ToCsv for ListOfGeoClassifiers {
+    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec!["ID", "NAME"];
+            writer.write_record(&columns)?;
+        }
+
+        for classifier in &self.classifiers {
+            let id = classifier.id.to_string().to_owned();
+            let name = classifier.name.to_owned();
+
+            let mut values: Vec<String> = Vec::new();
+            values.push(id);
+            values.push(name);
+
+            writer.write_record(&values)?;
+        }
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct GeoLabel {
+    #[serde(rename = "id")]
+    pub id: u32,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "geoClassifierId")]
+    pub geo_classifier_id: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ListOfGeoLabels {
+    #[serde(rename = "geoLabels")]
+    pub labels: Vec<GeoLabel>,
+}
+
+impl ListOfGeoLabels {
+    pub fn new(labels: Vec<GeoLabel>) -> Self {
+        ListOfGeoLabels { labels }
+    }
+}
+
+impl From<Vec<GeoLabel>> for ListOfGeoLabels {
+    fn from(labels: Vec<GeoLabel>) -> Self {
+        ListOfGeoLabels::new(labels)
+    }
+}
+
+impl ToJson for ListOfGeoLabels {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
+    }
+}
+
+impl ToCsv for ListOfGeoLabels {
+    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec!["ID", "NAME", "CLASSIFIER_ID"];
+            writer.write_record(&columns)?;
+        }
+
+        for label in &self.labels {
+            let id = label.id.to_string();
+            let name = label.name.to_owned();
+            let classifier_id = label.geo_classifier_id.to_string();
+
+            let mut values: Vec<String> = Vec::new();
+            values.push(id);
+            values.push(name);
+            values.push(classifier_id);
+
+            writer.write_record(&values)?;
+        }
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct GeoMatch {
+    #[serde(rename = "matchedModel")]
+    pub model: Model,
+    #[serde(rename = "confidence")]
+    pub confidence: f64,
+    #[serde(rename = "geoLabelId")]
+    pub label_id: u32,
+}
+
+impl PartialEq for GeoMatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.model.name.eq(&other.model.name)
+    }
+}
+impl Eq for GeoMatch {}
+
+impl GeoMatch {
+    pub fn new(model: Model, confidence: f64, label_id: u32) -> GeoMatch {
+        GeoMatch {
+            model,
+            confidence,
+            label_id,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ListOfGeoClassifierPredictions {
+    #[serde(rename = "matches")]
+    pub matches: Vec<GeoMatch>,
+}
+
+impl ListOfGeoClassifierPredictions {
+    pub fn new(matches: Vec<GeoMatch>) -> Self {
+        ListOfGeoClassifierPredictions { matches }
+    }
+}
+
+impl From<Vec<GeoMatch>> for ListOfGeoClassifierPredictions {
+    fn from(matches: Vec<GeoMatch>) -> Self {
+        ListOfGeoClassifierPredictions::new(matches)
+    }
+}
+
+impl ToJson for ListOfGeoClassifierPredictions {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
+    }
+}
+
+impl ToCsv for ListOfGeoClassifierPredictions {
+    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec!["ID", "NAME", "CONFIDENCE", "IS_ASSEMBLY", "FOLDER"];
+            writer.write_record(&columns)?;
+        }
+
+        for m in &self.matches {
+            let id = m.model.uuid.to_string();
+            let name = m.model.name.to_owned();
+            let confidence = m.confidence.to_string();
+            let is_assembly = m.model.is_assembly.to_string();
+            let folder = m.model.folder_id.to_string();
+
+            let mut values: Vec<String> = Vec::new();
+            values.push(id);
+            values.push(name);
+            values.push(confidence);
+            values.push(is_assembly);
+            values.push(folder);
+
+            writer.write_record(&values)?;
+        }
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}

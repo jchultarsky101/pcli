@@ -1,5 +1,6 @@
 use crate::model::{
-    FileUploadResponse, FolderCreateResponse, ImageClassifier, ListOfClassificationScores, Model,
+    FileUploadResponse, FolderCreateResponse, GeoMatch, ImageClassifier,
+    ListOfClassificationScores, ListOfGeoClassifiers, ListOfGeoLabels, Model,
     ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
 };
 use anyhow::{anyhow, Result};
@@ -138,10 +139,6 @@ pub struct PartToPartMatchResponse {
     pub matches: Vec<PartToPartMatch>,
     #[serde(rename = "pageData")]
     pub page_data: PageData,
-    // The filder data is causing some kind of problem whle parsing
-    // I do not see any use for it, so I will ignore it for now
-    //#[serde(rename = "filterData")]
-    //pub filter_data: FilterData,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -276,6 +273,14 @@ pub struct ImageClassifierCreateResponse {
     pub status: String,
     #[serde(rename = "modelFilter")]
     pub model_filter: ModelFilter,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct GeoMatchPageResponse {
+    #[serde(rename = "matches")]
+    pub matches: Vec<GeoMatch>,
+    #[serde(rename = "pageData")]
+    pub page_data: PageData,
 }
 
 #[derive(Clone, Debug)]
@@ -954,6 +959,55 @@ impl ApiClient {
         trace!("{}", json);
         let result: ListOfClassificationScores = serde_json::from_str(&json)?;
 
+        Ok(result)
+    }
+
+    pub fn get_geo_classifiers(&self) -> Result<ListOfGeoClassifiers, ClientError> {
+        let url = format!("{}/v2/geo-classifiers", self.base_url);
+        trace!("GET {}", url.to_string());
+
+        let json = self.get(url.as_str(), None)?;
+        //trace!("{}", json);
+        let result: ListOfGeoClassifiers = serde_json::from_str(&json)?;
+
+        Ok(result)
+    }
+
+    pub fn get_geo_labels(&self) -> Result<ListOfGeoLabels, ClientError> {
+        let url = format!("{}/v2/geo-labels", self.base_url);
+        trace!("GET {}", url.to_string());
+
+        let json = self.get(url.as_str(), None)?;
+        //trace!("{}", json);
+        let result: ListOfGeoLabels = serde_json::from_str(&json)?;
+
+        Ok(result)
+    }
+
+    pub fn get_geo_match_page(
+        &self,
+        uuid: &Uuid,
+        label_id: &u32,
+        threshold: &f64,
+        per_page: u32,
+        page: u32,
+    ) -> Result<GeoMatchPageResponse, ClientError> {
+        let url = format!(
+            "{}/v2/models/{}/geo-label-matches/{}",
+            self.base_url,
+            urlencode(uuid.to_string()),
+            label_id.to_string()
+        );
+        trace!("GET {}", url.to_string());
+
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+        query_parameters.push(("threshold".to_string(), threshold.to_string()));
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
+
+        let json = self.get(url.as_str(), Some(query_parameters))?;
+        //trace!("{}", json);
+        let result: GeoMatchPageResponse = serde_json::from_str(&json)?;
         Ok(result)
     }
 }
