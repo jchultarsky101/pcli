@@ -9,7 +9,14 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.7.7
+The latest version is 1.8.0
+
+### Version 1.8.0
+
+* Added new commands for working with geo-classifiers
+  - geo-classifiers: list all available geo classifiers
+  - geo-labels: lists all available geo labels
+  - geo-classifier-predictions: outputs the list of matching models that have the specified geo label
 
 ### Version 1.7.7
 
@@ -183,32 +190,35 @@ CLI client utility to the Physna public API/V2
 Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
 Commands:
-  sysinfo                     Prints details of the current host system
-  token                       Obtains security access token from the provider
-  invalidate                  Invalidates the current access token
-  model                       Reads data for a specific model
-  reprocess                   Reprocesses a specific model
-  delete-model                Deletes a specific model
-  model-meta                  Reads the metadata (properties) for a specific model
-  models                      Lists all available models in a folder
-  assembly-tree               Reads the model's assembly tree
-  match-model                 Matches all models to the specified one
-  match-scan                  Scan-match all models to the specified one
-  match-folder                Matches all models in a folder to other models
-  label-folder                Labels models in a folder based on KNN algorithm and geometric match score as distance
-  delete-folder               Deletes a specific folder
-  assembly-bom                Generates flat BoM of model IDs for model
-  status                      Generates a tenant's environment status summary
-  upload                      Uploads a file to Physna
-  upload-model-meta           Reads metadata from an input CSV file and uploads it for a model specified by UUID
-  match-report                Generates a match report for the specified models
-  folders                     Lists all available folders
-  create-folder               Creates a new folder
-  properties                  Lists all available metadata propertie names and their IDs
-  create-image-classifier     Creates a new image classifier
-  classifiers                 Lists all available image classifiers
-  classification-predictions  Read the list of classification predictions for an image by given classifier
-  help                        Print this message or the help of the given subcommand(s)
+  sysinfo                           Prints details of the current host system
+  token                             Obtains security access token from the provider
+  invalidate                        Invalidates the current access token
+  model                             Reads data for a specific model
+  reprocess                         Reprocesses a specific model
+  delete-model                      Deletes a specific model
+  model-meta                        Reads the metadata (properties) for a specific model
+  models                            Lists all available models in a folder
+  assembly-tree                     Reads the model's assembly tree
+  match-model                       Matches all models to the specified one
+  match-scan                        Scan-match all models to the specified one
+  match-folder                      Matches all models in a folder to other models
+  label-folder                      Labels models in a folder based on KNN algorithm and geometric match score as distance
+  delete-folder                     Deletes a specific folder
+  assembly-bom                      Generates flat BoM of model IDs for model
+  status                            Generates a tenant's environment status summary
+  upload                            Uploads a file to Physna
+  upload-model-meta                 Reads metadata from an input CSV file and uploads it for a model specified by UUID
+  match-report                      Generates a match report for the specified models
+  folders                           Lists all available folders
+  create-folder                     Creates a new folder
+  properties                        Lists all available metadata propertie names and their IDs
+  create-image-classifier           Creates a new image classifier
+  image-classifiers                 Lists all available image classifiers
+  image-classification-predictions  Read the list of classification predictions for an image by given image classifier
+  geo-classifiers                   Lists all available geo classifiers
+  geo-labels                        Lists all available geo classifier labels
+  geo-classifier-predictions        Searches for all models in a folder that are predicted to belong to a specified class
+  help                              Print this message or the help of the given subcommand(s)
 
 Options:
   -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
@@ -217,7 +227,6 @@ Options:
       --color <color>    Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white') [possible values: black, red, green, yellow, blue, magenta, cyan, white]
   -h, --help             Print help
   -V, --version          Print version
-utility to the Physna public API/V2
 ```
 
 The application supports sub-commands. To get more detailed help for a
@@ -920,7 +929,7 @@ background processing completed.
 
 The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
 
-### Classifiers
+### Image Classifiers
 
 In addition to geometric search and comparison functions, Physna offers AI technology capable of automatic classification of images into 3D models. If you have uploaded sufficient number of models in your environment and have created and trained an image classifier, you could upload a 2D image of a part (e.g. digital picture taken with your phone) and Physna can recognize the object and retrieve the 3D model that corresponds to it.
 
@@ -928,26 +937,26 @@ At this time, the training of new classifiers within Physna is only available vi
 
 The ML algorithm used in this case is [Logistic Reressoin](https://en.wikipedia.org/wiki/Logistic_regression).
 
-#### List the available classifiers
+#### List the available image classifiers
 
 To obtain the list of currently available classifiers in your environment, use the "classifiers" command. It takes no arguments:
 
 ```
-pcli --tenant=mycompany --format=csv --pretty classifiers
+pcli --tenant=mycompany --format=csv --pretty image-classifiers
 ID,NAME,STATUS
 8db6569f-65e6-45ca-8fc2-3603c9967437,MyClassifier,deployed
 ```
 
 You will need the classifier UUID in order to be able to execute the next command.
 
-#### Classification predictions
+#### Image classification predictions
 
 As I mentioned above, you can take a 2D picture of a part and upload that image as input. Physna's AI will analyze the image and produce a list of predictions to what 3D models this image belongs. The command to do this is:
 
 ```
 Read the list of classification predictions for an image by given classifier
 
-Usage: pcli --tenant <tenant> classification-predictions --uuid <uuid>... --input <input>
+Usage: pcli --tenant <tenant> image-classification-predictions --uuid <uuid>... --input <input>
 
 Options:
   -u, --uuid <uuid>...  Classifier UUID
@@ -964,7 +973,7 @@ The required arguments are:
 Here is an example:
 
 ```
-pcli --tenant=delta --format=csv --pretty classification-predictions --uuid=1d896c02-9fba-4807-b9ec-07c96a7db946 --input=./mypart.png
+pcli --tenant=delta --format=csv --pretty image-classification-predictions --uuid=1d896c02-9fba-4807-b9ec-07c96a7db946 --input=./mypart.png
 ID,NAME,STATUS
 96a2bb55-dcef-4a05-a43f-82bf696f872d,part1,0.9844062328338624
 9575ad2b-0548-4b48-9cec-7ed183bff064,part2,0.0000015775714246046846
@@ -1045,6 +1054,81 @@ folder will be used for matching.
 In other words, the label values may come from any folder in your tenant unless you specify --exclusive.
 
 For the initial labeling of models, you can use the "upload-model-meta" command.
+
+### Geometric Classification
+
+Physna provides a machine learning algorithm that can help you to categorize 3D models automatically based on their geometry. The ML utilized requires supervised training. For example, with proper training it could predict
+which 3D model is a compressor, or a chair, or perhaps a lamp. The training process is done via Physna's web UI and it is beyond the scope of PCLI, but it is a powerful tool and I encourage you to take a look. In this context, PCLI only
+provides commands to interact with the ML functionality in a limited way.
+
+This algorithm is very different in function than the image classifiers mentioned above. Although in both cases ML is used, the image classifiers are only responsible for the identification of a specific instance of a 3D model based on
+a provided 2D image. The geo classifier on another hand is concerned with logically labeling sets of 3D models as members of distinct categories by making predictions based on their geometry. Another difference is that the image classifiers
+do not require supervised training - their training is done automatically on the backend.
+
+You can define multiple distinct ML configurations, called "classifiers". Each classifier can be trained differently and set to operate over different subsets of data.
+
+#### Listing geo classifiers
+
+Once you have created and trained your geo classiifiers, you can list them in PCLI with the following command:
+
+````
+pcli help geo-classifiers                                                                                                                                                                04/27/2023 09:07:13 PM
+Lists all available geo classifiers
+
+Usage: pcli --tenant <tenant> geo-classifiers
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+````
+
+The command does not take any arguments. It will output the list of all available geo-classifiers in your tenant. As with other commands, you can use the --format argiment. 
+
+This command is mostly for information purposes.
+
+#### Listing available geo labels
+
+A geo-label is simply a category name. For example "cats" or "dogs". It can be anything that could be a logical category in your context. 
+
+You can list all available geo labels across all geo classifiers with the following command:
+
+````
+pcli help geo-labels                                                                                                                                                                     04/27/2023 09:07:27 PM
+Lists all available geo classifier labels
+
+Usage: pcli --tenant <tenant> geo-labels
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+````
+
+One data point of note in the output is the geo label identifier, whcih is an integer. You will need to use that if you want to retrieve all models that are member of that category.
+
+#### Listing all models that belong to a category
+
+This is probably a more interesting command for you:
+
+````
+pcli help geo-classifier-predictions                                                                                                                                                     04/27/2023 09:11:31 PM
+Searches for all models in a folder that are predicted to belong to a specified class
+
+Usage: pcli --tenant <tenant> geo-classifier-predictions [OPTIONS] --uuid <uuid> --label_id <label_id> --threshold <threshold>
+
+Options:
+  -u, --uuid <uuid>            Model UUID
+  -l, --label_id <label_id>    class prediction value
+  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5')
+  -m, --meta                   Enhance output with model's metadata
+  -h, --help                   Print help
+  -V, --version                Print version
+````
+
+It outputs the list of all models that match a specific model and also belong to a specified category (geo label). It takes three arguments:
+
+- uuid: the UUID of the known model
+- label_id: the identifier of a geo label (category)
+- threshold: the threshold of confidence that a model is a member of a category. This is a positive real number between 0 and 1
 
 ## Advanced Use
 
