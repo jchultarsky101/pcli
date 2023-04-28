@@ -1,10 +1,11 @@
 use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::model::{
-    EnvironmentStatusReport, FlatBom, Folder, ListOfClassificationScores, ListOfFolders,
-    ListOfImageClassifiers, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch,
-    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
-    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
-    PropertyCollection, SimpleDuplicatesMatchReport,
+    EnvironmentStatusReport, FlatBom, Folder, GeoMatch, ListOfClassificationScores, ListOfFolders,
+    ListOfGeoClassifierPredictions, ListOfGeoClassifiers, ListOfGeoLabels, ListOfImageClassifiers,
+    ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch, ModelMatchReport,
+    ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelMetadataItemShort,
+    ModelStatusRecord, PartNodeDictionaryItem, Property, PropertyCollection,
+    SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -787,5 +788,50 @@ impl Api {
             Box::new(buffer[0..chunk_size].to_vec()),
         )?;
         Ok(scores)
+    }
+
+    pub fn get_geo_classifiers(&self) -> Result<ListOfGeoClassifiers> {
+        Ok(self.client.get_geo_classifiers()?)
+    }
+
+    pub fn get_geo_labels(&self) -> Result<ListOfGeoLabels> {
+        Ok(self.client.get_geo_labels()?)
+    }
+
+    pub fn get_geo_classifier_predictions(
+        &self,
+        uuid: &Uuid,
+        threshold: &f64,
+        label_id: &u32,
+        _with_meta: bool,
+    ) -> Result<ListOfGeoClassifierPredictions> {
+        trace!("Matching model {} by geo label {}...", uuid, label_id);
+        let mut list_of_matches: Vec<GeoMatch> = Vec::new();
+
+        let mut has_more = true;
+        let mut page: u32 = 1;
+        let per_page: u32 = 50;
+        while has_more {
+            match self
+                .client
+                .get_geo_match_page(uuid, label_id, threshold, per_page, page)
+            {
+                Ok(result) => {
+                    if result.page_data.total > 0 {
+                        let matches = result.matches;
+                        if !matches.is_empty() {
+                            for m in matches {
+                                list_of_matches.push(m.clone());
+                            }
+                        }
+                    }
+                    has_more = result.page_data.current_page < result.page_data.last_page;
+                    page = result.page_data.current_page + 1;
+                }
+                Err(e) => return Err(anyhow!("{}", e)),
+            };
+        }
+
+        Ok(ListOfGeoClassifierPredictions::new(list_of_matches))
     }
 }
