@@ -595,12 +595,12 @@ fn main() {
                 )
         )
         .subcommand(
-            Command::new("classifiers")
+            Command::new("image-classifiers")
                 .about("Lists all available image classifiers"),
         )
         .subcommand(
-            Command::new("classification-predictions")
-                .about("Read the list of classification predictions for an image by given classifier")
+            Command::new("image-classification-predictions")
+                .about("Read the list of classification predictions for an image by given image classifier")
                 .arg(
                     Arg::new("uuid")
                         .short('u')
@@ -617,6 +617,53 @@ fn main() {
                         .num_args(1)
                         .help("Path to the input file")
                         .required(true)
+                ),
+        )
+        .subcommand(
+            Command::new("geo-classifiers")
+                .about("Lists all available geo classifiers"),
+        )
+        .subcommand(
+            Command::new("geo-labels")
+                .about("Lists all available geo classifier labels"),
+        )
+        .subcommand(
+            Command::new("geo-classifier-predictions")
+                .about("Searches for all models in a folder that are predicted to belong to a specified class")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .num_args(1)
+                        .help("Model UUID")
+                        .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
+                )
+                .arg(
+                    Arg::new("label_id")
+                        .short('l')
+                        .long("label_id")
+                        .num_args(1)
+                        .help("class prediction value")
+                        .required(true)
+                        .value_parser(clap::value_parser!(u32))
+                )
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. '96.5')")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .num_args(0)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
                 ),
         )
         .arg(
@@ -1334,7 +1381,7 @@ fn main() {
                 }
             }
         },
-        Some(("classifiers", _sub_matches)) => {
+        Some(("image-classifiers", _sub_matches)) => {
             let classifiers = api.get_image_classifiers();
             match classifiers {
                 Ok(classifiers) => {
@@ -1351,13 +1398,12 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while reading classifiers: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while reading image classifiers: {}. Try invalidating the token.", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
         },
-        Some(("classification-predictions", sub_matches)) => {
-
+        Some(("image-classification-predictions", sub_matches)) => {
             let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
             let file =  sub_matches.get_one::<String>("input").unwrap();
             let scores = api.get_classification_predictions(uuid.clone(), file.as_str());
@@ -1376,9 +1422,82 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while reading classification predictions: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while reading classification predictions: {}. Perhaps this service is not enabled for your tenant? Hint: Try invalidating the token.", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
+            }
+        },
+        Some(("geo-classifiers", _sub_matches)) => {
+            let classifiers = api.get_geo_classifiers();
+            match classifiers {
+                Ok(classifiers) => {
+                    let output = format::format_list_of_geo_classifiers(classifiers, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while reading geo classifiers: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while reading classifiers: {}. Perhaps, this service is not enabled for your tenant? Hint: Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("geo-labels", _sub_matches)) => {
+            let labels = api.get_geo_labels();
+            match labels {
+                Ok(labels) => {
+                    let output = format::format_list_of_geo_labels(labels, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while reading geo labels: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error while reading geo labels: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("geo-classifier-predictions", sub_matches)) => {
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let with_meta = sub_matches.get_flag("meta");
+            let label_id = sub_matches.get_one::<u32>("label_id").unwrap();
+            
+            let model_matches = match api.get_geo_classifier_predictions(&uuid, &threshold, label_id, with_meta) {
+                Ok(model_matches) => {
+                    trace!("We found {} match(es)!", model_matches.matches.len());
+                    model_matches
+                },
+                Err(e) => {
+                    warn!("No matches found.");
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            };
+            let output = format::format_list_of_geo_matches(&model_matches, &output_format, pretty, color);
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("{}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
             }
         },
         _ => unreachable!("Invalid command"),
@@ -1386,3 +1505,4 @@ fn main() {
 
     ::std::process::exit(exitcode::OK);
 }
+
