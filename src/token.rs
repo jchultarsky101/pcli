@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
-use base64::encode;
+use base64::engine::general_purpose;
+use base64::Engine;
 use dirs::home_dir;
 use http::StatusCode;
 use jsonwebtoken::decode_header;
@@ -166,7 +167,11 @@ fn request_new_token_from_provider(
             let combined_credentials = [client_id.clone(), actual_client_secret.clone()]
                 .join(":")
                 .to_owned();
-            let encoded_credentials = encode(combined_credentials);
+
+            let encoded_credentials =
+                general_purpose::STANDARD.encode(combined_credentials.to_owned());
+            //let encoded_credentials = encode(combined_credentials);
+
             let mut authorization_header_value = String::from("Basic ");
             authorization_header_value.push_str(encoded_credentials.as_str());
 
@@ -185,7 +190,6 @@ fn request_new_token_from_provider(
                 .post(security_provider_url)
                 .header("Authorization", authorization_header_value.as_str())
                 .header("cache-control", "no-cache")
-                .header("scope", "tenantApp")
                 .form(&params)
                 .send();
             match response {
