@@ -158,7 +158,6 @@ fn request_new_token_from_provider(
             // 1. Set the headers
             // "Authorization", "Basic " + encodedCredentials
             // "cache-control", "no-cache"
-            // "scope", "tenantApp"
             // 2. Prepare multi value request body:
             // "grant_type", "client_credentials"
             // "scope", "tenantApp"
