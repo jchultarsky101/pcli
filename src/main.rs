@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{env, cmp::Ordering};
 use std::collections::HashMap;
 use clap::{
@@ -28,8 +29,6 @@ use std::{
         Instant
     }
 };
-use glob::glob;
-
 
 /// The main application entry point
 fn main() {
@@ -440,6 +439,7 @@ fn main() {
                         .num_args(1)
                         .help("Path to the input file")
                         .required(true)
+                        .value_parser(clap::value_parser!(PathBuf))
                 )
                 .arg(
                     Arg::new("meta-input")
@@ -1241,7 +1241,7 @@ fn main() {
         Some(("upload", sub_matches)) => {
 
             let folder = sub_matches.get_one::<u32>("folder").unwrap();
-            let file = sub_matches.get_one::<String>("input").unwrap();
+            let file = sub_matches.get_one::<PathBuf>("input").unwrap();
             let metadata_file = sub_matches.get_one::<String>("meta-input");
             let batch_uuid = match sub_matches.get_one::<Uuid>("batch") {
                 Some(batch_uuid) => batch_uuid.to_owned(),
@@ -1258,68 +1258,60 @@ fn main() {
                 None => None,
             };
 
-            let glob = glob(file.as_str());
-            match glob {
-                Ok(glob) => {
-                    let mut list_of_models: Vec<model::Model> = Vec::new();
-                    for path in glob {
-                        let file = path.unwrap().into_os_string().into_string().unwrap();
-                        let result = api.upload_file(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
-                        match result {
-                            Ok(model) => {
-                                match model {
-                                    Some(model) => {
-                                        let m: model::Model = match metadata_file {
-                                                        Some(metadata_file) => {
-                                                            let _meta_response = api.upload_model_metadata(metadata_file);
-                                                            let m2 = api.get_model(&model.uuid, false, false);
-                                                            m2.unwrap()
-                                                        },
-                                                        None => model.clone(),
-                                        };
-            
-                                        if validate {
-                                            let two_seconds = time::Duration::from_millis(2000);
-                                            let start_time = Instant::now();
-                                            let mut state = m.state.clone();
-                                            while state.ne("finished") &&
-                                                  state.ne("failed") &&
-                                                  state.ne("missing-parts") {
-            
-                                                let duration = start_time.elapsed().as_secs();
-                                                if timeout.is_some() && (duration >= timeout.unwrap()) {
-                                                    ::std::process::exit(exitcode::TEMPFAIL);
-                                                }
-            
-                                                match api.get_model(&m.uuid, false, false) {
-                                                    Ok(verified_model) => {
-                                                        state = verified_model.state.clone();
-                                                    },
-                                                    Err(_) => break,
-                                                }
-                                                thread::sleep(two_seconds);
-                                            }
-                                        }
+            let mut list_of_models: Vec<model::Model> = Vec::new();
+            let file = file.clone().into_os_string().into_string().unwrap();
 
-                                        list_of_models.push(m.clone());
-                                    },
-                                    None => (),
+            trace!("Uploading file {}...", file.to_owned());
+            let result = api.upload_file(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
+            match result {
+                Ok(model) => {
+                    match model {
+                        Some(model) => {
+                            let m: model::Model = match metadata_file {
+                                            Some(metadata_file) => {
+                                                let _meta_response = api.upload_model_metadata(metadata_file);
+                                                let m2 = api.get_model(&model.uuid, false, false);
+                                                m2.unwrap()
+                                            },
+                                            None => model.clone(),
+                            };
+
+                            if validate {
+                                let two_seconds = time::Duration::from_millis(2000);
+                                let start_time = Instant::now();
+                                let mut state = m.state.clone();
+                                while state.ne("finished") &&
+                                      state.ne("failed") &&
+                                      state.ne("missing-parts") {
+
+                                    let duration = start_time.elapsed().as_secs();
+                                    if timeout.is_some() && (duration >= timeout.unwrap()) {
+                                        ::std::process::exit(exitcode::TEMPFAIL);
+                                    }
+
+                                    match api.get_model(&m.uuid, false, false) {
+                                        Ok(verified_model) => {
+                                            state = verified_model.state.clone();
+                                        },
+                                        Err(_) => break,
+                                    }
+                                    thread::sleep(two_seconds);
                                 }
-                            },
-                            Err(e) => {
-                                eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
-                                ::std::process::exit(exitcode::DATAERR);
                             }
-                        }
-                    }
 
-                    let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
-                    println!("{}", output.unwrap());
+                            list_of_models.push(m.clone());
+                        },
+                        None => (),
+                    }
                 },
-                Err(_) => {
+                Err(e) => {
+                    eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
+
+            let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
+            println!("{}", output.unwrap());
         },
         Some(("match-report", sub_matches)) => {
             let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();

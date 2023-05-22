@@ -646,6 +646,9 @@ impl Api {
         source_id: Option<String>,
     ) -> Result<Option<Model>> {
         const CAPACITY: usize = 1000000;
+
+        trace!("Openning file {} for reading...", file);
+
         let mut f = File::open(file)?;
         let mut total_size: u64 = 0;
         let file_size = f.metadata().unwrap().len();
