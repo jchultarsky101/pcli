@@ -699,6 +699,8 @@ impl ApiClient {
         file_size: u64,
         bytes: Box<Vec<u8>>,
     ) -> Result<Option<Model>> {
+        trace!("Uploading file chunk...");
+
         let url = format!("{}/v1/{}/models", self.base_url, self.tenant);
         let bearer: String = format!("Bearer {}", self.access_token);
         let file_name = Path::new(&file.to_owned())

@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.0
+The latest version is 1.8.1
+
+### Version 1.8.1
+
+* Removed the glob pattern used to specify files for upload using wildcards. It was seldom used feature.
 
 ### Version 1.8.0
 
