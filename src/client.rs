@@ -855,7 +855,7 @@ impl ApiClient {
         let url = format!("{}/v2/models/{}/metadata/{}", self.base_url, model_uuid, id);
         let bearer: String = format!("Bearer {}", self.access_token);
 
-        trace!("DELETE{}", url);
+        trace!("DELETE {}", url);
 
         let response = self
             .client

@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.1
+The latest version is 1.8.2
+
+### Version 1.8.2
+
+* Added "clean" option to upload-model-meta
 
 ### Version 1.8.1
 

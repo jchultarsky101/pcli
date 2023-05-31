@@ -16,6 +16,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
+use std::rc::Rc;
 use std::{fs::File, path::Path};
 use unicase::UniCase;
 use uuid::Uuid;
@@ -716,20 +717,38 @@ impl Api {
         }
     }
 
-    pub fn upload_model_metadata(&self, input_file: &str) -> Result<()> {
+    pub fn upload_model_metadata(&self, input_file: &str, clean: bool) -> Result<()> {
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
+        let all_props = Rc::new(properties.properties.clone());
         let mut reverse_lookup: HashMap<UniCase<String>, u64> = properties
             .properties
-            .into_iter()
+            .iter()
             .map(|p| (UniCase::new(p.name.to_owned()), p.id))
             .collect();
+
+        let mut uuids: Vec<Uuid> = Vec::new();
 
         let mut rdr = csv::Reader::from_reader(File::open(input_file)?);
         for record in rdr.records() {
             let (id, property) = match record {
                 Ok(record) => {
                     let m: ModelMetadataItemShort = record.deserialize(None)?;
+
+                    if clean && !uuids.contains(&m.model_uuid) {
+                        trace!(
+                            "Deleting all properties for model {}...",
+                            m.model_uuid.to_string()
+                        );
+
+                        for property in all_props.clone().iter() {
+                            let _ = self
+                                .client
+                                .delete_model_property(&m.model_uuid, &property.id);
+                        }
+                        uuids.push(m.model_uuid.clone());
+                    }
+
                     let case_insensitive_name: UniCase<String> = UniCase::new(m.name.to_owned());
                     match reverse_lookup.get(&case_insensitive_name) {
                         Some(id) => (*id, m.to_item(*id)),

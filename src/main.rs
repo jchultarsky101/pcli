@@ -500,6 +500,13 @@ fn main() {
                         .help("Path to the input file")
                         .required(true)
                 )
+                .arg(
+                    Arg::new("clean")
+                        .long("clean")
+                        .num_args(0)
+                        .help("Deletes all pre-existing metadata properties")
+                        .required(false)
+                )
         ) 
         .subcommand(
             Command::new("match-report")
@@ -905,7 +912,8 @@ fn main() {
         },
         Some(("upload-model-meta", sub_matches)) => {
             let input_file = sub_matches.get_one::<String>("input").unwrap();
-            match api.upload_model_metadata(&input_file) {
+            let clean = sub_matches.get_flag("clean");
+            match api.upload_model_metadata(&input_file, clean) {
                 Ok(_) => {
                     ::std::process::exit(exitcode::OK);
                 },
@@ -1269,7 +1277,7 @@ fn main() {
                         Some(model) => {
                             let m: model::Model = match metadata_file {
                                             Some(metadata_file) => {
-                                                let _meta_response = api.upload_model_metadata(metadata_file);
+                                                let _meta_response = api.upload_model_metadata(metadata_file, false);
                                                 let m2 = api.get_model(&model.uuid, false, false);
                                                 m2.unwrap()
                                             },
