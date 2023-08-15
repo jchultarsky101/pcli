@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.2
+The latest version is 1.8.3
+
+### Version 1.8.3
+
+* Added support for VBSS-based image identification
 
 ### Version 1.8.2
 

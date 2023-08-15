@@ -16,6 +16,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::{fs::File, path::Path};
 use unicase::UniCase;
@@ -810,6 +811,14 @@ impl Api {
             Box::new(buffer[0..chunk_size].to_vec()),
         )?;
         Ok(scores)
+    }
+
+    pub fn search_by_image(&self, path: &PathBuf) -> Result<()> {
+        let image_upload_specs = self.client.get_image_upload_specs(path.as_path())?;
+
+        todo!("Implement the actual data upload in client and call it here");
+
+        Ok(())
     }
 
     pub fn get_geo_classifiers(&self) -> Result<ListOfGeoClassifiers> {

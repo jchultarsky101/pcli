@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::Duration;
 use substring::Substring;
-use url;
+use url::{self, Url};
 use uuid::Uuid;
 
 fn urlencode<T: AsRef<str>>(s: T) -> String {
@@ -281,6 +281,50 @@ pub struct GeoMatchPageResponse {
     pub matches: Vec<GeoMatch>,
     #[serde(rename = "pageData")]
     pub page_data: PageData,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct ImageUploadSpecsRequest {
+    filename: String,
+}
+
+impl ImageUploadSpecsRequest {
+    fn new(filename: String) -> Self {
+        Self { filename }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ImageUploadSizeRequirements {
+    #[serde(rename = "minSizeInBytes")]
+    min_size_in_bytes: u32,
+    #[serde(rename = "maxSizeInBytes")]
+    max_size_in_bytes: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ImageUploadHeaders {
+    #[serde(rename = "Content-Type")]
+    content_type: String,
+    #[serde(rename = "X-Goog-Content-Length-Range")]
+    content_length_range: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ImageUploadResponse {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "uploadUrl")]
+    upload_url: String,
+    #[serde(rename = "headers")]
+    headers: ImageUploadHeaders,
+    #[serde(rename = "fileSizeRequirements")]
+    file_size_requirements: ImageUploadSizeRequirements,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ImageUploadSpecsResponse {
+    image: ImageUploadResponse,
 }
 
 #[derive(Clone, Debug)]
@@ -1011,6 +1055,40 @@ impl ApiClient {
         //trace!("{}", json);
         let result: GeoMatchPageResponse = serde_json::from_str(&json)?;
         Ok(result)
+    }
+
+    pub fn get_image_upload_specs(&self, path: &Path) -> Result<ImageUploadSpecsResponse> {
+        if !path.is_file() {
+            return Err(anyhow!("Input is not a file"));
+        }
+
+        let url = format!("{}/v2/images", self.base_url);
+        let bearer: String = format!("Bearer {}", self.access_token);
+
+        let filename = match path.file_name() {
+            Some(filename) => filename.to_str().unwrap(),
+            None => return Err(anyhow!("Error extracting file name from input path")),
+        };
+
+        trace!("Requesting upload specs for image {}", &filename);
+        let response = self
+            .client
+            .post(url)
+            .timeout(Duration::from_secs(180))
+            .header("Authorization", bearer)
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .json(&ImageUploadSpecsRequest::new(filename.to_string()))
+            .send()?;
+        let json = response.text().unwrap();
+        //trace!("{}", json);
+
+        let file_size_requirements: ImageUploadSpecsResponse = serde_json::from_str(&json)?;
+        //trace!("File size requirements: {:?}", &file_size_requirements);
+
+        Ok(file_size_requirements)
     }
 }
 
