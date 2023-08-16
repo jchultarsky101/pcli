@@ -1,6 +1,6 @@
 use crate::model::{
-    FileUploadResponse, FolderCreateResponse, GeoMatch, ImageClassifier,
-    ListOfClassificationScores, ListOfGeoClassifiers, ListOfGeoLabels, Model,
+    FileUploadResponse, FolderCreateResponse, GeoMatch, ImageClassifier, ImageMatch,
+    ListOfClassificationScores, ListOfGeoClassifiers, ListOfGeoLabels, ListOfModels, Model,
     ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
 };
 use anyhow::{anyhow, Result};
@@ -14,8 +14,8 @@ use reqwest::{
     StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 use std::time::Duration;
+use std::{fs::File, path::Path};
 use substring::Substring;
 use url::{self, Url};
 use uuid::Uuid;
@@ -297,34 +297,42 @@ impl ImageUploadSpecsRequest {
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ImageUploadSizeRequirements {
     #[serde(rename = "minSizeInBytes")]
-    min_size_in_bytes: u32,
+    pub min_size_in_bytes: u64,
     #[serde(rename = "maxSizeInBytes")]
-    max_size_in_bytes: u32,
+    pub max_size_in_bytes: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ImageUploadHeaders {
     #[serde(rename = "Content-Type")]
-    content_type: String,
+    pub content_type: String,
     #[serde(rename = "X-Goog-Content-Length-Range")]
-    content_length_range: String,
+    pub content_length_range: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ImageUploadResponse {
     #[serde(rename = "id")]
-    id: String,
+    pub id: String,
     #[serde(rename = "uploadUrl")]
-    upload_url: String,
+    pub upload_url: String,
     #[serde(rename = "headers")]
-    headers: ImageUploadHeaders,
+    pub headers: ImageUploadHeaders,
     #[serde(rename = "fileSizeRequirements")]
-    file_size_requirements: ImageUploadSizeRequirements,
+    pub file_size_requirements: ImageUploadSizeRequirements,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ImageUploadSpecsResponse {
-    image: ImageUploadResponse,
+    pub image: ImageUploadResponse,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ImageMatchPageResponse {
+    #[serde(rename = "matches")]
+    pub matches: Vec<ImageMatch>,
+    #[serde(rename = "pageData")]
+    pub page_data: PageData,
 }
 
 #[derive(Clone, Debug)]
@@ -458,7 +466,7 @@ impl ApiClient {
         self.evaluate_satus(response.status())?;
 
         let content = response.text()?;
-        trace!("{}", content);
+        //trace!("{}", content);
         Ok(content)
     }
 
@@ -1044,7 +1052,7 @@ impl ApiClient {
             urlencode(uuid.to_string()),
             label_id.to_string()
         );
-        trace!("GET {}", url.to_string());
+        //trace!("GET {}", url.to_string());
 
         let mut query_parameters: Vec<(String, String)> = Vec::new();
         query_parameters.push(("threshold".to_string(), threshold.to_string()));
@@ -1057,7 +1065,7 @@ impl ApiClient {
         Ok(result)
     }
 
-    pub fn get_image_upload_specs(&self, path: &Path) -> Result<ImageUploadSpecsResponse> {
+    pub fn get_image_upload_specs(&self, path: &Path) -> Result<ImageUploadResponse> {
         if !path.is_file() {
             return Err(anyhow!("Input is not a file"));
         }
@@ -1088,7 +1096,126 @@ impl ApiClient {
         let file_size_requirements: ImageUploadSpecsResponse = serde_json::from_str(&json)?;
         //trace!("File size requirements: {:?}", &file_size_requirements);
 
-        Ok(file_size_requirements)
+        Ok(file_size_requirements.image)
+    }
+
+    pub fn upload_image_file(
+        &self,
+        url: Url,
+        upload_size_requirements: ImageUploadSizeRequirements,
+        path: &Path,
+        mime: String,
+        content_range: String,
+    ) -> Result<()> {
+        trace!("Uploading image file {}...", path.to_str().unwrap());
+        //trace!("Upload URL: {}", url.to_string());
+
+        let max_size = upload_size_requirements.max_size_in_bytes;
+        let file = File::open(path)?;
+        let file_size = file.metadata().unwrap().len();
+        if file_size > max_size {
+            return Err(anyhow!("File too large"));
+        }
+
+        //let curl = format!("curl -X PUT --upload-file {} -H 'Content-Type: {mime}' -H 'X-Goog-Content-Length-Range: {content_range}' {}", path.to_str().unwrap(), url.to_string());
+        //trace!("Example: {}", curl);
+
+        let response = self
+            .client
+            .put(url)
+            .timeout(Duration::from_secs(180))
+            .header("Content-Type", mime)
+            .header("X-Goog-Content-Length-Range", content_range)
+            .body(file)
+            .send();
+
+        let _json = match response {
+            Ok(response) => response.text(),
+            Err(e) => return Err(anyhow!(e)),
+        };
+
+        //let json = json.unwrap();
+        //trace!("{}", json);
+
+        Ok(())
+    }
+
+    fn get_image_search_matches_page(
+        &self,
+        id: String,
+        search: Option<String>,
+        filter: Option<String>,
+        page: u32,
+        per_page: u32,
+    ) -> Result<ImageMatchPageResponse> {
+        trace!("Searching matching models for image with ID {id}...");
+
+        let url = format!("{}/v2/images/model-matches", self.base_url);
+        let mut query_parameters: Vec<(String, String)> = Vec::new();
+        query_parameters.push(("id".to_string(), id));
+        query_parameters.push(("perPage".to_string(), per_page.to_string()));
+        query_parameters.push(("page".to_string(), page.to_string()));
+        match search {
+            Some(search) => query_parameters.push(("search".to_string(), search)),
+            None => (),
+        }
+        match filter {
+            Some(filter) => query_parameters.push(("filter".to_string(), filter)),
+            None => (),
+        }
+
+        let json = self.get(url.as_str(), Some(query_parameters));
+        let json = match json {
+            Ok(json) => json,
+            Err(e) => return Err(anyhow!("Failed to find matches for image: {}", e)),
+        };
+        let result: ImageMatchPageResponse = serde_json::from_str(&json)?;
+        Ok(result)
+    }
+
+    pub fn get_image_search_maches(
+        &self,
+        id: String,
+        search: Option<String>,
+        filter: Option<String>,
+        max_matches: u32,
+    ) -> Result<ListOfModels> {
+        let mut page = 1;
+        let per_page = 20;
+        let mut models: Vec<Model> = Vec::new();
+
+        trace!("Limit={}", max_matches);
+
+        loop {
+            let page_result = self.get_image_search_matches_page(
+                id.clone(),
+                search.clone(),
+                filter.clone(),
+                page,
+                per_page,
+            )?;
+            let page_models: Vec<Model> = page_result
+                .matches
+                .into_iter()
+                .map(|m| Model::from(m.model))
+                .collect();
+            let local_size = page_models.len();
+            models.extend(page_models);
+            if models.len() > max_matches as usize {
+                models.truncate(max_matches as usize);
+            }
+
+            trace!("Page {}", page);
+            trace!("size={}", local_size);
+            trace!("models.size={}", models.len());
+
+            page += 1;
+            if local_size < per_page as usize || models.len() >= max_matches as usize {
+                break;
+            }
+        }
+
+        Ok(ListOfModels::from(models))
     }
 }
 

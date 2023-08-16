@@ -13,7 +13,7 @@ The latest version is 1.8.3
 
 ### Version 1.8.3
 
-* Added support for VBSS-based image identification
+* Added command "image-search" for searching 3D models by providing 2D image
 
 ### Version 1.8.2
 
@@ -940,6 +940,40 @@ Therefore, the model will not immediately appear in "FIXED" state. You may need 
 background processing completed.
 
 The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
+
+### Searching for 3D models by 2D iamge
+
+In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
+that corresponds to this image.
+
+Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediatelly.
+
+To search by image, PCLI implements the "iamge-search" command:
+
+
+```
+Usage: pcli --tenant <tenant> image-search [OPTIONS] --input <input>
+
+Options:
+  -i, --input <input>  Path to the input file
+  -l, --limit <limit>  Maximum number of results to be returned (default is 20) [default: 20]
+  -h, --help           Print help
+  -V, --version        Print version
+```
+
+It takes two arguments:
+* input - the path to the image file on your local file system
+* limit - the maximum number of matches to be returned. This is optional with default of 20
+
+The search results are sorted where the most likely matches are returned first.
+
+Example:
+````bash
+$ pcli --format=csv --pretty --tenant=my_tenant image-search --input my_picture.JPG --limit 30
+````
+
+This will return a list of matching model records in CSV format. Only the top 30 matches will be returned.
+
 
 ### Image Classifiers
 
