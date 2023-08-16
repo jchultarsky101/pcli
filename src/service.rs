@@ -16,9 +16,11 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::{fs::File, path::Path};
 use unicase::UniCase;
+use url::Url;
 use uuid::Uuid;
 
 pub struct Api {
@@ -810,6 +812,25 @@ impl Api {
             Box::new(buffer[0..chunk_size].to_vec()),
         )?;
         Ok(scores)
+    }
+
+    pub fn search_by_image(&self, path: &PathBuf, max_results: u32) -> Result<ListOfModels> {
+        let path = path.as_path();
+        let image_upload = self.client.get_image_upload_specs(&path)?;
+        let url = Url::parse(image_upload.upload_url.as_str()).unwrap();
+        let size_requirements = image_upload.file_size_requirements;
+        let mime = image_upload.headers.content_type;
+        let content_range = image_upload.headers.content_length_range;
+        let id = image_upload.id;
+
+        self.client
+            .upload_image_file(url, size_requirements, &path, mime, content_range)?;
+
+        let matches = self
+            .client
+            .get_image_search_maches(id, None, None, max_results)?;
+
+        Ok(matches)
     }
 
     pub fn get_geo_classifiers(&self) -> Result<ListOfGeoClassifiers> {

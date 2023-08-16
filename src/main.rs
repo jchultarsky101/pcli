@@ -627,6 +627,29 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("image-search")
+                .about("Search for 3D model based on 2D image (image identification)")
+                .arg(
+                    Arg::new("input")
+                        .short('i')
+                        .long("input")
+                        .num_args(1)
+                        .help("Path to the input file")
+                        .required(true)
+                        .value_parser(clap::value_parser!(PathBuf))
+                )
+                .arg(
+                    Arg::new("limit")
+                        .short('l')
+                        .long("limit")
+                        .num_args(1)
+                        .help("Maximum number of results to be returned (default is 20)")
+                        .required(false)
+                        .default_value("20")
+                        .value_parser(clap::value_parser!(u32))
+                ),
+        )
+        .subcommand(
             Command::new("geo-classifiers")
                 .about("Lists all available geo classifiers"),
         )
@@ -1423,6 +1446,30 @@ fn main() {
                 },
                 Err(e) => {
                     eprintln!("Error occurred while reading classification predictions: {}. Perhaps this service is not enabled for your tenant? Hint: Try invalidating the token.", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("image-search", sub_matches)) => {
+            let file =  sub_matches.get_one::<PathBuf>("input").unwrap();
+            let max_results = sub_matches.get_one::<u32>("limit").unwrap();
+            let scores = api.search_by_image(&file, max_results.to_owned());
+            match scores {
+                Ok(scores) => {
+                    let output = format::format_list_of_models(&scores, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while searching by image: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }

@@ -1633,6 +1633,25 @@ impl GeoMatch {
     }
 }
 
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct ImageMatch {
+    #[serde(rename = "matchedModel")]
+    pub model: Model,
+}
+
+impl PartialEq for ImageMatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.model.name.eq(&other.model.name)
+    }
+}
+impl Eq for ImageMatch {}
+
+impl ImageMatch {
+    pub fn new(model: Model) -> Self {
+        Self { model }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ListOfGeoClassifierPredictions {
     #[serde(rename = "matches")]
