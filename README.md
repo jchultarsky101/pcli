@@ -197,8 +197,6 @@ For example:
 $ pcli help
 ```
 ```
-CLI client utility to the Physna public API/V2
-
 Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
 Commands:
@@ -227,6 +225,7 @@ Commands:
   create-image-classifier           Creates a new image classifier
   image-classifiers                 Lists all available image classifiers
   image-classification-predictions  Read the list of classification predictions for an image by given image classifier
+  image-search                      Search for 3D model based on 2D image (image identification)
   geo-classifiers                   Lists all available geo classifiers
   geo-labels                        Lists all available geo classifier labels
   geo-classifier-predictions        Searches for all models in a folder that are predicted to belong to a specified class
