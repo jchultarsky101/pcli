@@ -1143,8 +1143,8 @@ impl ApiClient {
     fn get_image_search_matches_page(
         &self,
         id: String,
-        search: Option<String>,
-        filter: Option<String>,
+        search: Option<&String>,
+        filter: Option<&String>,
         page: u32,
         per_page: u32,
     ) -> Result<ImageMatchPageResponse> {
@@ -1156,11 +1156,11 @@ impl ApiClient {
         query_parameters.push(("perPage".to_string(), per_page.to_string()));
         query_parameters.push(("page".to_string(), page.to_string()));
         match search {
-            Some(search) => query_parameters.push(("search".to_string(), search)),
+            Some(search) => query_parameters.push(("search".to_string(), search.to_owned())),
             None => (),
         }
         match filter {
-            Some(filter) => query_parameters.push(("filter".to_string(), filter)),
+            Some(filter) => query_parameters.push(("filter".to_string(), filter.to_owned())),
             None => (),
         }
 
@@ -1176,8 +1176,8 @@ impl ApiClient {
     pub fn get_image_search_maches(
         &self,
         id: String,
-        search: Option<String>,
-        filter: Option<String>,
+        search: Option<&String>,
+        filter: Option<&String>,
         max_matches: u32,
     ) -> Result<ListOfModels> {
         let mut page = 1;

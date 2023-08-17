@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.3
+The latest version is 1.8.4
+
+### Version 1.8.4
+
+* Added "search" and "filter" arguments to command image-search
+* Removed image classifier commands since that fnctionality is deprecated in Physna API
 
 ### Version 1.8.3
 
@@ -43,76 +48,6 @@ The latest version is 1.8.3
 
 * Upgraded the create-folder command to use the new API endpoint in V2
 * Added more descriptive error message in the case when the user is trying to delete non-empty directory without --force
-
-### Version 1.7.4
-
-* Added "delete-folder" command
-* Renamed the --meta parameter of the "upload" command to --meta-input to prevent confusion
-
-### Version 1.7.3 
-
-* Added --noasm flag to the "status" command to filter out assemblies when initiating automatic repair with the --repair flag
-
-### Version 1.7.2
-
-* Fixed a bug preventing proper triggering of --repair for the "status" command
-
-### Version 1.7.1
-
-* Added "--repair" flag to the "status" command to force reprocessing of any models that are not in "FINISHED" state
-* Implemented a workaround for situations where the backend reports NULL metadata name
-* Updated README.md
-
-### Version 1.7.0
-
-This release features many changes. Some of which modify the behaviour of commands to allow for multi-value arguments.
-
-* Upgraded to version 4.1 of the clap library with number of improvements in command line argument parsing
-* Updated the look of the help output
-* Removed parameter --config. This parameter was designed to allow the user to provide an alterhative configuration file on case-by-case basis.
-However, it was not popular and the users never used it. Removing it will simplify operations
-* Implement option to use multiple parameter values. Please, see the changes for specific commands
-* Command 'models' now allows for multiple values for the 'folder' parameter
-* Command 'delete-model' now allows for multiple values for 'uuid'. Added command alias 'delete'
-* Command 'reprocess' now allows for multiple values for 'uuid'. Added command alias 'reprocess-model'
-* Fixed a bug where the output JSON for model was showing inconsistency when working with NULL values
-* Implemented a workaround when the API returns metadata keys with NULL names
-* Various performance improvements
-* Updated README.md
-
-### Version 1.6.17
-
-* Fixed a bug when producing CSV metadata output in cases of the backend reporting duplicate property names
-
-### Version 1.6.16
-
-* Fixed a bug when handling duplicate metadata property names provided in the input file
-
-### Version 1.6.15
-
-* Fixed bugs related to the new version of the API
-* Optimized performance when reading metadata
-* Updated README.md
-
-### Version 1.6.14
-
-* Fixed a bug when parsing empty JSON vector in the latest version of serde
-
-### Version 1.6.13
-
-* Added new OIDC scope to support upcoming RBAC changes in the API
-
-### Version 1.6.12
-
-* Modified commands to consistently use the optional --meta flag:
-    - model
-    - models
-    - match-folder
-* Updated the client to use the new metadata API end points
-
-### Version 1.6.11
-
-* Added label-folder command
 
 ## Installation
 
@@ -200,36 +135,33 @@ $ pcli help
 Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
 Commands:
-  sysinfo                           Prints details of the current host system
-  token                             Obtains security access token from the provider
-  invalidate                        Invalidates the current access token
-  model                             Reads data for a specific model
-  reprocess                         Reprocesses a specific model
-  delete-model                      Deletes a specific model
-  model-meta                        Reads the metadata (properties) for a specific model
-  models                            Lists all available models in a folder
-  assembly-tree                     Reads the model's assembly tree
-  match-model                       Matches all models to the specified one
-  match-scan                        Scan-match all models to the specified one
-  match-folder                      Matches all models in a folder to other models
-  label-folder                      Labels models in a folder based on KNN algorithm and geometric match score as distance
-  delete-folder                     Deletes a specific folder
-  assembly-bom                      Generates flat BoM of model IDs for model
-  status                            Generates a tenant's environment status summary
-  upload                            Uploads a file to Physna
-  upload-model-meta                 Reads metadata from an input CSV file and uploads it for a model specified by UUID
-  match-report                      Generates a match report for the specified models
-  folders                           Lists all available folders
-  create-folder                     Creates a new folder
-  properties                        Lists all available metadata propertie names and their IDs
-  create-image-classifier           Creates a new image classifier
-  image-classifiers                 Lists all available image classifiers
-  image-classification-predictions  Read the list of classification predictions for an image by given image classifier
-  image-search                      Search for 3D model based on 2D image (image identification)
-  geo-classifiers                   Lists all available geo classifiers
-  geo-labels                        Lists all available geo classifier labels
-  geo-classifier-predictions        Searches for all models in a folder that are predicted to belong to a specified class
-  help                              Print this message or the help of the given subcommand(s)
+  sysinfo                     Prints details of the current host system
+  token                       Obtains security access token from the provider
+  invalidate                  Invalidates the current access token
+  model                       Reads data for a specific model
+  reprocess                   Reprocesses a specific model
+  delete-model                Deletes a specific model
+  model-meta                  Reads the metadata (properties) for a specific model
+  models                      Lists all available models in a folder
+  assembly-tree               Reads the model's assembly tree
+  match-model                 Matches all models to the specified one
+  match-scan                  Scan-match all models to the specified one
+  match-folder                Matches all models in a folder to other models
+  label-folder                Labels models in a folder based on KNN algorithm and geometric match score as distance
+  delete-folder               Deletes a specific folder
+  assembly-bom                Generates flat BoM of model IDs for model
+  status                      Generates a tenant's environment status summary
+  upload                      Uploads a file to Physna
+  upload-model-meta           Reads metadata from an input CSV file and uploads it for a model specified by UUID
+  match-report                Generates a match report for the specified models
+  folders                     Lists all available folders
+  create-folder               Creates a new folder
+  properties                  Lists all available metadata propertie names and their IDs
+  image-search                Search for 3D model based on 2D image (image identification)
+  geo-classifiers             Lists all available geo classifiers
+  geo-labels                  Lists all available geo classifier labels
+  geo-classifier-predictions  Searches for all models in a folder that are predicted to belong to a specified class
+  help                        Print this message or the help of the given subcommand(s)
 
 Options:
   -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
@@ -954,15 +886,19 @@ To search by image, PCLI implements the "iamge-search" command:
 Usage: pcli --tenant <tenant> image-search [OPTIONS] --input <input>
 
 Options:
-  -i, --input <input>  Path to the input file
-  -l, --limit <limit>  Maximum number of results to be returned (default is 20) [default: 20]
-  -h, --help           Print help
-  -V, --version        Print version
+  -i, --input <input>    Path to the input file
+  -l, --limit <limit>    Maximum number of results to be returned (default is 20) [default: 20]
+  -s, --search <search>  Search clause to further filter output (optional: e.g. a model name)
+  -f, --filter <filter>  Physna filter expression. See: https://api.physna.com/v2/docs#model-FilterExpression
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
-It takes two arguments:
+It takes four arguments:
 * input - the path to the image file on your local file system
 * limit - the maximum number of matches to be returned. This is optional with default of 20
+* search - is optional argument. When provided it will sub-select the results based on the text value. For example, you could provide folder name or the value of a metadata property
+* filter - is optional. You could specify a Physna filter expression for detailed control of the query. For more details on the syntax, please see [Physna's documentation](https://api.physna.com/v2/docs#model-FilterExpression)
 
 The search results are sorted where the most likely matches are returned first.
 
@@ -973,63 +909,9 @@ $ pcli --format=csv --pretty --tenant=my_tenant image-search --input my_picture.
 
 This will return a list of matching model records in CSV format. Only the top 30 matches will be returned.
 
-
-### Image Classifiers
-
-In addition to geometric search and comparison functions, Physna offers AI technology capable of automatic classification of images into 3D models. If you have uploaded sufficient number of models in your environment and have created and trained an image classifier, you could upload a 2D image of a part (e.g. digital picture taken with your phone) and Physna can recognize the object and retrieve the 3D model that corresponds to it.
-
-At this time, the training of new classifiers within Physna is only available via the web UI since user input is required during the training process. The PCLI offers commands to query the classifier(s) and retrieve a list of predictions from the AI.
-
-The ML algorithm used in this case is [Logistic Reressoin](https://en.wikipedia.org/wiki/Logistic_regression).
-
-#### List the available image classifiers
-
-To obtain the list of currently available classifiers in your environment, use the "classifiers" command. It takes no arguments:
-
-```
-pcli --tenant=mycompany --format=csv --pretty image-classifiers
-ID,NAME,STATUS
-8db6569f-65e6-45ca-8fc2-3603c9967437,MyClassifier,deployed
-```
-
-You will need the classifier UUID in order to be able to execute the next command.
-
-#### Image classification predictions
-
-As I mentioned above, you can take a 2D picture of a part and upload that image as input. Physna's AI will analyze the image and produce a list of predictions to what 3D models this image belongs. The command to do this is:
-
-```
-Read the list of classification predictions for an image by given classifier
-
-Usage: pcli --tenant <tenant> image-classification-predictions --uuid <uuid>... --input <input>
-
-Options:
-  -u, --uuid <uuid>...  Classifier UUID
-  -i, --input <input>   Path to the input file
-  -h, --help            Print help
-  -V, --version         Print version
-```
-
-The required arguments are:
-
-* "uuid" - the UUID of the classifier to use. See the previous section for details on how to obtain that UUID
-* "input" - the path to the 2D file in your local file system
-
-Here is an example:
-
-```
-pcli --tenant=delta --format=csv --pretty image-classification-predictions --uuid=1d896c02-9fba-4807-b9ec-07c96a7db946 --input=./mypart.png
-ID,NAME,STATUS
-96a2bb55-dcef-4a05-a43f-82bf696f872d,part1,0.9844062328338624
-9575ad2b-0548-4b48-9cec-7ed183bff064,part2,0.0000015775714246046846
-```
-
-In this case, we have one model with score of 0.98, which is very close match.
-
 ### Model Labeling
 
-While the classification altorithm we described in the previous section is a component of Physna's backend logic, 
-the PCLI client also provides its own (much simpler) mechanism for label propagation. 
+the PCLI client also provides its own mechanism for label propagation. 
 This is implemented in the *label-folder" command. 
 It is based entirely on geometric match scores provided by Physna. 
 
