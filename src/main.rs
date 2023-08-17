@@ -580,6 +580,7 @@ fn main() {
             Command::new("properties")
                 .about("Lists all available metadata propertie names and their IDs"),
         )
+        /* deprecated in Physna API
         .subcommand(
             Command::new("create-image-classifier")
                 .about("Creates a new image classifier")
@@ -626,6 +627,7 @@ fn main() {
                         .required(true)
                 ),
         )
+        */
         .subcommand(
             Command::new("image-search")
                 .about("Search for 3D model based on 2D image (image identification)")
@@ -647,8 +649,24 @@ fn main() {
                         .required(false)
                         .default_value("20")
                         .value_parser(clap::value_parser!(u32))
-                ),
-        )
+                )
+                .arg(
+                    Arg::new("search")
+                        .short('s')
+                        .long("search")
+                        .num_args(1)
+                        .help("Search clause to further filter output (optional: e.g. a model name)")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("filter")
+                        .short('f')
+                        .long("filter")
+                        .num_args(1)
+                        .help("Physna filter expression. See: https://api.physna.com/v2/docs#model-FilterExpression")
+                        .required(false)
+                )
+,        )
         .subcommand(
             Command::new("geo-classifiers")
                 .about("Lists all available geo classifiers"),
@@ -1453,7 +1471,9 @@ fn main() {
         Some(("image-search", sub_matches)) => {
             let file =  sub_matches.get_one::<PathBuf>("input").unwrap();
             let max_results = sub_matches.get_one::<u32>("limit").unwrap();
-            let scores = api.search_by_image(&file, max_results.to_owned());
+            let search = sub_matches.get_one::<String>("search");
+            let filter = sub_matches.get_one::<String>("filter");
+            let scores = api.search_by_image(&file, max_results.to_owned(), search, filter);
             match scores {
                 Ok(scores) => {
                     let output = format::format_list_of_models(&scores, &output_format, pretty, color);
