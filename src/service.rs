@@ -814,7 +814,13 @@ impl Api {
         Ok(scores)
     }
 
-    pub fn search_by_image(&self, path: &PathBuf, max_results: u32) -> Result<ListOfModels> {
+    pub fn search_by_image(
+        &self,
+        path: &PathBuf,
+        max_results: u32,
+        search: Option<&String>,
+        filter: Option<&String>,
+    ) -> Result<ListOfModels> {
         let path = path.as_path();
         let image_upload = self.client.get_image_upload_specs(&path)?;
         let url = Url::parse(image_upload.upload_url.as_str()).unwrap();
@@ -828,7 +834,7 @@ impl Api {
 
         let matches = self
             .client
-            .get_image_search_maches(id, None, None, max_results)?;
+            .get_image_search_maches(id, search, filter, max_results)?;
 
         Ok(matches)
     }
