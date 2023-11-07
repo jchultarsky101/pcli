@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.4
+The latest version is 1.8.5
+
+### Version 1.8.5
+
+* Using the new V2 enpoint for reprocessing models
 
 ### Version 1.8.4
 
