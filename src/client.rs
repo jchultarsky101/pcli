@@ -629,10 +629,8 @@ impl ApiClient {
     }
 
     pub fn reprocess_model(&self, uuid: &Uuid) -> Result<()> {
-        let url = format!("{}/v1/{}/models/reprocess", self.base_url, self.tenant);
+        let url = format!("{}/v2/models/{}/reprocess", self.base_url, uuid.to_string());
         let bearer: String = format!("Bearer {}", self.access_token);
-
-        let form = Form::new().part("uuid", Part::text(uuid.to_string()));
 
         trace!("Reprocessing model {}", url);
 
@@ -645,7 +643,7 @@ impl ApiClient {
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
-            .multipart(form)
+            .body("")
             .send()?;
 
         let status = self.evaluate_satus(response.status());
