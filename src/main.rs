@@ -518,6 +518,7 @@ fn main() {
                         .num_args(1)
                         .help("Top-level assembly UUID (you can provide multiple)")
                         .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
                     Arg::new("threshold")
@@ -526,6 +527,7 @@ fn main() {
                         .num_args(1)
                         .help("Match threshold percentage (e.g. '96.5')")
                         .required(true)
+                        .value_parser(clap::value_parser!(f64))
                 )
                 .arg(
                     Arg::new("duplicates")

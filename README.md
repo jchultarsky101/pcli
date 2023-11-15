@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.5
+The latest version is 1.8.6
+
+### Version 1.8.6
+
+* Fix a bug related to command line arguments in the match-report command
 
 ### Version 1.8.5
 
