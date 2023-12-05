@@ -1,11 +1,9 @@
 use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::model::{
-    EnvironmentStatusReport, FlatBom, Folder, GeoMatch, ListOfClassificationScores, ListOfFolders,
-    ListOfGeoClassifierPredictions, ListOfGeoClassifiers, ListOfGeoLabels, ListOfImageClassifiers,
-    ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMatch, ModelMatchReport,
-    ModelMatchReportItem, ModelMetadata, ModelMetadataItem, ModelMetadataItemShort,
-    ModelStatusRecord, PartNodeDictionaryItem, Property, PropertyCollection,
-    SimpleDuplicatesMatchReport,
+    EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfModelMatches, ListOfModels,
+    Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
+    ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -14,11 +12,11 @@ use petgraph::matrix_graph::MatrixGraph;
 use petgraph::matrix_graph::NodeIndex;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
+use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::{fs::File, path::Path};
 use unicase::UniCase;
 use url::Url;
 use uuid::Uuid;
@@ -776,42 +774,82 @@ impl Api {
         Ok(())
     }
 
-    pub fn create_image_classifier(&self, name: String, folder: Vec<u32>) -> Result<Uuid> {
-        let response = self.client.create_image_classifier(&name, folder)?;
-        Ok(response.id)
-    }
-
-    pub fn get_image_classifiers(&self) -> Result<ListOfImageClassifiers> {
-        let classifiers = self.client.get_image_classifiers()?;
-        Ok(ListOfImageClassifiers::new(classifiers))
-    }
-
-    pub fn get_classification_predictions(
+    fn average_image_search_results(
         &self,
-        uuid: Uuid,
-        file: &str,
-    ) -> Result<ListOfClassificationScores> {
-        const CAPACITY: usize = 1000000;
-        let mut f = File::open(file)?;
-        let file_size = f.metadata().unwrap().len();
+        max_results: u32,
+        results: Vec<ListOfModels>,
+    ) -> ListOfModels {
+        let mut rank_map: HashMap<Uuid, Vec<usize>> = HashMap::new();
+        let mut model_map: HashMap<Uuid, Model> = HashMap::new();
+        let mut seen_uuids: Vec<Uuid> = Vec::new();
+        let number_of_lists = results.len();
 
-        trace!(
-            "Reading input file {} with size of {} byte(s)...",
-            file,
-            file_size
-        );
+        for models in results {
+            let models = models.models.to_owned();
+            for (rank, model) in models.iter().enumerate() {
+                model_map.insert(model.uuid, model.clone());
+                rank_map
+                    .entry(model.uuid)
+                    .or_insert_with(Vec::new)
+                    .push(rank);
 
-        let buffer = &mut [0 as u8; CAPACITY];
-        let chunk_size: usize = f.read(buffer)?;
+                seen_uuids.push(model.uuid);
+            }
 
-        trace!("Read {} byte(s)", chunk_size);
+            for (&uuid, ranks) in &mut rank_map {
+                if !seen_uuids.contains(&uuid) {
+                    ranks.push(max_results as usize)
+                }
+            }
+        }
 
-        let scores = self.client.get_classification_scores(
-            uuid,
-            file.to_string(),
-            Box::new(buffer[0..chunk_size].to_vec()),
-        )?;
-        Ok(scores)
+        // Calculating average ranks
+        let mut average_ranks: HashMap<Uuid, f64> = HashMap::new();
+        for (uuid, ranks) in rank_map {
+            let sum: usize = ranks.iter().sum();
+            let avg = sum as f64 / number_of_lists as f64;
+            average_ranks.insert(uuid, avg);
+        }
+
+        // sort by average rank in assending order
+        let mut sorted_average_ranks: Vec<(Uuid, f64)> = average_ranks.into_iter().collect();
+        sorted_average_ranks.sort_by(|&(_, v1), &(_, v2)| {
+            v1.partial_cmp(&v2).unwrap_or(std::cmp::Ordering::Greater)
+        });
+
+        let mut result = ListOfModels::default();
+        for (uuid, rank) in sorted_average_ranks {
+            log::trace!("UUID={}, rank={}", uuid, rank);
+            result.models.push(model_map.get(&uuid).unwrap().to_owned());
+        }
+
+        result
+    }
+
+    pub fn search_by_multiple_images(
+        &self,
+        paths: Vec<&PathBuf>,
+        max_results: u32,
+        search: Option<&String>,
+        filter: Option<&String>,
+    ) -> Result<ListOfModels> {
+        let mut results: Vec<ListOfModels> = Vec::new();
+
+        if paths.len() == 1 {
+            // optimization for a single image file, which would be most often
+            self.search_by_image(&paths[0], max_results, search, filter)
+        } else {
+            // using miltiple image files
+            for path in paths {
+                let result = self.search_by_image(&path, max_results, search, filter)?;
+                results.push(result);
+            }
+
+            // average the results into a single result
+            let result = self.average_image_search_results(max_results, results);
+
+            Ok(result)
+        }
     }
 
     pub fn search_by_image(
@@ -837,50 +875,5 @@ impl Api {
             .get_image_search_maches(id, search, filter, max_results)?;
 
         Ok(matches)
-    }
-
-    pub fn get_geo_classifiers(&self) -> Result<ListOfGeoClassifiers> {
-        Ok(self.client.get_geo_classifiers()?)
-    }
-
-    pub fn get_geo_labels(&self) -> Result<ListOfGeoLabels> {
-        Ok(self.client.get_geo_labels()?)
-    }
-
-    pub fn get_geo_classifier_predictions(
-        &self,
-        uuid: &Uuid,
-        threshold: &f64,
-        label_id: &u32,
-        _with_meta: bool,
-    ) -> Result<ListOfGeoClassifierPredictions> {
-        trace!("Matching model {} by geo label {}...", uuid, label_id);
-        let mut list_of_matches: Vec<GeoMatch> = Vec::new();
-
-        let mut has_more = true;
-        let mut page: u32 = 1;
-        let per_page: u32 = 50;
-        while has_more {
-            match self
-                .client
-                .get_geo_match_page(uuid, label_id, threshold, per_page, page)
-            {
-                Ok(result) => {
-                    if result.page_data.total > 0 {
-                        let matches = result.matches;
-                        if !matches.is_empty() {
-                            for m in matches {
-                                list_of_matches.push(m.clone());
-                            }
-                        }
-                    }
-                    has_more = result.page_data.current_page < result.page_data.last_page;
-                    page = result.page_data.current_page + 1;
-                }
-                Err(e) => return Err(anyhow!("{}", e)),
-            };
-        }
-
-        Ok(ListOfGeoClassifierPredictions::new(list_of_matches))
     }
 }

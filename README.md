@@ -9,7 +9,12 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.6
+The latest version is 1.8.7
+
+### Version 1.8.7
+
+* Removed all functionality related to geometric classification as it is deprecated in Physna
+* Enhanced image-search to allow for uploading of multiple pictures of the same object
 
 ### Version 1.8.6
 
