@@ -1,6 +1,5 @@
 use crate::model::{
-    EnvironmentStatusReport, Folder, ListOfClassificationScores, ListOfFolders,
-    ListOfGeoClassifierPredictions, ListOfGeoClassifiers, ListOfGeoLabels, ListOfImageClassifiers,
+    EnvironmentStatusReport, Folder, ListOfFolders, ListOfGeoClassifierPredictions,
     ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMetadata, PropertyCollection,
     SimpleDuplicatesMatchReport, ToCsv, ToJson,
 };
@@ -199,58 +198,6 @@ pub fn format_environment_status_report(
     match format {
         Format::Json => Ok(color_string(stats.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(stats.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
-    }
-}
-
-pub fn format_list_of_classifiers(
-    classifiers: ListOfImageClassifiers,
-    format: &Format,
-    pretty: bool,
-    color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
-    match format {
-        Format::Json => Ok(color_string(classifiers.to_json(pretty)?.as_str(), color)),
-        Format::Csv => Ok(color_string(classifiers.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
-    }
-}
-
-pub fn format_list_of_geo_classifiers(
-    classifiers: ListOfGeoClassifiers,
-    format: &Format,
-    pretty: bool,
-    color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
-    match format {
-        Format::Json => Ok(color_string(classifiers.to_json(pretty)?.as_str(), color)),
-        Format::Csv => Ok(color_string(classifiers.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
-    }
-}
-
-pub fn format_list_of_classification_predictions(
-    scores: ListOfClassificationScores,
-    format: &Format,
-    pretty: bool,
-    color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
-    match format {
-        Format::Json => Ok(color_string(scores.to_json(pretty)?.as_str(), color)),
-        Format::Csv => Ok(color_string(scores.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
-    }
-}
-
-pub fn format_list_of_geo_labels(
-    labels: ListOfGeoLabels,
-    format: &Format,
-    pretty: bool,
-    color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
-    match format {
-        Format::Json => Ok(color_string(labels.to_json(pretty)?.as_str(), color)),
-        Format::Csv => Ok(color_string(labels.to_csv(pretty)?.as_str(), color)),
         _ => Err(anyhow!("Unsupported format {:?}", format)),
     }
 }
