@@ -1044,13 +1044,6 @@ fn main() {
             let exclusive = sub_matches.get_flag("exclusive");
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-            let meta = false;
->>>>>>> develop
-=======
->>>>>>> 8e4cd01065ee485c6f7562ec6aad98ec0ba9c75d
 
             match api.list_all_models(folders.clone(), search, false) {
                 Ok(physna_models) => {
