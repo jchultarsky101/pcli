@@ -350,6 +350,14 @@ fn main() {
                         .required(false)
                 )
                 .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .num_args(0)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
+                )
+                .arg(
                     Arg::new("exclusive")
                         .short('e')
                         .long("exclusive")
