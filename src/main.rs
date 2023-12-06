@@ -1044,9 +1044,8 @@ fn main() {
             let exclusive = sub_matches.get_flag("exclusive");
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
-            let meta = sub_matches.get_flag("meta");
 
-            match api.list_all_models(folders.clone(), search, meta) {
+            match api.list_all_models(folders.clone(), search, false) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
