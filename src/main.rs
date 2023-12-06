@@ -350,6 +350,14 @@ fn main() {
                         .required(false)
                 )
                 .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .num_args(0)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
+                )
+                .arg(
                     Arg::new("exclusive")
                         .short('e')
                         .long("exclusive")
@@ -1036,9 +1044,8 @@ fn main() {
             let exclusive = sub_matches.get_flag("exclusive");
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
-            let meta = false;
 
-            match api.list_all_models(folders.clone(), search, meta) {
+            match api.list_all_models(folders.clone(), search, false) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
