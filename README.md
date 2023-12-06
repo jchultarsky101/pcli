@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.7
+The latest version is 1.8.8
+
+### Version 1.8.8
+
+* Fixed a bug related to the --meta tag for the label-folder command
 
 ### Version 1.8.7
 
