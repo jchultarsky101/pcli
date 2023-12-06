@@ -13,15 +13,7 @@ The latest version is 1.8.8
 
 ### Version 1.8.8
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 * Fixed a bug related to the --meta argument of the label-folder command
-=======
-* Fixed a bug related to the --meta tag for the label-folder command
->>>>>>> develop
-=======
-* Fixed a bug related to the --meta argument of the label-folder command
->>>>>>> 8e4cd01065ee485c6f7562ec6aad98ec0ba9c75d
 
 ### Version 1.8.7
 
