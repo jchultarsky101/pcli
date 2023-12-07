@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.8
+The latest version is 1.8.9
+
+### Version 1.8.9
+
+* Fixed a bug related to missing metadata in the label-folder command
 
 ### Version 1.8.8
 
@@ -27,44 +31,6 @@ The latest version is 1.8.8
 ### Version 1.8.5
 
 * Using the new V2 enpoint for reprocessing models
-
-### Version 1.8.4
-
-* Added "search" and "filter" arguments to command image-search
-* Removed image classifier commands since that fnctionality is deprecated in Physna API
-
-### Version 1.8.3
-
-* Added command "image-search" for searching 3D models by providing 2D image
-
-### Version 1.8.2
-
-* Added "clean" option to upload-model-meta
-
-### Version 1.8.1
-
-* Removed the glob pattern used to specify files for upload using wildcards. It was seldom used feature.
-
-### Version 1.8.0
-
-* Added new commands for working with geo-classifiers
-  - geo-classifiers: list all available geo classifiers
-  - geo-labels: lists all available geo labels
-  - geo-classifier-predictions: outputs the list of matching models that have the specified geo label
-
-### Version 1.7.7
-
-* Fixed a bug in match-scan
-
-### Version 1.7.6
-
-* Added match-scan command
-* Refactored the base functionality as a library to allow other projects to use the functionality (i.e. PTUI)
-
-### Version 1.7.5
-
-* Upgraded the create-folder command to use the new API endpoint in V2
-* Added more descriptive error message in the case when the user is trying to delete non-empty directory without --force
 
 ## Installation
 
