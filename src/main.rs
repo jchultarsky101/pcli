@@ -1045,7 +1045,7 @@ fn main() {
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
 
-            match api.list_all_models(folders.clone(), search, false) {
+            match api.list_all_models(folders.clone(), search, true) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -1097,9 +1097,17 @@ fn main() {
                                             let meta = match model_meta_cache.get(&model.uuid) {
                                                 Some(meta) => meta.clone(),
                                                 None => {
-                                                    let meta = api.get_model_metadata(&model.uuid).unwrap().unwrap();
-                                                    model_meta_cache.insert(model.uuid, meta.clone());
-                                                    meta
+                                                    match api.get_model_metadata(&model.uuid).unwrap() {
+                                                        Some(meta) => {    
+                                                            model_meta_cache.insert(model.uuid, meta.clone());
+                                                            meta
+                                                        },
+                                                        None => {
+                                                            let meta = ModelMetadata::new(Vec::new());
+                                                            model_meta_cache.insert(model.uuid, meta.clone());
+                                                            meta
+                                                        }
+                                                    }
                                                 },
                                             };
                                             let meta: HashMap<String, ModelMetadataItem> = meta.properties.iter().map(|p| (p.name.clone(), p.clone())).collect();
