@@ -13,7 +13,7 @@ The latest version is 1.8.9
 
 ### Version 1.8.9
 
-* Fixed a bug related to missing metadata in the label-folder command
+* Fixed a bug related to missing model metadata in the label-folder command
 
 ### Version 1.8.8
 
