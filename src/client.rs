@@ -1020,6 +1020,7 @@ impl ApiClient {
         query_parameters.push(("id".to_string(), id));
         query_parameters.push(("perPage".to_string(), per_page.to_string()));
         query_parameters.push(("page".to_string(), page.to_string()));
+
         match search {
             Some(search) => query_parameters.push(("search".to_string(), search.to_owned())),
             None => (),

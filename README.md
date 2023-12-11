@@ -892,6 +892,26 @@ $ pcli --format=csv --pretty --tenant=my_tenant image-search --input my_picture.
 
 This will return a list of matching model records in CSV format. Only the top 30 matches will be returned.
 
+For best results, you should specify the folder in which your models reside by utilizing the --filter argument. For example, if I know that my 3D models are in folder with ID of 100, 
+I would add the following filter expression:
+
+````bash
+$ pcli --format=csv --pretty --tenant=my_tenant image-search --input my_picture.JPG --limit 30 --filter='folderId(eq(100))'
+````
+
+This would provide me the result faster and more accuratelly than searching the entire database.
+
+It is important to take photos that show as many geometric features of the object as possible. In some cases, to get a better match, we need to provide
+multiple images of the same object taken from different angles. PCLI allows you to upload multiple images by repeating the --input argument.
+
+
+````bash
+$ pcli --format=csv --pretty --tenant=my_tenant image-search --input my_picture_take1.JPG ---input my_picture_take2.JPG-limit 30 --filter='folderId(eq(100))'
+````
+
+Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that 
+are repeating in the outputs.
+
 ### Model Labeling
 
 the PCLI client also provides its own mechanism for label propagation. 
