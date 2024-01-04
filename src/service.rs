@@ -638,7 +638,7 @@ impl Api {
         Ok(stats)
     }
 
-    pub fn upload_file(
+    pub fn upload_file_v1(
         &self,
         folder_id: u32,
         file: &str,
@@ -687,7 +687,7 @@ impl Api {
 
             total_size += chunk_size as u64;
             let end_index = start_index + chunk_size as u64 - 1;
-            result = self.client.upload_file_chunk(
+            result = self.client.upload_file_chunk_v1(
                 folder_id,
                 file,
                 source_id_resolved.to_owned().as_str(),
@@ -706,6 +706,10 @@ impl Api {
         }
 
         result
+    }
+
+    pub fn upload_model(&self, folder_id: u32, file: &str, units: &str) -> Result<Option<Model>> {
+        self.client.upload_model(folder_id, file, units)
     }
 
     pub fn list_all_properties(&self) -> Result<PropertyCollection> {
@@ -872,7 +876,7 @@ impl Api {
 
         let matches = self
             .client
-            .get_image_search_maches(id, search, filter, max_results)?;
+            .get_image_search_maches(id, search, filter, max_results, 100)?;
 
         Ok(matches)
     }

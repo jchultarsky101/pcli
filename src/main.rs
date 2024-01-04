@@ -1234,7 +1234,7 @@ fn main() {
             let file = file.clone().into_os_string().into_string().unwrap();
 
             trace!("Uploading file {}...", file.to_owned());
-            let result = api.upload_file(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
+            let result = api.upload_file_v1(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
             match result {
                 Ok(model) => {
                     match model {

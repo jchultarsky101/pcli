@@ -736,7 +736,11 @@ impl ApiClient {
         Ok(result)
     }
 
-    pub fn upload_file_chunk(
+    pub fn upload_model(&self, folder_id: u32, file: &str, units: &str) -> Result<Option<Model>> {
+        Ok(None)
+    }
+
+    pub fn upload_file_chunk_v1(
         &self,
         folder_id: u32,
         file: &str,
@@ -1045,9 +1049,10 @@ impl ApiClient {
         search: Option<&String>,
         filter: Option<&String>,
         max_matches: u32,
+        per_page: u32,
     ) -> Result<ListOfModels> {
         let mut page = 1;
-        let per_page = 20;
+        // let per_page = 20;
         let mut models: Vec<Model> = Vec::new();
 
         trace!("Limit={}", max_matches);
