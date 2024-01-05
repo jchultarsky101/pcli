@@ -22,13 +22,6 @@ use sysinfo::{
     System, 
     SystemExt
 };
-use std::{
-    thread, 
-    time::{
-        self, 
-        Instant
-    }
-};
 
 /// The main application entry point
 fn main() {
@@ -436,9 +429,8 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .num_args(1)
-                        .help("Folder ID (e.g. --folder=1)")
+                        .help("Folder name (e.g. --folder=default)")
                         .required(true)
-                        .value_parser(clap::value_parser!(u32))
                 )
                 .arg(
                     Arg::new("input")
@@ -449,53 +441,6 @@ fn main() {
                         .required(true)
                         .value_parser(clap::value_parser!(PathBuf))
                 )
-                .arg(
-                    Arg::new("meta-input")
-                        .long("meta-input")
-                        .num_args(1)
-                        .help("Input CSV file name containing additional metadata associated with this model")
-                        .required(false)
-                )
-                .arg(
-                    Arg::new("batch")
-                        .short('b')
-                        .long("batch")
-                        .num_args(1)
-                        .help("Batch UUID (Optional, if not provided new one will be generated)")
-                        .required(false)
-                        .value_parser(clap::value_parser!(Uuid))
-                )
-                .arg(
-                    Arg::new("units")
-                        .long("units")
-                        .num_args(1)
-                        .help("The unit of measure for the model (e.g. 'inch', 'mm', etc.)")
-                        .required(true)
-                )
-                .arg(
-                    Arg::new("validate")
-                        .long("validate")
-                        .num_args(0)
-                        .help("Blocks until the model is in its final state")
-                        .required(false)
-                )
-                .arg(
-                    Arg::new("timeout")
-                        .long("timeout")
-                        .num_args(1)
-                        .requires("validate")
-                        .help("When validating, specifies the timeout in seconds")
-                        .required(false)
-                        .value_parser(clap::value_parser!(u32))
-                )
-                .arg(
-                    Arg::new("source")
-                        .long("source")
-                        .num_args(1)
-                        .help("Specifies the Source ID to be used")
-                        .required(false)
-                )
-
         )
         .subcommand(
             Command::new("upload-model-meta")
@@ -1212,67 +1157,17 @@ fn main() {
         },
         Some(("upload", sub_matches)) => {
 
-            let folder = sub_matches.get_one::<u32>("folder").unwrap();
-            let file = sub_matches.get_one::<PathBuf>("input").unwrap();
-            let metadata_file = sub_matches.get_one::<String>("meta-input");
-            let batch_uuid = match sub_matches.get_one::<Uuid>("batch") {
-                Some(batch_uuid) => batch_uuid.to_owned(),
-                None => Uuid::new_v4(),
-            };
-            let units = sub_matches.get_one::<String>("units").unwrap();
-            let validate = sub_matches.get_flag("validate");
-            let timeout: Option<u64> = match sub_matches.get_one::<u64>("timeout") {
-                Some(duration) => Some(duration.clone()),
-                None => None,
-            };
-            let source_id: Option<String> = match sub_matches.get_one::<String>("source") {
-                Some(id) => Some(id.to_string()),
-                None => None,
-            };
+            let folder = sub_matches.get_one::<String>("folder").unwrap();
+            let path = sub_matches.get_one::<PathBuf>("input").unwrap();
 
             let mut list_of_models: Vec<model::Model> = Vec::new();
-            let file = file.clone().into_os_string().into_string().unwrap();
 
-            trace!("Uploading file {}...", file.to_owned());
-            let result = api.upload_file(folder.to_owned(), &file, batch_uuid, &units, source_id.clone());
+            trace!("Uploading file {}...", String::from(path.clone().into_os_string().to_string_lossy()));
+            let result = api.upload_model(&folder.to_owned(), &path);
             match result {
                 Ok(model) => {
                     match model {
-                        Some(model) => {
-                            let m: model::Model = match metadata_file {
-                                            Some(metadata_file) => {
-                                                let _meta_response = api.upload_model_metadata(metadata_file, false);
-                                                let m2 = api.get_model(&model.uuid, false, false);
-                                                m2.unwrap()
-                                            },
-                                            None => model.clone(),
-                            };
-
-                            if validate {
-                                let two_seconds = time::Duration::from_millis(2000);
-                                let start_time = Instant::now();
-                                let mut state = m.state.clone();
-                                while state.ne("finished") &&
-                                      state.ne("failed") &&
-                                      state.ne("missing-parts") {
-
-                                    let duration = start_time.elapsed().as_secs();
-                                    if timeout.is_some() && (duration >= timeout.unwrap()) {
-                                        ::std::process::exit(exitcode::TEMPFAIL);
-                                    }
-
-                                    match api.get_model(&m.uuid, false, false) {
-                                        Ok(verified_model) => {
-                                            state = verified_model.state.clone();
-                                        },
-                                        Err(_) => break,
-                                    }
-                                    thread::sleep(two_seconds);
-                                }
-                            }
-
-                            list_of_models.push(m.clone());
-                        },
+                        Some(model) => list_of_models.push(model.clone()),
                         None => (),
                     }
                 },

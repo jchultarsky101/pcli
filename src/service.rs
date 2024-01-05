@@ -14,8 +14,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
-use std::io::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 use unicase::UniCase;
 use url::Url;
@@ -638,74 +637,8 @@ impl Api {
         Ok(stats)
     }
 
-    pub fn upload_file(
-        &self,
-        folder_id: u32,
-        file: &str,
-        batch_uuid: Uuid,
-        units: &str,
-        source_id: Option<String>,
-    ) -> Result<Option<Model>> {
-        const CAPACITY: usize = 1000000;
-
-        trace!("Openning file {} for reading...", file);
-
-        let mut f = File::open(file)?;
-        let mut total_size: u64 = 0;
-        let file_size = f.metadata().unwrap().len();
-        let mut start_index = 0;
-        let mut result: Result<Option<Model>> = Err(anyhow!("Failed to upload file"));
-
-        let file_name = Path::new(&file.to_owned())
-            .file_name()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap();
-
-        let source_id_resolved = match source_id {
-            Some(source_id) => source_id,
-            None => {
-                let mut id = String::new();
-                id.push_str("/");
-                id.push_str(Uuid::new_v4().to_string().as_str());
-                id.push_str("/");
-                id.push_str(file_name.as_str());
-
-                id
-            }
-        };
-
-        trace!(
-            "Uploading file {} with size {} byte(s)...",
-            file.to_owned(),
-            file_size.to_owned()
-        );
-        while total_size < file_size {
-            let buffer = &mut [0 as u8; CAPACITY];
-            let chunk_size: usize = f.read(buffer)?;
-
-            total_size += chunk_size as u64;
-            let end_index = start_index + chunk_size as u64 - 1;
-            result = self.client.upload_file_chunk(
-                folder_id,
-                file,
-                source_id_resolved.to_owned().as_str(),
-                batch_uuid,
-                units,
-                start_index,
-                end_index,
-                file_size,
-                Box::new(buffer[0..chunk_size].to_vec()),
-            );
-
-            match result {
-                Ok(_) => start_index = end_index + 1,
-                Err(e) => return Err(e),
-            }
-        }
-
-        result
+    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>> {
+        self.client.upload_model(folder, path)
     }
 
     pub fn list_all_properties(&self) -> Result<PropertyCollection> {
@@ -872,7 +805,7 @@ impl Api {
 
         let matches = self
             .client
-            .get_image_search_maches(id, search, filter, max_results)?;
+            .get_image_search_maches(id, search, filter, max_results, 100)?;
 
         Ok(matches)
     }
