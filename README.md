@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.9
+The latest version is 1.8.10
+
+### Version 1.8.10
+
+* Now using the new model upload API
 
 ### Version 1.8.9
 
@@ -142,7 +146,7 @@ Commands:
   properties                  Lists all available metadata propertie names and their IDs
   image-search                Search for 3D model based on 2D image (image identification)
   geo-classifiers             Lists all available geo classifiers
-  geo-labels                  Lists all available geo classifier labels
+  geo-labels                  Lists all available geo classifier labels/upload/
   geo-classifier-predictions  Searches for all models in a folder that are predicted to belong to a specified class
   help                        Print this message or the help of the given subcommand(s)
 
@@ -515,58 +519,25 @@ $ pcli help upload
 ```
 Uploads a file to Physna
 
-Usage: pcli --tenant <tenant> upload [OPTIONS] --folder <folder> --input <input> --units <units>
+Usage: pcli --tenant <tenant> upload --folder <folder> --input <input>
 
 Options:
-  -d, --folder <folder>    Folder ID (e.g. --folder=1)
-  -i, --input <input>      Path to the input file
-  -m, --meta               Input CSV file name containing additional metadata associated with this model
-  -b, --batch <batch>      Batch UUID (Optional, if not provided new one will be generated)
-      --units <units>      The unit of measure for the model (e.g. 'inch', 'mm', etc.)
-      --validate           Blocks until the model is in its final state
-      --timeout <timeout>  When validating, specifies the timeout in seconds
-      --source <source>    Specifies the Source ID to be used
-  -h, --help               Print help
-  -V, --version            Print version
+  -d, --folder <folder>  Folder name (e.g. --folder=default)
+  -i, --input <input>    Path to the input file
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
 * "input" is the path to the file you would like to upload in your local file system
-* "folder" is the Physna folder ID that will be the destination for your upload
-* "units" is the unit of measure for your 3D model. It is a string. For example "mm"
-* "batch" is a UUID that represents a transaction. When uploading a group of logically related models (e.g. an assembly with all of its parts), you will need to provide UUID type 4 as the transaction ID to instruct Physna that all of these files are related. If not provided, each file will be considered independent from any other and a batch UUID will be generated automatically by the client for each file
-* "validate" is an optional argument that will cause the process to wait until the file upload completes. It will retrieve the model back and check the status. If the status is one of the final states, it returns the model data. If it is still pending, it will continue to wait. If no timeout is provided, it could wait forever or until error occurs.
-* "timeout" only applies when "validate" is present. It specifies the maximum wait time allowed. The value is in seconds. Use that argument together with "validate" to limit the time an operation can take.
-* "source" is an optional string provided by the user that represents an unique identifier for the source system. It could be helpful to link a model in Physna to an entry in a PLM system or some other database. If not specified, the original file name will be used as the default value.
-* "meta" is optional. It is the file path to additional file containing metadata associated with this model. Once the model is uploaded, we will attempt to upload the metadata for it as well.
-* "validate" is optional. Normally, the upload operation is asynchronous. This means that as soon as the content of the file is uploaded to Physna, the control will be returned back to the user. However, Physna will continue to process the model in order to index it in the background. That takes additional time. In some cases, you may want to block and wait until the model is fully ready for use before proceeding to the next operation. In such cases, you can add this flag.
+* "folder" is the Physna folder name (not the folder ID) that will be the destination for your upload
 
 Here is an example of how all this comes together:
 
 ```bash
-$ pcli --tenant="mycompany" upload --folder="5" --input="/path/to/my/file" --units="mm"
+$ pcli --tenant="mycompany" upload --folder="default" --input="/path/to/my/file" --units="mm"
 ```
 
 If successful, we will upload the model in the file named "file".
-
-Example of uploading a model and waiting until it is ready for use (or error):
-
-```bash
-$ pcli --tenant="mycompany" upload --folder="5" --input="/path/to/my/file" --units="mm" --validate --timeout=60
-```
-
-This operation will block until the model is fully indexed or 60 seconds have elapsed.
-
-You can upload multiple files in one operation. To do that, you can specify the input path to contain a wild card or simply be a directory path. If wild card is used, you need to surround the path with double quotes.
-
-**NOTE:** Be careful with uploading all files in a directory. It may contain files that are not 3D models. 
-
-For example:
-
-```bash
-$ pcli --tenant="mycompany" upload --folder="5" --input="/path/*.stl" --units="mm"
-```
-
-The above command will upload all files with STL extension in directory "/path".
 
 ### Reprocessing a Model
 
