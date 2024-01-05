@@ -419,26 +419,6 @@ impl ToCsv for ModelMetadata {
     }
 }
 
-impl From<FileUploadResponse> for Model {
-    fn from(response: FileUploadResponse) -> Self {
-        Model {
-            uuid: response.uuid,
-            is_assembly: response.is_assembly,
-            name: response.name,
-            folder_id: response.folder_id,
-            owner_id: "".to_string(),
-            created_at: response.created_at,
-            file_type: "".to_string(),
-            thumbnail: response.thumbnail,
-            units: response.units,
-            state: response.state,
-            attachment_url: response.attachment_url,
-            short_id: response.short_id,
-            metadata: None,
-        }
-    }
-}
-
 impl ToJson for Model {
     fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
         if pretty {
@@ -1304,30 +1284,6 @@ pub struct PartNodeDictionaryItem {
     pub name: String,
     pub node: usize,
     pub uuid: Uuid,
-}
-
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-pub struct FileUploadResponse {
-    #[serde(rename = "uuid")]
-    pub uuid: Uuid,
-    #[serde(rename = "isAssembly")]
-    pub is_assembly: bool,
-    #[serde(rename = "name")]
-    pub name: String,
-    #[serde(rename = "containerId")]
-    pub folder_id: u32,
-    #[serde(rename = "created")]
-    pub created_at: String,
-    #[serde(rename = "thumbnail", skip_serializing_if = "Option::is_none")]
-    pub thumbnail: Option<String>,
-    #[serde(rename = "units")]
-    pub units: String,
-    #[serde(rename = "processedState")]
-    pub state: String,
-    #[serde(rename = "attachmentUrl")]
-    pub attachment_url: Option<String>,
-    #[serde(rename = "shortId")]
-    pub short_id: Option<u64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]

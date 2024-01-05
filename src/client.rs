@@ -1,21 +1,20 @@
 use crate::model::{
-    FileUploadResponse, FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, Model,
-    ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
+    FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, Model, ModelCreateMetadataResponse,
+    ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
 };
 use anyhow::{anyhow, Result};
+use core::str::FromStr;
 use log::trace;
 use reqwest::{
     self,
-    blocking::{
-        multipart::{Form, Part},
-        Client,
-    },
+    blocking::Client,
+    header::{HeaderMap, HeaderName, HeaderValue},
     StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 use std::{fs::File, path::Path};
-use substring::Substring;
+use std::{io::Read, path::PathBuf};
 use url::{self, Url};
 use uuid::Uuid;
 
@@ -332,6 +331,85 @@ pub struct ImageMatchPageResponse {
     pub matches: Vec<ImageMatch>,
     #[serde(rename = "pageData")]
     pub page_data: PageData,
+}
+
+#[derive(Clone, Debug, Serialize)]
+struct ModelUploadRequestModelElement {
+    #[serde(rename = "filePath")]
+    file_path: String,
+    #[serde(rename = "name")]
+    name: String,
+}
+
+impl ModelUploadRequestModelElement {
+    fn new(folder: &str, name: &str) -> Self {
+        let path = [folder, name].join("/");
+        Self {
+            file_path: path.to_string(),
+            name: name.to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+struct ModelUploadRequest {
+    #[serde(rename = "models")]
+    models: Vec<ModelUploadRequestModelElement>,
+}
+
+impl ModelUploadRequest {
+    fn new(folder: &str, name: &str) -> Self {
+        let element = ModelUploadRequestModelElement::new(folder, name);
+        Self {
+            models: vec![element],
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct UploadInfoResponse {
+    #[serde(rename = "uploadUrl")]
+    url: String,
+    #[serde(rename = "headers")]
+    headers: HashMap<String, String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct ModelUploadElementResponse {
+    #[serde(rename = "uploadInfo")]
+    info: UploadInfoResponse,
+    #[serde(rename = "model")]
+    model: Model,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct ModelUploadResponse {
+    #[serde(rename = "models")]
+    models: Vec<ModelUploadElementResponse>,
+}
+
+struct CustomHeaderName(String);
+
+impl CustomHeaderName {
+    fn new(name: String) -> Self {
+        Self(name.to_owned())
+    }
+
+    fn into_header_name(&self) -> Option<HeaderName> {
+        HeaderName::from_str(self.0.as_str()).ok()
+    }
+}
+
+impl From<String> for CustomHeaderName {
+    fn from(name: String) -> Self {
+        Self::new(name)
+    }
+}
+
+impl ToString for CustomHeaderName {
+    fn to_string(&self) -> String {
+        self.0.to_owned()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -736,56 +814,32 @@ impl ApiClient {
         Ok(result)
     }
 
-    pub fn upload_file_chunk(
-        &self,
-        folder_id: u32,
-        file: &str,
-        source_id: &str,
-        batch_uuid: Uuid,
-        units: &str,
-        start_index: u64,
-        end_index: u64,
-        file_size: u64,
-        bytes: Box<Vec<u8>>,
-    ) -> Result<Option<Model>> {
-        trace!("Uploading file chunk...");
-
-        let url = format!("{}/v1/{}/models", self.base_url, self.tenant);
+    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>> {
+        let url = format!("{}/v2/models", self.base_url);
         let bearer: String = format!("Bearer {}", self.access_token);
-        let file_name = Path::new(&file.to_owned())
-            .file_name()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap();
 
-        let form = Form::new()
-            .part("file", Part::bytes(*bytes).file_name(file_name))
-            .part("units", Part::text(units.to_owned()))
-            .part("containerId", Part::text(folder_id.to_string()))
-            .part("sourceId", Part::text(source_id.to_owned()))
-            .part("fileSize", Part::text(file_size.to_string()))
-            .part("batch", Part::text(batch_uuid.to_string()));
+        let name = path.file_name();
+        if name.is_none() {
+            return Err(anyhow!("Invalid input file"));
+        }
+        let name = String::from(name.unwrap().to_string_lossy());
 
-        let mut range_value = String::from("bytes ");
-        range_value.push_str(start_index.to_string().as_str());
-        range_value.push_str("-");
-        range_value.push_str(end_index.to_string().as_str());
-        range_value.push_str("/");
-        range_value.push_str(file_size.to_string().as_str());
+        trace!("Uploading model data...");
+        let request = ModelUploadRequest::new(folder, name.as_str());
 
-        trace!("Uploading {}...", range_value);
+        log::trace!("POST {}", url.to_string());
         let response = self
             .client
             .post(url)
-            .timeout(Duration::from_secs(180))
+            .timeout(Duration::from_secs(30))
             .header("Authorization", bearer)
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
+            .query(&[("createMissingFolders", "false")])
             //.header("Content-Range", range_value.to_owned())
-            .multipart(form)
+            .json(&request)
             .send();
 
         let json = match response {
@@ -794,25 +848,40 @@ impl ApiClient {
         };
 
         let json = json.unwrap();
-        //trace!("{}", json);
-        let mut model: FileUploadResponse = serde_json::from_str(&json)?;
+        trace!("{}", json);
+        let response: ModelUploadResponse = serde_json::from_str(&json)?;
 
-        let attachment_url = model.attachment_url.to_owned();
-        match attachment_url {
-            Some(attachment_url) => {
-                let pos = attachment_url.rfind('/');
-                if pos.is_some() {
-                    let pos = pos.unwrap() + 1;
-                    let short_id = attachment_url.as_str().substring(pos, attachment_url.len());
-                    let short_id = short_id.parse::<u64>()?;
-                    model.short_id = Some(short_id.to_owned());
-                };
+        let response_model = response.models.get(0);
+        match response_model {
+            Some(response_model) => {
+                let response_model = response_model.to_owned();
+                let url = response_model.info.url;
+                let model = response_model.model;
+                let mut headers: HeaderMap = HeaderMap::new();
+                response_model.info.headers.into_iter().for_each(|(k, v)| {
+                    let header_name: HeaderName = CustomHeaderName::from(k.to_owned())
+                        .into_header_name()
+                        .unwrap();
+                    let header_value: HeaderValue = HeaderValue::from_str(v.as_str()).unwrap();
+                    headers.append(header_name, header_value);
+                });
+
+                let mut file = std::fs::File::open(path)?;
+                let mut buffer = Vec::new();
+                file.read_to_end(&mut buffer)?;
+
+                let _ = self
+                    .client
+                    .put(url)
+                    .timeout(Duration::from_secs(180))
+                    .headers(headers)
+                    .body(buffer)
+                    .send();
+
+                Ok(Some(model.to_owned()))
             }
-            None => (),
+            None => Ok(None),
         }
-
-        let model = Model::from(model);
-        Ok(Some(model))
     }
 
     pub fn get_list_of_properties(&self) -> Result<PropertyCollection, ClientError> {
@@ -1020,6 +1089,7 @@ impl ApiClient {
         query_parameters.push(("id".to_string(), id));
         query_parameters.push(("perPage".to_string(), per_page.to_string()));
         query_parameters.push(("page".to_string(), page.to_string()));
+
         match search {
             Some(search) => query_parameters.push(("search".to_string(), search.to_owned())),
             None => (),
@@ -1044,9 +1114,10 @@ impl ApiClient {
         search: Option<&String>,
         filter: Option<&String>,
         max_matches: u32,
+        per_page: u32,
     ) -> Result<ListOfModels> {
         let mut page = 1;
-        let per_page = 20;
+        // let per_page = 20;
         let mut models: Vec<Model> = Vec::new();
 
         trace!("Limit={}", max_matches);
