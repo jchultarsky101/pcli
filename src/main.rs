@@ -23,6 +23,8 @@ use sysinfo::{
     SystemExt
 };
 
+const PHYSNA_WHITELIST: [&str; 17] = ["3ds", "catpart", "catproduct", "glb", "igs", "iges", "prt", "x_b", "x_t", "asm", "par", "sldasm", "sldprt", "step", "stp", "stl", "ojb"];
+
 /// The main application entry point
 fn main() {
 
@@ -438,6 +440,27 @@ fn main() {
                         .long("input")
                         .num_args(1)
                         .help("Path to the input file")
+                        .required(true)
+                        .value_parser(clap::value_parser!(PathBuf))
+                )
+        )
+        .subcommand(
+            Command::new("upload-many")
+                .about("Performs a bulk upload of all files in a directory")
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .num_args(1)
+                        .help("Folder name (e.g. --folder=default)")
+                        .required(true)
+                )
+                .arg(
+                    Arg::new("input")
+                        .short('i')
+                        .long("input")
+                        .num_args(1)
+                        .help("Path to the input directory")
                         .required(true)
                         .value_parser(clap::value_parser!(PathBuf))
                 )
@@ -1175,6 +1198,59 @@ fn main() {
                     eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
+            }
+
+            let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
+            println!("{}", output.unwrap());
+        },
+        Some(("upload-many", sub_matches)) => {
+
+            let folder = sub_matches.get_one::<String>("folder").unwrap();
+            let path = sub_matches.get_one::<PathBuf>("input").unwrap();
+            let mut list_of_models: Vec<model::Model> = Vec::new();
+
+            
+            if path.is_dir() {
+                if let Ok(entries) = fs::read_dir(path) {
+                    for entry in entries {
+                        if let Ok(entry) = entry {
+                            let path = entry.path();
+                            if path.is_file() {
+                                if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+                                    let extension = extension.to_lowercase();
+                                    let extension = extension.as_str();
+                                    if PHYSNA_WHITELIST.contains(&extension) {
+                                        if let Ok(metadata) = fs::metadata(&path) {
+                                            if metadata.len() > 0 {
+                                                trace!("Uploading file {}...", String::from(path.clone().into_os_string().to_string_lossy()));
+                                                let result = api.upload_model(&folder.to_owned(), &path);
+                                                match result {
+                                                    Ok(model) => {
+                                                        match model {
+                                                            Some(model) => list_of_models.push(model.clone()),
+                                                            None => (),
+                                                        }
+                                                    },
+                                                    Err(e) => {
+                                                        eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
+                                                        ::std::process::exit(exitcode::DATAERR);
+                                                    }
+                                                }                                             
+                                            } else {
+                                                trace!("Ignored file {}. It has zero size.", path.into_os_string().to_string_lossy());
+                                            }
+                                        }
+                                    } else {
+                                        trace!("Ingnored file {}. It is not an approved type.", path.into_os_string().to_string_lossy());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                eprint!("Input path is not a directory.");
+                ::std::process::exit(exitcode::NOINPUT);
             }
 
             let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
