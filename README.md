@@ -9,7 +9,11 @@ To be able to use this client, you will need to first request a Physna Enterpris
 
 ## Change Log
 
-The latest version is 1.8.10
+The latest version is 1.8.11
+
+### Version 1.8.11
+
+* Added upload-many command for uploading the contents of an entire directory
 
 ### Version 1.8.10
 
@@ -122,33 +126,31 @@ $ pcli help
 Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
 Commands:
-  sysinfo                     Prints details of the current host system
-  token                       Obtains security access token from the provider
-  invalidate                  Invalidates the current access token
-  model                       Reads data for a specific model
-  reprocess                   Reprocesses a specific model
-  delete-model                Deletes a specific model
-  model-meta                  Reads the metadata (properties) for a specific model
-  models                      Lists all available models in a folder
-  assembly-tree               Reads the model's assembly tree
-  match-model                 Matches all models to the specified one
-  match-scan                  Scan-match all models to the specified one
-  match-folder                Matches all models in a folder to other models
-  label-folder                Labels models in a folder based on KNN algorithm and geometric match score as distance
-  delete-folder               Deletes a specific folder
-  assembly-bom                Generates flat BoM of model IDs for model
-  status                      Generates a tenant's environment status summary
-  upload                      Uploads a file to Physna
-  upload-model-meta           Reads metadata from an input CSV file and uploads it for a model specified by UUID
-  match-report                Generates a match report for the specified models
-  folders                     Lists all available folders
-  create-folder               Creates a new folder
-  properties                  Lists all available metadata propertie names and their IDs
-  image-search                Search for 3D model based on 2D image (image identification)
-  geo-classifiers             Lists all available geo classifiers
-  geo-labels                  Lists all available geo classifier labels/upload/
-  geo-classifier-predictions  Searches for all models in a folder that are predicted to belong to a specified class
-  help                        Print this message or the help of the given subcommand(s)
+  sysinfo            Prints details of the current host system
+  token              Obtains security access token from the provider
+  invalidate         Invalidates the current access token
+  model              Reads data for a specific model
+  reprocess          Reprocesses a specific model
+  delete-model       Deletes a specific model
+  model-meta         Reads the metadata (properties) for a specific model
+  models             Lists all available models in a folder
+  assembly-tree      Reads the model's assembly tree
+  match-model        Matches all models to the specified one
+  match-scan         Scan-match all models to the specified one
+  match-folder       Matches all models in a folder to other models
+  label-folder       Labels models in a folder based on KNN algorithm and geometric match score as distance
+  delete-folder      Deletes a specific folder
+  assembly-bom       Generates flat BoM of model IDs for model
+  status             Generates a tenant's environment status summary
+  upload             Uploads a file to Physna
+  upload-many        Performs a bulk upload of all files in a directory
+  upload-model-meta  Reads metadata from an input CSV file and uploads it for a model specified by UUID
+  match-report       Generates a match report for the specified models
+  folders            Lists all available folders
+  create-folder      Creates a new folder
+  properties         Lists all available metadata propertie names and their IDs
+  image-search       Search for 3D model based on 2D image(s) (object identification)
+  help               Print this message or the help of the given subcommand(s)
 
 Options:
   -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
@@ -538,6 +540,38 @@ $ pcli --tenant="mycompany" upload --folder="default" --input="/path/to/my/file"
 ```
 
 If successful, we will upload the model in the file named "file".
+
+Be aware of the following restrictions:
+
+* You can upload the following file types: .3ds, .asm, .catpart, .catproduct, .glb, .iges, .igs, .obj, .par, .prt, .sldasm, .sldprt, .stl, .step, .stp, .x_b, .x_t
+* Please be aware that files may take several minutes to process after uploading.
+* Scans with missing facets or filesizes over 150MB may impact performance.
+* Each part file should not exceed 1GB
+* Each assembly file should not have more than 3,000 parts
+* All part files should be uploaded with their assembly file(s)
+
+### Uploading multiple models in one step
+
+You can upload multiple models in one step if they are located in the same directory on your computer. In this case,
+you can use the 'upload-many' command. It is esentially the same as 'upload', but in this case the --input argument
+is not a file, but the path to the directory on your computer where the files are staged.
+
+```bash
+pcli help upload-many
+````
+````
+Performs a bulk upload of all files in a directory
+
+Usage: pcli --tenant <tenant> upload-many --folder <folder> --input <input>
+
+Options:
+  -d, --folder <folder>  Folder name (e.g. --folder=default)
+  -i, --input <input>    Path to the input directory
+  -h, --help             Print help
+  -V, --version          Print version
+````
+
+Alternativelly, you can write a script to call the 'upload' command for each file you want to upload.
 
 ### Reprocessing a Model
 
