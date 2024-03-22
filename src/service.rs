@@ -11,7 +11,7 @@ use log::{error, trace, warn};
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::matrix_graph::NodeIndex;
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
@@ -465,8 +465,10 @@ impl Api {
         folders: Vec<u32>,
         exclusive: bool,
         with_meta: bool,
+        filter_reverse_matches: bool,
     ) -> anyhow::Result<SimpleDuplicatesMatchReport> {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
+        let mut previously_matched: HashSet<String> = HashSet::new();
 
         for uuid in uuids {
             let model = self.get_model(&uuid, true, with_meta);
@@ -507,7 +509,21 @@ impl Api {
                                 matches: simple_duplicate_matches,
                             };
 
-                            simple_match_report.inner.insert(uuid.to_string(), item);
+                            let forward_key = format!("{}-{}", item.uuid, uuid.to_string());
+                            let reverse_key = format!("{}-{}", uuid.to_string(), item.uuid);
+                            let previous_reverse_key = previously_matched.get(&reverse_key);
+
+                            if filter_reverse_matches {
+                                if previous_reverse_key.is_none() {
+                                    simple_match_report.inner.insert(uuid.to_string(), item);
+                                    previously_matched.insert(forward_key);
+                                    previously_matched.insert(reverse_key);
+                                } else {
+                                    log::trace!("Ignoring reverse match...");
+                                }
+                            } else {
+                                simple_match_report.inner.insert(uuid.to_string(), item);
+                            }
                         }
                     } else {
                         warn!(
@@ -528,6 +544,7 @@ impl Api {
         uuids: Vec<Uuid>,
         threshold: f64,
         with_meta: bool,
+        ignore_reverse_match: bool,
     ) -> anyhow::Result<ModelMatchReport> {
         let mut flat_bom = FlatBom::empty();
         let mut roots: HashMap<Uuid, ModelAssemblyTree> = HashMap::new();
@@ -558,6 +575,7 @@ impl Api {
             vec![],
             false,
             with_meta,
+            ignore_reverse_match,
         )?;
 
         // Create the DAG

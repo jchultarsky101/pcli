@@ -305,7 +305,14 @@ fn main() {
                         .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
-                ),
+                )
+                .arg(
+                    Arg::new("include-reverse-match")
+                        .long("include-reverse-match")
+                        .num_args(0)
+                        .help("(Optional) If specified, will include matches between same two models but occurring in reverse order as separate records")
+                        .required(false)
+                ),    
         )        
         .subcommand(
             Command::new("label-folder")
@@ -501,7 +508,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold [0..1] (e.g. '.95' is 95% similaty)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -535,6 +542,13 @@ fn main() {
                         .long("meta")
                         .num_args(0)
                         .help("Enhance output with model's metadata")
+                        .required(false)
+                )    
+                .arg(
+                    Arg::new("include-reverse-match")
+                        .long("include-reverse-match")
+                        .num_args(0)
+                        .help("(Optional) If specified, will include matches between same two models but occurring in reverse order as separate records")
                         .required(false)
                 ),    
         )
@@ -946,12 +960,13 @@ fn main() {
             let search = sub_matches.get_one::<String>("search");
             let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
             let meta = sub_matches.get_flag("meta");
+            let ignore_reverse_match = !sub_matches.get_flag("include-reverse-match");
 
             match api.list_all_models(folders.clone(), search, meta) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), exclusive, with_meta) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), exclusive, with_meta, ignore_reverse_match) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
                             println!("{}", output.unwrap());
@@ -1020,7 +1035,7 @@ fn main() {
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true, false) {
                         Ok(report) => {
                             
                             // ensure that the classification property is available
@@ -1266,8 +1281,9 @@ fn main() {
 
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
             let with_meta = sub_matches.get_flag("meta");
+            let ignore_reverse_match = !sub_matches.get_flag("include-reverse-match");
 
-            match api.generate_model_match_report(uuids, threshold, with_meta) {
+            match api.generate_model_match_report(uuids, threshold, with_meta, ignore_reverse_match) {
                 Ok(report) => {
 
                     let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
