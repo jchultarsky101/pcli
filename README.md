@@ -1,7 +1,9 @@
 # Physna CLI
 
-This utility is a CLI client for the Physna's public API V2 (and in part API V1). It could be used to interact with the system
+This utility is a CLI client for the Physna's public API V2. It could be used to interact with the system
 in automated ways.
+
+:warning: **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
 
 ## Physna Account
 
