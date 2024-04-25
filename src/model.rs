@@ -14,6 +14,7 @@ use std::io;
 use std::io::BufWriter;
 use std::iter::Extend;
 use std::iter::IntoIterator;
+use std::vec::IntoIter;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -46,6 +47,14 @@ pub struct Folder {
     pub id: u32,
     #[serde(rename = "name")]
     pub name: String,
+}
+
+impl Hash for Folder {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Hash each field individually
+        self.id.hash(state);
+        self.name.hash(state);
+    }
 }
 
 impl Folder {
@@ -114,10 +123,42 @@ impl ToCsv for Folder {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, Deserialize)]
 pub struct ListOfFolders {
     #[serde(rename = "folders")]
-    pub folders: Vec<Folder>,
+    folders: Vec<Folder>,
+}
+
+// Implementing IntoIterator for ListOfFolders to iterate over Folder references
+impl IntoIterator for ListOfFolders {
+    type Item = Folder;
+    type IntoIter = IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.folders.into_iter()
+    }
+}
+
+// Implementing Iterator for a borrowed ListOfFolders (yielding references)
+impl<'a> IntoIterator for &'a ListOfFolders {
+    type Item = &'a Folder;
+    type IntoIter = std::slice::Iter<'a, Folder>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.folders.iter()
+    }
+}
+
+impl ListOfFolders {
+    pub fn get_folder_by_id(&self, id: &u32) -> Option<&Folder> {
+        self.folders
+            .iter()
+            .find(|&folder| folder.id == id.to_owned())
+    }
+
+    pub fn get_folder_by_name(&self, name: &str) -> Option<&Folder> {
+        self.folders.iter().find(|&folder| folder.name == name)
+    }
 }
 
 impl ToJson for ListOfFolders {
@@ -158,6 +199,14 @@ impl ToCsv for ListOfFolders {
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
         Ok(result)
+    }
+}
+
+// Implementing FromIterator for references to Folder
+impl<'a> FromIterator<&'a Folder> for ListOfFolders {
+    fn from_iter<I: IntoIterator<Item = &'a Folder>>(iter: I) -> Self {
+        let folders = iter.into_iter().cloned().collect();
+        ListOfFolders { folders }
     }
 }
 

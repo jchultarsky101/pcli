@@ -6,12 +6,14 @@ use crate::model::{
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use anyhow::{anyhow, Result};
+use itertools::Itertools;
 use log::debug;
 use log::{error, trace, warn};
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::matrix_graph::NodeIndex;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
@@ -65,12 +67,13 @@ impl Api {
         }
     }
 
-    pub fn delete_folder(&self, folders: Vec<u32>) -> anyhow::Result<()> {
+    pub fn delete_folder(&self, folders: HashSet<String>) -> anyhow::Result<()> {
         self.client.delete_folder(&folders)?;
         Ok(())
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
+        log::trace!("Reading model metadata for {}...", uuid.to_string());
         Ok(self.client.get_model_metadata(uuid)?)
     }
 
@@ -165,13 +168,30 @@ impl Api {
         Ok(assembly_tree)
     }
 
+    /// Returns a list of models that match the search and filter criteria
+    ///
+    /// Parameters:
+    ///
+    /// folders - list of folder names to be used as a filter. If empty, all folders are included
+    /// search - search text
+    /// meta - if true, the metadata is included in the response
     pub fn list_all_models(
         &self,
-        folders: Vec<u32>,
+        folders: HashSet<String>,
         search: Option<&String>,
-        meta: bool,
     ) -> Result<ListOfModels> {
         trace!("Listing all models for folders {:?}...", folders);
+
+        let folder_ids: HashSet<u32> = if folders.len() > 0 {
+            let existing_folders = self.get_list_of_folders()?;
+
+            let folders = self.validate_folders(&existing_folders, &folders)?;
+
+            let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
+            folder_ids
+        } else {
+            HashSet::new()
+        };
 
         let mut list_of_models: Vec<Model> = Vec::new();
 
@@ -180,7 +200,7 @@ impl Api {
         let per_page: u32 = 50;
         while has_more {
             match self.client.get_list_of_models_page(
-                folders.clone(),
+                folder_ids.clone(),
                 search.to_owned(),
                 per_page,
                 page,
@@ -190,12 +210,7 @@ impl Api {
                         let models = result.models;
                         if !models.is_empty() {
                             for m in models {
-                                let mut normalized_model = Model::from(m.clone());
-
-                                if !meta {
-                                    normalized_model.metadata = None;
-                                }
-                                list_of_models.push(normalized_model);
+                                list_of_models.push(Model::from(m.clone()));
                             }
                         }
                     }
@@ -244,12 +259,13 @@ impl Api {
                             for m in matches {
                                 let mut model_match = ModelMatch::from(m);
                                 let model = model_match.model.clone();
-                                let metadata: Option<ModelMetadata>;
-                                if with_meta {
-                                    metadata = self.get_model_metadata(&model.uuid)?;
+                                let metadata: Option<ModelMetadata> = if with_meta {
+                                    self.get_model_metadata(&model.uuid)?
                                 } else {
-                                    metadata = None;
-                                }
+                                    None
+                                };
+
+                                log::trace!("Model metadata: {:?}", &metadata);
 
                                 match classification {
                                     Some(classification) => {
@@ -458,15 +474,64 @@ impl Api {
         }
     }
 
+    /// Validates list of folder names against the list of actual folders present in the tenant
+    ///
+    /// Parameters:
+    ///
+    /// existing_folders - list of existing folders
+    /// desired_folder_names - list of folder names we want to check. If empty list, include all available
+    pub fn validate_folders(
+        &self,
+        existing_folders: &ListOfFolders,
+        desired_folder_names: &HashSet<String>,
+    ) -> Result<ListOfFolders> {
+        let existing_folder_names: HashSet<String> = existing_folders
+            .into_iter()
+            .map(|f| f.name.to_owned())
+            .collect();
+
+        // generate an error if any of the desired names are not existing folder names
+        let diff: HashSet<String> = desired_folder_names
+            .difference(&existing_folder_names)
+            .cloned()
+            .collect();
+
+        if diff.len() > 0 {
+            return Err(anyhow!(format!(
+                "Folder not found: {}",
+                diff.iter().join(", ")
+            )));
+        }
+
+        let validated_folders = if desired_folder_names.len() > 0 {
+            // if there is a filter, include only the folders that match the names
+            desired_folder_names
+                .iter()
+                .map(|n| existing_folders.get_folder_by_name(n.as_str()).unwrap())
+                .collect()
+        } else {
+            // if there is no filter, include all folders
+            existing_folders.clone()
+        };
+
+        Ok(validated_folders)
+    }
+
     pub fn generate_simple_model_match_report(
         &mut self,
         uuids: Vec<Uuid>,
         threshold: &f64,
-        folders: Vec<u32>,
+        folders: HashSet<String>,
         exclusive: bool,
         with_meta: bool,
     ) -> anyhow::Result<SimpleDuplicatesMatchReport> {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
+
+        // read the list of folders currently existing in the tenant
+        let existing_folders = self.get_list_of_folders()?;
+
+        // create a sublist only from folders that a validated to be found in the tenant
+        let folders = self.validate_folders(&existing_folders, &folders)?;
 
         for uuid in uuids {
             let model = self.get_model(&uuid, true, with_meta);
@@ -480,7 +545,8 @@ impl Api {
 
                         for m in *matches.inner {
                             if !exclusive
-                                || (exclusive && folders.contains(&m.model.folder_id))
+                                || (exclusive
+                                    && folders.get_folder_by_id(&m.model.folder_id).is_some())
                                     && (!model.name.eq(&m.model.name)
                                         && !simple_duplicate_matches.contains(&m))
                             {
@@ -555,7 +621,7 @@ impl Api {
         let simple_match_report = self.generate_simple_model_match_report(
             target_uuids,
             &threshold,
-            vec![],
+            HashSet::new(),
             false,
             with_meta,
         )?;
@@ -581,15 +647,15 @@ impl Api {
 
     pub fn tenant_stats(
         &mut self,
-        folders: Vec<u32>,
+        folders: HashSet<String>,
         force_fix: bool,
         ignore_assemblies: bool,
     ) -> anyhow::Result<EnvironmentStatusReport> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
-            all_folders.folders.into_iter().map(|f| (f.id, f)).collect();
+            all_folders.into_iter().map(|f| (f.id, f)).collect();
 
-        let models = self.list_all_models(folders.to_owned(), None, false)?;
+        let models = self.list_all_models(folders, None)?;
         let models = models.models.to_owned();
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
