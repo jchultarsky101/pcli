@@ -25,10 +25,10 @@
   </a>
 -->
 
-  <h3 align="center">UAM CLI</h3>
+  <h3 align="center">PCLI</h3>
 
   <p align="center">
-    Command Line Interface client for the Unity Asset Manager API
+    Command Line Interface client for the Physna API
     <br />
     <a href="https://jchultarsky101.github.io/pcli/"><strong>Explore the docs »</strong></a>
     <br />
