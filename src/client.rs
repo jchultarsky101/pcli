@@ -8,11 +8,15 @@ use log::trace;
 use reqwest::{
     self,
     blocking::Client,
+    blocking::Response,
     header::{HeaderMap, HeaderName, HeaderValue},
     StatusCode,
 };
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Duration,
+};
 use std::{fs::File, path::Path};
 use std::{io::Read, path::PathBuf};
 use url::{self, Url};
@@ -30,6 +34,8 @@ pub enum ClientError {
     NotFound,
     FailedToDeleteFolder(String),
     Unsupported(String),
+    ServerError(String),
+    BadRequest,
 }
 
 impl std::error::Error for ClientError {
@@ -57,6 +63,18 @@ impl From<reqwest::Error> for ClientError {
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+struct ServerErrorDetails {
+    #[serde(rename = "message")]
+    message: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ServerError {
+    #[serde(rename = "error")]
+    error_details: ServerErrorDetails,
+}
+
 impl std::convert::From<serde_json::Error> for ClientError {
     fn from(err: serde_json::Error) -> ClientError {
         ClientError::Parsing(format!("{}", err))
@@ -71,10 +89,12 @@ impl std::fmt::Display for ClientError {
                 f,
                 "Request is unauthorized! Please, renew your access token"
             ),
-            Self::Forbidden => write!(f, "Request is forbidden!"),
-            Self::NotFound => write!(f, "Resource not found!"),
-            Self::FailedToDeleteFolder(message) => write!(f, "Error: {}", message),
-            Self::Unsupported(message) => write!(f, "Error: {}", message),
+            Self::Forbidden => write!(f, "Request is forbidden"),
+            Self::NotFound => write!(f, "Resource not found"),
+            Self::FailedToDeleteFolder(message) => write!(f, "{}", message),
+            Self::Unsupported(message) => write!(f, "{}", message),
+            Self::ServerError(message) => write!(f, "{}", message),
+            Self::BadRequest => write!(f, "Bad client request"),
         }
     }
 }
@@ -105,15 +125,26 @@ pub struct PartToPartMatch {
     pub match_percentage: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FolderFilterData {
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "id")]
-    pub id: u32,
+    pub id: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "name")]
-    pub name: String,
+    pub name: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+impl Default for FolderFilterData {
+    fn default() -> Self {
+        Self {
+            id: None,
+            name: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize)]
 pub struct PropertyFilterData {
     #[serde(rename = "id")]
     pub id: u32,
@@ -123,12 +154,14 @@ pub struct PropertyFilterData {
     pub values: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct FilterData {
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "folders")]
-    pub folders: Vec<FolderFilterData>,
+    pub folders: Option<Vec<FolderFilterData>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "properties")]
-    pub properties: Vec<PropertyFilterData>,
+    pub properties: Option<Vec<PropertyFilterData>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -435,7 +468,7 @@ impl ApiClient {
         }
     }
 
-    fn evaluate_satus(&self, status: StatusCode) -> Result<(), ClientError> {
+    fn evaluate_status(&self, status: StatusCode) -> Result<(), ClientError> {
         if status.is_success() {
             ()
         }
@@ -450,6 +483,7 @@ impl ApiClient {
             StatusCode::FORBIDDEN => return Err(ClientError::Forbidden),
             StatusCode::NOT_FOUND => return Err(ClientError::NotFound),
             StatusCode::UNAUTHORIZED => return Err(ClientError::Unauthorized),
+            StatusCode::BAD_REQUEST => return Err(ClientError::BadRequest),
             StatusCode::CONTINUE
             | StatusCode::SWITCHING_PROTOCOLS
             | StatusCode::PROCESSING
@@ -465,7 +499,6 @@ impl ApiClient {
             | StatusCode::USE_PROXY
             | StatusCode::TEMPORARY_REDIRECT
             | StatusCode::PERMANENT_REDIRECT
-            | StatusCode::BAD_REQUEST
             | StatusCode::PAYMENT_REQUIRED
             | StatusCode::METHOD_NOT_ALLOWED
             | StatusCode::NOT_ACCEPTABLE
@@ -490,7 +523,6 @@ impl ApiClient {
             | StatusCode::TOO_MANY_REQUESTS
             | StatusCode::REQUEST_HEADER_FIELDS_TOO_LARGE
             | StatusCode::UNAVAILABLE_FOR_LEGAL_REASONS
-            | StatusCode::INTERNAL_SERVER_ERROR
             | StatusCode::NOT_IMPLEMENTED
             | StatusCode::BAD_GATEWAY
             | StatusCode::SERVICE_UNAVAILABLE
@@ -500,8 +532,12 @@ impl ApiClient {
             | StatusCode::INSUFFICIENT_STORAGE
             | StatusCode::LOOP_DETECTED
             | StatusCode::NOT_EXTENDED
+            | StatusCode::INTERNAL_SERVER_ERROR
             | StatusCode::NETWORK_AUTHENTICATION_REQUIRED => {
-                return Err(ClientError::Unsupported(format!("Status: {:?}", status)))
+                return Err(ClientError::Unsupported(format!(
+                    "Server responded with error status: {:?}",
+                    status
+                )))
             }
             _ => {
                 return Err(ClientError::Unsupported(
@@ -540,7 +576,7 @@ impl ApiClient {
 
         trace!("Status: {}", response.status());
 
-        self.evaluate_satus(response.status())?;
+        self.evaluate_status(response.status())?;
 
         let content = response.text()?;
         //trace!("{}", content);
@@ -610,7 +646,7 @@ impl ApiClient {
         Ok(result)
     }
 
-    pub fn delete_folder(&self, folders: &Vec<u32>) -> Result<(), ClientError> {
+    pub fn delete_folder(&self, folders: &HashSet<String>) -> Result<(), ClientError> {
         trace!("Deleting folder {:?}...", folders);
         let url = format!("{}/v2/folders", self.base_url);
         let mut query_parameters: Vec<(String, String)> = Vec::new();
@@ -635,7 +671,7 @@ impl ApiClient {
         if status.is_client_error() {
             return Err(ClientError::FailedToDeleteFolder("Error deleting folder. Make sure the folder is empty first or use the --force flag".to_string()));
         } else {
-            self.evaluate_satus(status)?;
+            self.evaluate_status(status)?;
         }
 
         Ok(())
@@ -662,7 +698,7 @@ impl ApiClient {
             .send()?;
 
         let status = response.status();
-        self.evaluate_satus(status)?;
+        self.evaluate_status(status)?;
         let json = response.text().unwrap();
         trace!("{}", json);
         let result: FolderCreateResponse = serde_json::from_str(&json)?;
@@ -701,7 +737,7 @@ impl ApiClient {
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
         let response = self.client.execute(request)?;
-        self.evaluate_satus(response.status())?;
+        self.evaluate_status(response.status())?;
         Ok(())
     }
 
@@ -723,7 +759,7 @@ impl ApiClient {
             .body("")
             .send()?;
 
-        let status = self.evaluate_satus(response.status());
+        let status = self.evaluate_status(response.status());
         let json = response.text().unwrap();
         trace!("{}", json);
 
@@ -783,19 +819,32 @@ impl ApiClient {
         Ok(result)
     }
 
+    /// Returns a single-page response for list of models
+    ///
+    /// Parameters:
+    ///
+    /// folders - a list of folder IDs. If the list is empty, models from all folders will be included
+    /// search - a search clause (e.g. part number)
+    /// per_page - how many records to return per page
+    /// page - the current page number
     pub fn get_list_of_models_page(
         &self,
-        folders: Vec<u32>,
+        folders: HashSet<u32>,
         search: Option<&String>,
         per_page: u32,
         page: u32,
     ) -> Result<ModelListResponse, ClientError> {
         let url = format!("{}/v2/models", self.base_url);
+        let bearer: String = format!("Bearer {}", self.access_token);
 
         let mut query_parameters: Vec<(String, String)> = Vec::new();
 
-        for folder in folders {
-            query_parameters.push(("folderIds".to_string(), folder.to_string()));
+        if folders.len() > 0 {
+            let filter: Vec<String> = folders.iter().map(|f| f.to_string()).collect();
+            let filter_operations = format!("folderId(in({}))", filter.join(","));
+
+            log::trace!("Filter Operations: {}", filter_operations.to_owned());
+            query_parameters.push(("filter".to_string(), filter_operations));
         }
 
         if search.is_some() {
@@ -805,13 +854,87 @@ impl ApiClient {
         query_parameters.push(("perPage".to_string(), per_page.to_string()));
         query_parameters.push(("page".to_string(), page.to_string()));
 
-        let json = self.get(url.as_str(), Some(query_parameters))?;
+        log::trace!("GET {}", url.to_string());
+        let response = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(60))
+            .header("Authorization", bearer)
+            .header("Cache-Control", "no-cache")
+            .header("Content-Length", "0")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .query(&query_parameters)
+            .send();
 
-        //std::fs::write("./dump.json", &json).expect("Unable to write file");
-        let result: ModelListResponse = serde_json::from_str::<ModelListResponse>(&json)?;
+        self.handle_response::<ModelListResponse>(response)
+    }
 
-        //trace!("Parsed OK");
-        Ok(result)
+    /// Checks the response from an HTTP operation for errors and if none, parses the response body into specific type
+    ///
+    /// Parameters:
+    ///
+    /// response - thre result from the response
+    fn handle_response<'de, T>(
+        &self,
+        response: Result<Response, reqwest::Error>,
+    ) -> Result<T, ClientError>
+    where
+        T: DeserializeOwned,
+    {
+        match response {
+            Ok(response) => {
+                match self.evaluate_status(response.status()) {
+                    Ok(_) => {
+                        // normal exit status from the HTTP operation
+
+                        // get the JSON from the response body
+                        let json = response.text();
+                        match json {
+                            Ok(json) => {
+                                // the JSON was extracted OK
+                                log::trace!("Response: {}", json.to_owned());
+
+                                // parse the JSON in the final object form
+                                let object = serde_json::from_str::<T>(&json)?;
+
+                                // return the list of models
+                                Ok(object)
+                            }
+                            Err(e) => Err(ClientError::ServerError(e.to_string())),
+                        }
+                    }
+                    Err(e) => {
+                        // the response status indicates an error
+
+                        // attempting to get the message sent by the server...
+                        let json = response.text();
+                        match json {
+                            Ok(json) => {
+                                // the response has a payload
+                                log::trace!("Response: {}", json.to_owned());
+
+                                match serde_json::from_str::<ServerError>(&json) {
+                                    Ok(server_error) => {
+                                        // we were able to parse the payload into a proper server error type
+                                        log::trace!(
+                                            "Server Error: {}",
+                                            server_error.error_details.message
+                                        );
+
+                                        Err(ClientError::ServerError(e.to_string()))
+                                    }
+                                    Err(_) => Err(e),
+                                }
+                            }
+                            Err(_) => Err(e),
+                        }
+                    }
+                }
+            }
+            Err(e) => Err(ClientError::ServerError(e.to_string())),
+        }
     }
 
     pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>> {
@@ -919,7 +1042,7 @@ impl ApiClient {
             .json(&request)
             .send()?;
 
-        let status = self.evaluate_satus(response.status());
+        let status = self.evaluate_status(response.status());
         let json = response.text().unwrap();
         //trace!("{}", json);
 
@@ -956,7 +1079,7 @@ impl ApiClient {
             .json(&PropertyValueRequest::new(item.value.to_owned()))
             .send()?;
 
-        let status = self.evaluate_satus(response.status());
+        let status = self.evaluate_status(response.status());
         let json = response.text().unwrap();
         trace!("{}", json);
 
@@ -987,7 +1110,7 @@ impl ApiClient {
             //.header("Content-Range", range_value.to_owned())
             .send()?;
 
-        let status = self.evaluate_satus(response.status());
+        let status = self.evaluate_status(response.status());
         let json = response.text().unwrap();
         trace!("{}", json);
 
