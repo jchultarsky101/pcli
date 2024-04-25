@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::{env, cmp::Ordering};
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use clap::{
     Arg, 
     Command, ArgAction
@@ -60,7 +60,7 @@ fn main() {
         )
         .subcommand(
             Command::new("invalidate")
-                .about("Invalidates the current access token"),
+                .about("Invalidates the current access token, which will cause new token to be created next execution"),
         )      
         .subcommand(
             Command::new("model")
@@ -129,32 +129,23 @@ fn main() {
         )
         .subcommand(
             Command::new("models")
-                .about("Lists all available models in a folder")
+                .about("Lists available models that meet the search criteria")
                 .arg(
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .num_args(1..)
+                        .num_args(0..)
                         .value_delimiter(',')
                         .action(clap::ArgAction::Append) 
-                        .help("Folder ID (e.g. --folder=1)")
-                        .required(true)
-                        .value_parser(clap::value_parser!(u32).range(1..))
+                        .help("Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .required(false)
                 )
                 .arg(
                     Arg::new("search")
                         .short('s')
                         .long("search")
                         .num_args(1)
-                        .help("Search clause to further filter output (optional: e.g. a model name)")
-                        .required(false)
-                )
-                .arg(
-                    Arg::new("meta")
-                        .short('m')
-                        .long("meta")
-                        .num_args(0)
-                        .help("Enhance output with model's metadata")
+                        .help("Optional: Search clause to further filter output (e.g. a model name)")
                         .required(false)
                 ),
         )
@@ -277,10 +268,11 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .num_args(1)
-                        .help("Folder ID (e.g. --folder=1)")
-                        .required(true)
-                        .value_parser(clap::value_parser!(u32))
+                        .num_args(0..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
+                        .help("Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .required(false)
                 )
                 .arg(
                     Arg::new("search")
@@ -315,9 +307,9 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .num_args(1)
-                        .help("Folder ID (e.g. --folder=1)")
+                        .help("Folder name")
                         .required(true)                  
-                        .value_parser(clap::value_parser!(u32))
+                        .value_parser(clap::value_parser!(String))
                 )
                 .arg(
                     Arg::new("threshold")
@@ -369,9 +361,9 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .num_args(1)
-                        .help("Folder ID (e.g. --folder=1)")
+                        .help("Folder name")
                         .required(true)                  
-                        .value_parser(clap::value_parser!(u32))
+                        .value_parser(clap::value_parser!(String))
                 )
                 .arg(
                     Arg::new("force")
@@ -402,9 +394,9 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .num_args(1)
-                        .help("Folder ID (e.g. --folder=1)")
+                        .help("Folder name")
                         .required(true)
-                        .value_parser(clap::value_parser!(u32))
+                        .value_parser(clap::value_parser!(String))
                 )
                 .arg(
                     Arg::new("repair")
@@ -725,9 +717,7 @@ fn main() {
             let folders = api.get_list_of_folders();
             match folders {
                 Ok(folders) => {
-                    let list_of_folders = folders.folders;
-                    let list_of_folders = model::ListOfFolders::from(list_of_folders);
-                    let output = format::format_list_of_folders(list_of_folders, &output_format, pretty, color);
+                    let output = format::format_list_of_folders(folders, &output_format, pretty, color);
                     match output {
                         Ok(output) => {
                             println!("{}", output);
@@ -859,12 +849,13 @@ fn main() {
         },             
         Some(("models", sub_matches)) => {
             let search = sub_matches.get_one::<String>("search");
-            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
-            let meta: bool = sub_matches.get_flag("meta");
-
+            let folders: HashSet<String> = match sub_matches.get_many::<String>("folder") {
+                Some(folders) => folders.cloned().map(String::from).collect(),
+                None => HashSet::new(),
+            };
             trace!("List of folders: {:?}", folders);
 
-            match api.list_all_models(folders, search, meta) {
+            match api.list_all_models(folders, search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let output = format::format_list_of_models(&models, &output_format, pretty, color);
@@ -872,7 +863,7 @@ fn main() {
                     ::std::process::exit(exitcode::OK);
                 },
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -891,7 +882,7 @@ fn main() {
                 },
                 Err(e) => {
                     warn!("No matches found.");
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
             };
@@ -903,7 +894,7 @@ fn main() {
                     ::std::process::exit(exitcode::OK);
                 },
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
             }
@@ -922,7 +913,7 @@ fn main() {
                 },
                 Err(e) => {
                     warn!("No matches found.");
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
             };
@@ -934,7 +925,7 @@ fn main() {
                     ::std::process::exit(exitcode::OK);
                 },
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
             }
@@ -944,38 +935,37 @@ fn main() {
             let exclusive = sub_matches.get_flag("exclusive");
             let with_meta = sub_matches.get_flag("meta");
             let search = sub_matches.get_one::<String>("search");
-            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
-            let meta = sub_matches.get_flag("meta");
+            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
 
-            match api.list_all_models(folders.clone(), search, meta) {
+            match api.list_all_models(folders.clone(), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), exclusive, with_meta) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
                             println!("{}", output.unwrap());
                             ::std::process::exit(exitcode::OK);
                         },
                         Err(e) => {
-                            eprintln!("{}", e);
+                            eprintln!("Error: {}", e);
                             ::std::process::exit(exitcode::DATAERR);
                         }
                     }
                 },
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
         },
         Some(("delete-folder", sub_matches)) => {
             let force = sub_matches.get_flag("force");
-            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
 
             // delete all models in the folders if forced
             if force {
-                match api.list_all_models(folders.clone(), None, false) {
+                match api.list_all_models(folders.clone(), None) {
                     Ok(physna_models) => {
                         let models = model::ListOfModels::from(physna_models);
                         let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -983,14 +973,14 @@ fn main() {
                             match api.delete_model(&uuid) {
                                 Ok(()) => (),
                                 Err(e) => {
-                                    eprintln!("{}", e);
+                                    eprintln!("Error: {}", e);
                                     ::std::process::exit(exitcode::DATAERR);
                                 }
                             }
                         }
                     },
                     Err(e) => {
-                        eprintln!("{}", e);
+                        eprintln!("Error: {}", e);
                         ::std::process::exit(exitcode::DATAERR);
                     }
                 }
@@ -1000,20 +990,20 @@ fn main() {
             match api.delete_folder(folders) {
                 Ok(()) => (),
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
             }
         },
         Some(("label-folder", sub_matches)) => {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
-            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
             let classification = sub_matches.get_one::<String>("classification").unwrap();
             let exclusive = sub_matches.get_flag("exclusive");
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
 
-            match api.list_all_models(folders.clone(), search, true) {
+            match api.list_all_models(folders.clone(), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -1022,6 +1012,14 @@ fn main() {
                     
                     match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true) {
                         Ok(report) => {
+
+                            let existing_folders = match api.get_list_of_folders() {
+                                Ok(folders) => folders,
+                                Err(e) => {
+                                    eprintln!("Failed to retrieve the list of folders: {}", e);
+                                    ::std::process::exit(exitcode::DATAERR);
+                                }
+                            };
                             
                             // ensure that the classification property is available
                             debug!("Reading master property list...");
@@ -1060,7 +1058,8 @@ fn main() {
                                     debug!("Found matches for model {}, Checking for classification labels {}...", master_model_uuid, classification);
                                     
                                     for matched_model in item.matches {
-                                        if !exclusive || (exclusive && folders.contains(&&matched_model.model.folder_id)) {
+                                        let matched_model_folder_name = existing_folders.get_folder_by_id(&&matched_model.model.folder_id).unwrap().name.to_owned();
+                                        if !exclusive || (exclusive && folders.contains(&matched_model_folder_name)) {
                                             let model = matched_model.model;
                                             let meta = match model_meta_cache.get(&model.uuid) {
                                                 Some(meta) => meta.clone(),
@@ -1119,13 +1118,13 @@ fn main() {
                             ::std::process::exit(exitcode::OK);
                         },
                         Err(e) => {
-                            eprintln!("{}", e);
+                            eprintln!("Error: {}", e);
                             ::std::process::exit(exitcode::DATAERR);
                         }
                     }
                 },
                 Err(e) => {
-                    eprintln!("{}", e);
+                    eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -1162,7 +1161,7 @@ fn main() {
             }
         },
         Some(("status", sub_matches)) => {
-            let folders: Vec<u32> = sub_matches.get_many::<u32>("folder").unwrap().copied().collect();
+            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
             let repair = sub_matches.get_flag("repair");
             let noasm = sub_matches.get_flag("noasm");
             let result = api.tenant_stats(folders, repair, noasm);
@@ -1249,7 +1248,7 @@ fn main() {
                     }
                 }
             } else {
-                eprint!("Input path is not a directory.");
+                eprint!("Error: Input path is not a directory.");
                 ::std::process::exit(exitcode::NOINPUT);
             }
 
@@ -1296,7 +1295,7 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Failed to generate assembly graph: {}", e);
+                    eprintln!("Error: Failed to generate assembly graph: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -1327,7 +1326,7 @@ fn main() {
                 }
             }
         },
-        _ => unreachable!("Invalid command"),
+        _ => unreachable!("Error: Invalid command. See help for details"),
     }
 
     ::std::process::exit(exitcode::OK);
