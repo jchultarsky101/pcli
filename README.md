@@ -651,7 +651,7 @@ pcli --tenant="mytenant" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 
 Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
 
-## Deleting a model
+## Deleting a Model
 
 This command will delete a model and all related metadata from the Physna database. Please, be careful when using this function.
 

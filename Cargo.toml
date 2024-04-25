@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"
 repository = "https://github.com/jchultarsky101/pcli.git"
+license-file = "LICENSE"
 
 [[bin]]
 name = "pcli"
