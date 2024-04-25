@@ -1317,7 +1317,7 @@ dependencies = [
 
 [[package]]
 name = "pcli"
-version = "1.8.11"
+version = "1.8.12"
 dependencies = [
  "anyhow",
  "base64 0.21.0",

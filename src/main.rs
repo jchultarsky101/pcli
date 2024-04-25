@@ -129,7 +129,7 @@ fn main() {
         )
         .subcommand(
             Command::new("models")
-                .about("Lists all available models in a folder")
+                .about("Lists available models that meet the search criteria")
                 .arg(
                     Arg::new("folder")
                         .short('d')
@@ -268,10 +268,11 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .num_args(1)
-                        .help("Folder name")
-                        .required(true)
-                        .value_parser(clap::value_parser!(String))
+                        .num_args(0..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
+                        .help("Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .required(false)
                 )
                 .arg(
                     Arg::new("search")
