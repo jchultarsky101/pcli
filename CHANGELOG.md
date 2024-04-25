@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 * Improved error messages
 * Implemeneted search filters using folder names instead of folder IDs
+* Implemented CI/CD
 
 ## v1.8.11
 
