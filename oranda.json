@@ -1,0 +1,11 @@
+{
+  "build": {
+    "path_prefix": "pcli"
+  },
+	"styles": {
+    "theme": "axodark"
+  },
+	"components": {
+    "changelog": true
+	}
+}
