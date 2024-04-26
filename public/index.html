@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" id="oranda" class="dark">
+<html lang="en" id="oranda" class="dark axo">
   <head>
     <title>pcli</title>
     
     
-      <link rel="icon" href="/favicon.ico" />
+      <link rel="icon" href="/pcli/favicon.ico" />
     
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +18,7 @@
     
     
     <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
-    <link rel="stylesheet" href="/oranda-v0.6.1.css" />
+    <link rel="stylesheet" href="/pcli/oranda-v0.6.1.css" />
     
     
   </head>
@@ -41,12 +41,12 @@
             
   <nav class="nav">
     <ul>
-      <li><a href="/">Home</a></li>
+      <li><a href="/pcli/">Home</a></li>
 
       
 
       
-        <li><a href="/artifacts/">Install</a></li>
+        <li><a href="/pcli/artifacts/">Install</a></li>
       
 
       
@@ -54,7 +54,7 @@
       
 
       
-        <li><a href="/changelog/">Changelog</a></li>
+        <li><a href="/pcli/changelog/">Changelog</a></li>
       
     </ul>
   </nav>
@@ -71,7 +71,7 @@
   <div class="artifact-header target">
     <h4>Install v1.8.12</h4>
     
-      <div><small class="published-date">Published on Apr 26 2024 at 10:10 UTC</small></div>
+      <div><small class="published-date">Published on Apr 26 2024 at 11:33 UTC</small></div>
     
 
     <ul class="arches">
@@ -118,7 +118,7 @@
     
       
     
-    <a class="button primary" href="/pcli-installer.sh.txt">Source</a>
+    <a class="button primary" href="/pcli/pcli-installer.sh.txt">Source</a>
   
 </div>
                 
@@ -188,7 +188,7 @@
     
       
     
-    <a class="button primary" href="/pcli-installer.sh.txt">Source</a>
+    <a class="button primary" href="/pcli/pcli-installer.sh.txt">Source</a>
   
 </div>
                 
@@ -258,7 +258,7 @@
     
       
     
-    <a class="button primary" href="/pcli-installer.ps1.txt">Source</a>
+    <a class="button primary" href="/pcli/pcli-installer.ps1.txt">Source</a>
   
 </div>
                 
@@ -328,7 +328,7 @@
     
       
     
-    <a class="button primary" href="/pcli-installer.sh.txt">Source</a>
+    <a class="button primary" href="/pcli/pcli-installer.sh.txt">Source</a>
   
 </div>
                 
@@ -364,7 +364,7 @@
       <span class="no-autodetect-details">We weren't able to detect your OS.</span>
     </div>
     <noscript>
-      <a href="/artifacts/">View all installation options</a>
+      <a href="/pcli/artifacts/">View all installation options</a>
     </noscript>
   
   <div class="mac-switch hidden">This project doesn't offer Apple Silicon downloads, but you can run Intel macOS binaries via Rosetta 2.</div>
@@ -372,7 +372,7 @@
   
   
   <div class="bottom-options ">
-    <a href="/artifacts/" class="backup-download primary">View all installation options</a>
+    <a href="/pcli/artifacts/" class="backup-download primary">View all installation options</a>
     
       <div class="arch-select hidden">
         <select id="install-arch-select">
@@ -392,7 +392,7 @@
   </div>
 </div>
 
-<a href="/artifacts/" class="button mobile-download primary">View all installation options</a>
+<a href="/pcli/artifacts/" class="button mobile-download primary">View all installation options</a>
 
 
     <p><a rel="noopener noreferrer"></a></p>
@@ -423,33 +423,108 @@
   </p>
 </div>
 
-<h1>About The Project</h1>
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#about-the-project" rel="noopener noreferrer">About the project</a></li>
+    <li><a href="#built-with" rel="noopener noreferrer">Built with</a></li>
+    <li>
+      <a href="#getting-started" rel="noopener noreferrer">Getting started</a>
+      <ol>
+        <li><a href="#prerequisites" rel="noopener noreferrer">Prerequisites</a></li>
+        <li>
+          <a href="#installation" rel="noopener noreferrer">Installation</a>
+          <ol>
+            <li><a href="#installers" rel="noopener noreferrer">Installers</a></li>
+            <li><a href="#downloading-binary" rel="noopener noreferrer">Downloading a pre-compiled binary</a></li>
+            <li><a href="#compilation" rel="noopener noreferrer">Compilation from source</a></li>
+          </ol>
+        </li>
+        <li><a href="#about-tenants" rel="noopener noreferrer">About tenants</a></li>
+      </ol>
+    </li>
+    <li><a href="#configuration" rel="noopener noreferrer">Configurations</a></li>
+    <li>
+      <a href="#basic-use" rel="noopener noreferrer">Basic use</a>
+      <ol>
+        <li>
+          <a href="#command-line-arguments" rel="noopener noreferrer">Command line arguments</a>
+          <ol>
+            <li><a href="#order-of-arguments" rel="noopener noreferrer">Order of arguments</a></li>
+            <li><a href="#general-vs-specific-args" rel="noopener noreferrer">How do I know which arguments are general and which are specific</a></li>
+            <li><a href="#signs-n-quotes" rel="noopener noreferrer">Equal sign, quotes, oh mine</a></li>
+            <li><a href="#milti-value-args" rel="noopener noreferrer">Arguments with multiple values</a></li>
+          </ol>
+        </li>
+        <li>
+          <a href="#tokens" rel="noopener noreferrer">Working with tokens</a>
+          <ol>
+            <li><a href="#invalidate-token" rel="noopener noreferrer">Invalidating your token</a></li>
+            <li><a href="#print-token" rel="noopener noreferrer">Displaying your token</a></li>
+            <li><a href="#token-best-practices" rel="noopener noreferrer">Best practices for handling tokens</a></li>
+          </ol>
+        </li>
+        <li><a href="#list-folders" rel="noopener noreferrer">Listing folders</a></li>
+        <li><a href="#list-models" rel="noopener noreferrer">Listing models</a></li>
+        <li><a href="#query-model" rel="noopener noreferrer">Querying for a specific model</a></li>
+        <li><a href="#upload-model" rel="noopener noreferrer">Uploading a model</a></li>
+        <li><a href="#upload-many-models" rel="noopener noreferrer">Uploading multiple models in one step</a></li>
+        <li><a href="#reprocess-model" rel="noopener noreferrer">Reprocessing a model</a></li>
+        <li><a href="#delete-model" rel="noopener noreferrer">Delete a model</a></li>
+        <li><a href="#read-meta" rel="noopener noreferrer">Reading metadata</a></li>
+        <li><a href="#upload-meta" rel="noopener noreferrer">Uploading metadata</a></li>
+        <li><a href="#read-asm" rel="noopener noreferrer">Reading the assembly structure</a></li>
+        <li><a href="#match-model" rel="noopener noreferrer">Matching models to other models</a></li>
+        <li><a href="#match-folders" rel="noopener noreferrer">Matching entire folders of models</a></li>
+        <li><a href="#match-report" rel="noopener noreferrer">Generating a match report</a></li>
+        <li><a href="#environment-status" rel="noopener noreferrer">Tenant environment status</a></li>
+        <li><a href="#2D-to-3D" rel="noopener noreferrer">Searching for 3D models by 2D image</a></li>
+        <li><a href="#model-label" rel="noopener noreferrer">Model labeling</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#advanced-use" rel="noopener noreferrer">Advanced use</a>
+      <ol>
+        <li><a href="#pipes" rel="noopener noreferrer">Using pipes</a></li>
+        <li><a href="#nushell" rel="noopener noreferrer">Using NuShell</a></li>
+      </ol>
+    </li><li>
+    </li><li><a href="#support" rel="noopener noreferrer">Support</a></li>
+    <li><a href="#roadmap" rel="noopener noreferrer">Roadmap</a></li>
+    <li><a href="#contributing" rel="noopener noreferrer">Contributing</a></li>
+    <li><a href="#license" rel="noopener noreferrer">License</a></li>
+    <li><a href="#contact" rel="noopener noreferrer">Contact</a></li>
+    <li><a href="#acknowledgments" rel="noopener noreferrer">Acknowledgments</a></li>
+  </ol>
+</details>
+<p>
+</p><h1><a id="about-the-project" rel="noopener noreferrer"></a>About the project</h1>
 <dl><dt>This utility is a CLI client for the Physna's public API V2. It could be used to interact with the system
 in automated ways.</dt>
 <dd>
 <p>warning: <strong>Disclaimer</strong>: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.</p>
 </dd>
 </dl>
-<h1>Built With</h1>
+<h1><a id="built-with" rel="noopener noreferrer"></a>Built with</h1>
 <p>This project is built with the wonderful programming language <a href="https://www.rust-lang.org" rel="noopener noreferrer">Rust</a>.</p>
 <p><a href="https://www.rust-lang.org/" rel="noopener noreferrer"><img src="http://rust-lang.org/logos/rust-logo-128x128.png" alt="Rust"></a></p>
 
-<h1>Getting started</h1>
-<h2>Prerequisites</h2>
+<h1><a id="getting-started" rel="noopener noreferrer"></a>Getting started</h1>
+<h2><a id="prerequisites" rel="noopener noreferrer"></a>Prerequisites</h2>
 <p>This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity of how to execute commands.</p>
 <p>It is a client to the Physna services. To be able to use it, you will need to first request a Physna Enterprise account. Please, contact your Physna representative for details.</p>
-<h2>Installation</h2>
-<h3>Installers</h3>
+<h2><a id="installation" rel="noopener noreferrer"></a>Installation</h2>
+<h3><a id="installers" rel="noopener noreferrer"></a>Installers</h3>
 <p>You can use the installation script for your platform as shown on the <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">documentation site</a>.</p>
-<h3>Downloading a pre-compiled binary</h3>
+<h3><a id="downloading-binary" rel="noopener noreferrer"></a>Downloading a pre-compiled binary</h3>
 <p>You can download a pre-compiled binary for your platform from the <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">documentation site</a>. You will have uncompress it and copy the file to location of your choice.</p>
-<h3>Compilation from source</h3>
+<h3><a id="compilation" rel="noopener noreferrer"></a>Compilation from source</h3>
 <p>You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">cargo build release
 </span></pre>
 
 <p>This will produce an executable for your operating system.</p>
-<h2>A word about tenants</h2>
+<h2><a id="about-tenants" rel="noopener noreferrer"></a>A word about tenants</h2>
 <p>Physna is a multi-tenant system. As such, each client organization receives their own environment.
 For example, if your company is MyCompany, LLC, you may receive an environment and your
 customer-facing web site may be at <a href="https://mycompany.physna.com" rel="noopener noreferrer">https://mycompany.physna.com</a>. Here the identifier "mycompany" is
@@ -457,7 +532,7 @@ your tenant ID.</p>
 <p>The tenant ID is a critical bit of information, which will be required from you almost every time you execute
 the CLI. If you are unsure what your tenant ID is, please contact your Physna representative.</p>
 <p>NOTE: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants</p>
-<h1>Configuration</h1>
+<h1><a id="configuration" rel="noopener noreferrer"></a>Configuration</h1>
 <p>The tool uses a single configuration file. The location for this file is your home directory
 and the file name is ~/.pcli.conf.</p>
 <p>Here is an example contents of .pcli.conf:</p>
@@ -474,7 +549,7 @@ edit this sample to reflect that correctly.</p>
 <p>The only other piece of data you need to provide is the <strong>client_id</strong> value. This can be obtained
 by your Physna administrator. In most cases, you should leave the client secret field unpopulated. Read further to understand how
 it could be useful sometimes.</p>
-<h1>Basic use</h1>
+<h1><a id="basic-use" rel="noopener noreferrer"></a>Basic use</h1>
 <p>This is a command line utility. You can use it within a terminal session.
 To see what functions are supported, you can type "help" as the first argument.</p>
 <p>Example:</p>
@@ -549,8 +624,8 @@ to specify the UUID of the model we are trying to read.</p>
 specify the full name "--tenant" or the short name "-t". Those two are be equivalent. Not all arguments
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.</p>
-<h2>Command line arguments</h2>
-<h3>Order of arguments</h3>
+<h2><a id="command-line-arguments" rel="noopener noreferrer"></a>Command line arguments</h2>
+<h3><a id="order-of-arguments" rel="noopener noreferrer"></a>Order of arguments</h3>
 <p>There are two types of arguments:</p>
 <ul>
 <li>General use</li>
@@ -575,11 +650,11 @@ We provide one more subcommand <strong>models</strong> to identify the exact sub
 <p>In this case, "tenant", "format", and "pretty" are all general arguments that apply accross many sub-commands.
 On another hand "folder" and "search" are arguments that are specific to the <strong>models</strong> command.
 Of course "models" is the sub-command itself.</p>
-<h3>How do I know which arguments are general and which are specific?</h3>
+<h3><a id="general-vs-specific-args" rel="noopener noreferrer"></a>How do I know which arguments are general and which are specific?</h3>
 <p>That is easy! If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
 a command name in the help request, you will see the command-specific arguments only.</p>
 <p>Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.</p>
-<h3>Equal sign, quotes, oh mine!</h3>
+<h3><a id="signs-n-quites" rel="noopener noreferrer"></a>Equal sign, quotes, oh mine!</h3>
 <p>There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.</p>
 <p>For example these two ways of executing the <strong>folders</strong> command are both valid and equivalent:</p>
@@ -596,7 +671,7 @@ The recommended way is to use the equal character (example #2) without any space
 The best practice is to always wrap it in double quotes.</p>
 <p>In general, it is considered O.K. to not surround numbers with double quotes.
 It is a bit more typing, but I recommend to be consistent and wrap all values as a matter of good habit.</p>
-<h3>Arguments with multiple values</h3>
+<h3><a id="multi-value-args" rel="noopener noreferrer"></a>Arguments with multiple values</h3>
 <p>Few sub-commands can take multiple values for an argument. Such arguments are clearly indicated in the help.
 In an example you will see further down again:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> match-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder1</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder2</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.99</span><span style="color:#89ddff;">"
@@ -638,7 +713,7 @@ provides a default value for the argument if it is not explicitly specified.</p>
 <li>--tenant - as "PCLI_TENANT"</li>
 <li>--format - as "PCLI_FORMAT"</li>
 </ul>
-<h2>Working with tokens</h2>
+<h2><a id="tokens" rel="noopener noreferrer"></a>Working with tokens</h2>
 <p>It is important to understand how the authentication and authorization work.
 Physna uses OpenID Connect provider and upon successful authentication will issue the user
 an access token, which will be valid for the duration of the session (several hours). As long
@@ -649,14 +724,14 @@ environment would be ~/.pcli.beta.token.</p>
 <p>You can delete the token file at any time. If you do, PCLI will prompt you to authenticate again
 and create a new one in its place. There is an easier way however. The CLI supports dedicated sub-commands
 to deal with token generation:</p>
-<h3>Invalidating your token</h3>
+<h3><a id="invalidate-token" rel="noopener noreferrer"></a>Invalidating your token</h3>
 <p>The sub-command <strong>invalidate</strong> will delete the current token for a given tenant. It will leave
 unmodified any other tokens belonging to other tenants you may have.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> invalidate
 </span></pre>
 
 <p>This operation causes PCLI to start a new session next time it is executed by requesting a new token.</p>
-<h3>Displaying your token</h3>
+<h3><a id="print-token" rel="noopener noreferrer"></a>Displaying your token</h3>
 <p>Your token data is encrypted. It does not reveal anything about yourself or your system.
 In the vast majority of cases, you would not care what it is. However, there may be some
 special use cases where knowing your token is handy. One such case is if you are trying to
@@ -668,7 +743,7 @@ none currently exist.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> token
 </span></pre>
 
-<h3>Best practices for handling tokens</h3>
+<h3><a id="token-best-practices" rel="noopener noreferrer"></a>Best practices for handling tokens</h3>
 <p>First of all, make sure your home directory is properly secured with the correct file permissions.
 It is by default on all popular OS-es, but this is your responsibility. If not secure, there is
 much to worry about, not just the access token by Physna.</p>
@@ -681,7 +756,7 @@ a less secure option, because it will not prompt you to enter it in your termina
 but if there is no human to enter it, it is difficult to automate. If you choose this path, make sure that
 your configuration file has the proper file permission to secure it against others that may share your
 computer.</p>
-<h2>Listing folders</h2>
+<h2><a id="list-folders" rel="noopener noreferrer"></a>Listing folders</h2>
 <p>The command <strong>folders</strong> will print the full list of folders currently available for your tenant.
 Physna organizes data into logical storage units named folders. This is not unlike many other
 systems you are familiar with. Each folder has a name. It also has a numeric identifier.
@@ -732,7 +807,7 @@ parsing later:</p>
 
 <p>The default output format is "json". The available options are "json", "csv", "tree".</p>
 <p>Adding "--pretty" in this case will add header row to the CSV output containing the column names.</p>
-<h2>Listing models</h2>
+<h2><a id="list-models" rel="noopener noreferrer"></a>Listing models</h2>
 <p>To obtain a list of models currently present in your tenant environment, use the <strong>models</strong> sub-command.
 Please, note that there is also <strong>model</strong> (singular) command, which is used for querying a single model.</p>
 <p>Example:</p>
@@ -773,7 +848,7 @@ In the following example, you will get all models belonging in either folder "my
 </span></pre>
 
 <p>If one is provided, the search argument applies across the folders.</p>
-<h2>Querying for a specific model</h2>
+<h2><a id="query-model" rel="noopener noreferrer"></a>Querying for a specific model</h2>
 <p>The <strong>model</strong> command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.</p>
 <pre style="background-color:#263238;"><span style="color:#eeffff;">Reads data for a specific model
@@ -795,7 +870,7 @@ argument. The CLI will query your tenant for that specific model regardless whic
 </span></pre>
 
 <p>As explained before you can use different output formats, pretty-print, color.</p>
-<h2>Uploading a model</h2>
+<h2><a id="upload-model" rel="noopener noreferrer"></a>Uploading a model</h2>
 <p>The <strong>upload</strong> command assists you with uploading new 3D models to Physna. It takes the following arguments:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upload
 </span><span style="color:#eeffff;">
@@ -830,7 +905,7 @@ argument. The CLI will query your tenant for that specific model regardless whic
 <li>Each assembly file should not have more than 3,000 parts</li>
 <li>All part files should be uploaded with their assembly file(s)</li>
 </ul>
-<h2>Uploading multiple models in one step</h2>
+<h2><a href="upload-many-models" rel="noopener noreferrer"></a>Uploading multiple models in one step</h2>
 <p>You can upload multiple models in one step if they are located in the same directory on your computer. In this case,
 you can use the <strong>upload-many</strong> command. It is esentially the same as <strong>upload</strong>, but in this case the "--input" argument
 is not a file, but the path to the directory on your computer where the files are staged.</p>
@@ -849,7 +924,7 @@ is not a file, but the path to the directory on your computer where the files ar
 </span></pre>
 
 <p>Alternativelly, you can write a script to call the <strong>upload</strong> command for each file you want to upload.</p>
-<h2>Reprocessing a model</h2>
+<h2><a id="reprocess-model" rel="noopener noreferrer"></a>Reprocessing a model</h2>
 <p>The <strong>reprocess</strong> command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
 in Physna has not completed normally. It takes mandatory parameter: the UUID of the model we want to reprocess.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help reprocess
@@ -880,7 +955,7 @@ in Physna has not completed normally. It takes mandatory parameter: the UUID of 
 </span></pre>
 
 <p>Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"</p>
-<h2>Deleting a model</h2>
+<h2><a id="delete-model" rel="noopener noreferrer"></a>Deleting a model</h2>
 <p>This command will delete a model and all related metadata from the Physna database.</p>
 <p>Example:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> delete-model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
@@ -893,7 +968,7 @@ in Physna has not completed normally. It takes mandatory parameter: the UUID of 
 <p>As with the <strong>reprocess</strong> command, it takes multiple values for --uuid to allow you to delete many models in one execution.</p>
 <p><strong>NOTE:</strong> Please, be extra careful when running bulk delete operations. Once deleted, a model cannot be recovered by Physna.
 You would have to upload it again.</p>
-<h2>Reading metadata</h2>
+<h2><a id="read-meta" rel="noopener noreferrer"></a>Reading metadata</h2>
 <p>In addition to the 3D geometry data, additional metadata can be associated with the model.
 The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings.
 The metadata is returned as part of the model data when using the commands <strong>model</strong> or <strong>models</strong>.
@@ -932,7 +1007,7 @@ The output by default is JSON, but when we specify CSV, the output contains the 
 
 <p>In this example, the model has two properties ("DESCRIPTION" and "SKU") with their corresponding names.</p>
 <p>The reason for the UUID of the model to be included as the first column is simple. You can concatenate the output of many executions of this command into one single file. That larger file will contain metadata for many models. You will see how that becomes helpful in the next section.</p>
-<h2>Uploading metadata</h2>
+<h2><a id="upload-meta" rel="noopener noreferrer"></a>Uploading metadata</h2>
 <p>In some cases, we need to associate additional metadata with the geometry of a model. The command <strong>upload-model-meta</strong> serves this purpose.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upload-model-meta
 </span></pre>
@@ -955,12 +1030,12 @@ in the input file as the first column.</p>
 <p>If a property with this name already exists for the model, its value will be overridden with the new value provided.
 If the property does not exist, a new property with the provided (but capitalized) name will be created.</p>
 <p><strong>NOTE:</strong> If the metadata property value is an empty string, this command will delete the property for the model. In other words, if you want to delete a property, upload the same with value of an empty string in the input CSV file.</p>
-<h2>Reading the assembly structure</h2>
+<h2><a id="read-asm" rel="noopener noreferrer"></a>Reading the assembly structure</h2>
 <p>The command <strong>assembly-tree</strong> will query for a specific model and return as result the assembly structure.
 Obviously, this is ony useful when working with assemblies. The assembly tree could be recursive with
 assemblies having sub-assemblies, and so forth.</p>
 <p>The <strong>assembly-tree</strong> command supports the unique output format of "tree".</p>
-<h2>Matching models to other models</h2>
+<h2><a id="match-model" rel="noopener noreferrer"></a>Matching models to other models</h2>
 <p>Physna's core expertise is in finding geometric matches for models. The sub-command <strong>match-model</strong> does
 part-to-part match. This means that a model is matched as a unit to all other models in the system.
 With this function, we do not cascade from top-level assembly into all of its sub-assemblies, nor we
@@ -1006,7 +1081,7 @@ matches, we will create a new medata property with name provided as --classifica
 If --classification is not provided, no new metadata will be created.
 This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
 You can also use the metadata to automate the ML learning for data classification.</p>
-<h2>Matching entire folders of models</h2>
+<h2><a id="match-folder" rel="noopener noreferrer"></a>Matching entire folders of models</h2>
 <p>Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
 achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute <strong>match-model</strong>. It will combine the responses into a single output. The input arguments are the same as the previous command.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help match-folder
@@ -1034,7 +1109,7 @@ It will output the result in CSV format (--format=csv) and add header line with 
 </span></pre>
 
 <p>You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.</p>
-<h2>Generating a match report</h2>
+<h2><a id="match-report" rel="noopener noreferrer"></a>Generating a match report</h2>
 <p>The <strong>match-report</strong> command combines multiple operations. It is used to generate comprehensive match report that
 could be used as input for further post processing. For example, machine learning algorithms. It produces multiple
 outputs and therefore it requires the user to specify file names for each output.</p>
@@ -1079,7 +1154,7 @@ You will have to install that utility separately. For example, to convert the fi
 </span></pre>
 
 <p>This will produce a SVG file, which you can view by opening it in your browser or another graphics viewer.</p>
-<h2>Tenant environment status</h2>
+<h2><a id="environment-status" rel="noopener noreferrer"></a>Tenant environment status</h2>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help status
 </span></pre>
 
@@ -1110,7 +1185,7 @@ that is not in "FINISHED" state. Please, notice that the reprocessing takes time
 Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the <strong>status</strong> command until all
 background processing completed.</p>
 <p>The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.</p>
-<h2>Searching for 3D models by 2D image</h2>
+<h2><a id="2D-to-3D" rel="noopener noreferrer"></a>Searching for 3D models by 2D image</h2>
 <p>In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
 that corresponds to this image.</p>
 <p>Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediatelly.</p>
@@ -1155,7 +1230,7 @@ multiple images of the same object taken from different angles. PCLI allows you 
 
 <p>Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that
 are repeating in the outputs.</p>
-<h2>Model labeling</h2>
+<h2><a id="model-label" rel="noopener noreferrer"></a>Model labeling</h2>
 <p>The PCLI client provides its own mechanism for label propagation, which is form of object classification.
 This is implemented in the <strong>label-folder</strong> command.
 It is based entirely on geometric match scores provided by Physna.</p>
@@ -1217,8 +1292,8 @@ unless the user adds the --exclusive command line argument. It that is specified
 folder will be used for matching.
 In other words, the label values may come from any folder in your tenant unless you specify --exclusive.</p>
 <p>For the initial labeling of models, you can use the "upload-model-meta" command.</p>
-<h1>Advanced use</h1>
-<h2>Using pipes</h2>
+<h1><a id="advanced-use" rel="noopener noreferrer"></a>Advanced use</h1>
+<h2><a id="pipes" rel="noopener noreferrer"></a>Using pipes</h2>
 <p>The real power of this CLI tool comes when you use it in conjunction with other tools. For example,
 you can filter down the list of models further by piping the output (formatted as JSON) to <a href="https://stedolan.github.io/jq/" rel="noopener noreferrer">JQ</a>:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">t</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folders</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" | </span><span style="color:#82aaff;">jq </span><span style="color:#89ddff;">'</span><span style="color:#c3e88d;">.[] | select(.id=="96049555-b55a-45b1-bdcb-2555cb0012fe")</span><span style="color:#89ddff;">'
@@ -1234,7 +1309,7 @@ a header record. If your post-processor counts the number of records in the CSV 
 models found (as example), you will have to ignore the first record. In this case it is probably better
 not to include the "--pretty" flag. This argument is binary and does not take a value. If it is present, it
 means that it is active; if not, it is effectively set to false.</p>
-<h2>Using NuShell</h2>
+<h2><a id="nushell" rel="noopener noreferrer"></a>Using NuShell</h2>
 <p><a href="https://www.nushell.sh/" rel="noopener noreferrer">NuShell</a> is an excellent partner for PCLI. You can use the combination of the two to a great effect.
 Instead of using the CSV format, you can ask NuShell to parse the JSON output of PCLI and even query the results in interesting ways.</p>
 <p>The scope of this document is not to explain in length how this works, but here is an example:</p>
@@ -1254,10 +1329,10 @@ Next, it will filter out only thouse models that have the worf "Block" in the mo
 It will then subselect only the data from properties "id", "name", "state".
 Finally, it will format the output as CSV.</p>
 <p>Please, read the NuShell documentation for all the wonderful ways you can use it for data manipulations.</p>
-<h1>Support</h1>
+<h1><a id="support" rel="noopener noreferrer"></a>Support</h1>
 <p>If you have any questions, please e-mail to <a href="mailto:jchultarsky@physna.com" rel="noopener noreferrer">jchultarsky@physna.com</a>.</p>
 
-<h1>Roadmap</h1>
+<h1><a id="roadmap" rel="noopener noreferrer"></a>Roadmap</h1>
 <p><em>The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch.</em></p>
 <ul>
 <li>✅ Implement basic operations (CRUD, search)</li>
@@ -1271,7 +1346,7 @@ Finally, it will format the output as CSV.</p>
 </ul>
 <p>See the <a href="https://github.com/jchultarsky101/pcli/issues" rel="noopener noreferrer">open issues</a> for a full list of proposed features (and known issues).</p>
 
-<h1>Contributing</h1>
+<h1><a id="contributing" rel="noopener noreferrer"></a>Contributing</h1>
 <p>Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are <strong>greatly appreciated</strong>.</p>
 <p>If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give the project a star! Thanks again!</p>
@@ -1283,14 +1358,14 @@ Don't forget to give the project a star! Thanks again!</p>
 <li>Open a Pull Request</li>
 </ol>
 
-<h1>License</h1>
+<h1><a id="license" rel="noopener noreferrer"></a>License</h1>
 <p>Distributed under the Apache License. See <code>LICENSE</code> for more information.</p>
 
-<h1>Contact</h1>
+<h1><a id="contact" rel="noopener noreferrer"></a>Contact</h1>
 <p>Julian Chultarsky - <a href="https://twitter.com/jchultarsky101" rel="noopener noreferrer">@jchultarsky101</a> - <a href="mailto:jchultarsky@physna.com" rel="noopener noreferrer">jchultarsky@physna.com</a></p>
 <p>Project Link: <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">https://jchultarsky101.github.io/pcli</a></p>
 
-<h1>Acknowledgments</h1>
+<h1><a id="acknowledgments" rel="noopener noreferrer"></a>Acknowledgments</h1>
 <ul>
 <li><a href="https://choosealicense.com" rel="noopener noreferrer">Choose an Open Source License</a></li>
 <li><a href="https://www.webpagefx.com/tools/emoji-cheat-sheet" rel="noopener noreferrer">GitHub Emoji Cheat Sheet</a></li>
@@ -1328,7 +1403,7 @@ Don't forget to give the project a star! Thanks again!</p>
 
     
 
-    <script src="/artifacts.js"></script>
+    <script src="/pcli/artifacts.js"></script>
 
 
   </body>

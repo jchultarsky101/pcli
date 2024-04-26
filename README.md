@@ -19,9 +19,10 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
+
 <!--
   <a href="https://github.com/jchultarsky101/pcli">
-    <img src="images/logo.png" alt="Logo" width="240" height="240">
+    <img src="images/logo.webb" alt="Logo" width="240" height="240">
   </a>
 -->
 
@@ -41,24 +42,74 @@
   </p>
 </div>
 
-<!-- TABLE OF CONTENTS
+<!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
+    <li><a href="#about-the-project">About the project</a></li>
+    <li><a href="#built-with">Built with</a></li>
     <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
+      <a href="#getting-started">Getting started</a>
+      <ol>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
+        <li>
+          <a href="#installation">Installation</a>
+          <ol>
+            <li><a href="#installers">Installers</a></li>
+            <li><a href="#downloading-binary">Downloading a pre-compiled binary</a></li>
+            <li><a href="#compilation">Compilation from source</a></li>
+          </ol>
+        </li>
+        <li><a href="#about-tenants">About tenants</a></li>
+      </ol>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li><a href="#configuration">Configurations</a></li>
+    <li>
+      <a href="#basic-use">Basic use</a>
+      <ol>
+        <li>
+          <a href="#command-line-arguments">Command line arguments</a>
+          <ol>
+            <li><a href="#order-of-arguments">Order of arguments</a></li>
+            <li><a href="#general-vs-specific-args">How do I know which arguments are general and which are specific</a></li>
+            <li><a href="#signs-n-quotes">Equal sign, quotes, oh mine</a></li>
+            <li><a href="#milti-value-args">Arguments with multiple values</a></li>
+          </ol>
+        </li>
+        <li>
+          <a href="#tokens">Working with tokens</a>
+          <ol>
+            <li><a href="#invalidate-token">Invalidating your token</a></li>
+            <li><a href="#print-token">Displaying your token</a></li>
+            <li><a href="#token-best-practices">Best practices for handling tokens</a></li>
+          </ol>
+        </li>
+        <li><a href="#list-folders">Listing folders</a></li>
+        <li><a href="#list-models">Listing models</a></li>
+        <li><a href="#query-model">Querying for a specific model</a></li>
+        <li><a href="#upload-model">Uploading a model</a></li>
+        <li><a href="#upload-many-models">Uploading multiple models in one step</a></li>
+        <li><a href="#reprocess-model">Reprocessing a model</a></li>
+        <li><a href="#delete-model">Delete a model</a></li>
+        <li><a href="#read-meta">Reading metadata</a></li>
+        <li><a href="#upload-meta">Uploading metadata</a></li>
+        <li><a href="#read-asm">Reading the assembly structure</a></li>
+        <li><a href="#match-model">Matching models to other models</a></li>
+        <li><a href="#match-folders">Matching entire folders of models</a></li>
+        <li><a href="#match-report">Generating a match report</a></li>
+        <li><a href="#environment-status">Tenant environment status</a></li>
+        <li><a href="#2D-to-3D">Searching for 3D models by 2D image</a></li>
+        <li><a href="#model-label">Model labeling</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#advanced-use">Advanced use</a>
+      <ol>
+        <li><a href="#pipes">Using pipes</a></li>
+        <li><a href="#nushell">Using NuShell</a></li>
+      </ol>
+    <li>
+    <li><a href="#support">Support</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -66,41 +117,42 @@
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
--->
 
-# About The Project
+<p/>
+
+# <a id="about-the-project"></a>About the project
 
 This utility is a CLI client for the Physna's public API V2. It could be used to interact with the system
 in automated ways.
 
 :warning: **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
 
-# Built With
+# <a id="built-with"></a>Built with
 
 This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
 
 [![Rust][Rust-logo]][Rust-url]
 
 <!-- GETTING STARTED -->
-# Getting started
+# <a id="getting-started"></a>Getting started
 
-## Prerequisites
+## <a id="prerequisites"></a>Prerequisites
 
 This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity of how to execute commands. 
 
 It is a client to the Physna services. To be able to use it, you will need to first request a Physna Enterprise account. Please, contact your Physna representative for details.
 
-## Installation
+## <a id="installation"></a>Installation
 
-### Installers
+### <a id="installers"></a>Installers
 
 You can use the installation script for your platform as shown on the [documentation site](https://jchultarsky101.github.io/pcli).
 
-### Downloading a pre-compiled binary
+### <a id="downloading-binary"></a>Downloading a pre-compiled binary
 
 You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have uncompress it and copy the file to location of your choice.
 
-### Compilation from source
+### <a id="compilation"></a>Compilation from source
 
 You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:
 
@@ -111,7 +163,7 @@ cargo build release
 This will produce an executable for your operating system.
 
 
-## A word about tenants
+## <a id="about-tenants"></a>A word about tenants
 
 Physna is a multi-tenant system. As such, each client organization receives their own environment. 
 For example, if your company is MyCompany, LLC, you may receive an environment and your
@@ -123,7 +175,7 @@ the CLI. If you are unsure what your tenant ID is, please contact your Physna re
 
 NOTE: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
 
-# Configuration
+# <a id="configuration"></a>Configuration
 
 The tool uses a single configuration file. The location for this file is your home directory
 and the file name is ~/.pcli.conf.
@@ -146,7 +198,7 @@ The only other piece of data you need to provide is the **client_id** value. Thi
 by your Physna administrator. In most cases, you should leave the client secret field unpopulated. Read further to understand how
 it could be useful sometimes.
 
-# Basic use
+# <a id="basic-use"></a>Basic use
 
 This is a command line utility. You can use it within a terminal session.
 To see what functions are supported, you can type "help" as the first argument.
@@ -233,9 +285,9 @@ specify the full name "--tenant" or the short name "-t". Those two are be equiva
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.
 
-## Command line arguments
+## <a id="command-line-arguments"></a>Command line arguments
 
-### Order of arguments
+### <a id="order-of-arguments"></a>Order of arguments
 
 There are two types of arguments:
 
@@ -270,14 +322,14 @@ In this case, "tenant", "format", and "pretty" are all general arguments that ap
 On another hand "folder" and "search" are arguments that are specific to the **models** command.
 Of course "models" is the sub-command itself.
 
-### How do I know which arguments are general and which are specific?
+### <a id="general-vs-specific-args"></a>How do I know which arguments are general and which are specific?
 
 That is easy! If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
 a command name in the help request, you will see the command-specific arguments only.
 
 Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.
 
-### Equal sign, quotes, oh mine!
+### <a id="signs-n-quites"></a>Equal sign, quotes, oh mine!
 
 There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.
@@ -303,7 +355,7 @@ The best practice is to always wrap it in double quotes.
 In general, it is considered O.K. to not surround numbers with double quotes. 
 It is a bit more typing, but I recommend to be consistent and wrap all values as a matter of good habit.
 
-### Arguments with multiple values
+### <A id="multi-value-args"></a>Arguments with multiple values
 
 Few sub-commands can take multiple values for an argument. Such arguments are clearly indicated in the help. 
 In an example you will see further down again:
@@ -363,7 +415,7 @@ There are two general arguments that can be configured as environment variables:
 * --tenant - as "PCLI_TENANT"
 * --format - as "PCLI_FORMAT"
 
-## Working with tokens
+## <a id="tokens"></a>Working with tokens
 
 It is important to understand how the authentication and authorization work.
 Physna uses OpenID Connect provider and upon successful authentication will issue the user
@@ -378,7 +430,7 @@ You can delete the token file at any time. If you do, PCLI will prompt you to au
 and create a new one in its place. There is an easier way however. The CLI supports dedicated sub-commands
 to deal with token generation:
 
-### Invalidating your token
+### <a id="invalidate-token"></a>Invalidating your token
 
 The sub-command **invalidate** will delete the current token for a given tenant. It will leave
 unmodified any other tokens belonging to other tenants you may have.
@@ -389,7 +441,7 @@ pcli --tenant="mytenant" invalidate
 
 This operation causes PCLI to start a new session next time it is executed by requesting a new token.
 
-### Displaying your token
+### <a id="print-token"></a>Displaying your token
 
 Your token data is encrypted. It does not reveal anything about yourself or your system.
 In the vast majority of cases, you would not care what it is. However, there may be some
@@ -406,7 +458,7 @@ The following command will print the current token for your tenant to the termin
 pcli --tenant="mytenant" token
 ```
 
-### Best practices for handling tokens
+### <a id="token-best-practices"></a>Best practices for handling tokens
 
 First of all, make sure your home directory is properly secured with the correct file permissions. 
 It is by default on all popular OS-es, but this is your responsibility. If not secure, there is 
@@ -423,7 +475,7 @@ but if there is no human to enter it, it is difficult to automate. If you choose
 your configuration file has the proper file permission to secure it against others that may share your
 computer.
 
-## Listing folders
+## <a id="list-folders"></a>Listing folders
 
 The command **folders** will print the full list of folders currently available for your tenant.
 Physna organizes data into logical storage units named folders. This is not unlike many other
@@ -488,7 +540,7 @@ The default output format is "json". The available options are "json", "csv", "t
 
 Adding "--pretty" in this case will add header row to the CSV output containing the column names.
 
-## Listing models
+## <a id="list-models"></a>Listing models
 
 To obtain a list of models currently present in your tenant environment, use the **models** sub-command.
 Please, note that there is also **model** (singular) command, which is used for querying a single model.
@@ -549,7 +601,7 @@ pcli --tenant="mytenant" models --folder="myfolder1,myfolder2"
 If one is provided, the search argument applies across the folders.
 
 
-## Querying for a specific model
+## <a id="query-model"></a>Querying for a specific model
 
 The **model** command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.
@@ -575,7 +627,7 @@ pcli --tenant="mytenant" model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 
 As explained before you can use different output formats, pretty-print, color.
 
-## Uploading a model
+## <a id="upload-model"></a>Uploading a model
 
 The **upload** command assists you with uploading new 3D models to Physna. It takes the following arguments:
 
@@ -615,7 +667,7 @@ Be aware of the following restrictions:
 * Each assembly file should not have more than 3,000 parts
 * All part files should be uploaded with their assembly file(s)
 
-## Uploading multiple models in one step
+## <a href="upload-many-models"></a>Uploading multiple models in one step
 
 You can upload multiple models in one step if they are located in the same directory on your computer. In this case,
 you can use the **upload-many** command. It is esentially the same as **upload**, but in this case the "--input" argument
@@ -638,7 +690,7 @@ Options:
 
 Alternativelly, you can write a script to call the **upload** command for each file you want to upload.
 
-## Reprocessing a model
+## <a id="reprocess-model"></a>Reprocessing a model
 
 The **reprocess** command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
 in Physna has not completed normally. It takes mandatory parameter: the UUID of the model we want to reprocess.
@@ -682,7 +734,7 @@ pcli --tenant="mytenant" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 
 Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
 
-## Deleting a model
+## <a id="delete-model"></a>Deleting a model
 
 This command will delete a model and all related metadata from the Physna database.
 
@@ -703,7 +755,7 @@ As with the **reprocess** command, it takes multiple values for --uuid to allow 
 **NOTE:** Please, be extra careful when running bulk delete operations. Once deleted, a model cannot be recovered by Physna.
 You would have to upload it again.
 
-## Reading metadata
+## <a id="read-meta"></a>Reading metadata
 
 In addition to the 3D geometry data, additional metadata can be associated with the model.
 The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings.
@@ -751,7 +803,7 @@ In this example, the model has two properties ("DESCRIPTION" and "SKU") with the
 
 The reason for the UUID of the model to be included as the first column is simple. You can concatenate the output of many executions of this command into one single file. That larger file will contain metadata for many models. You will see how that becomes helpful in the next section.
 
-## Uploading metadata
+## <a id="upload-meta"></a>Uploading metadata
 
 In some cases, we need to associate additional metadata with the geometry of a model. The command **upload-model-meta** serves this purpose.
 
@@ -783,7 +835,7 @@ If the property does not exist, a new property with the provided (but capitalize
 
 **NOTE:** If the metadata property value is an empty string, this command will delete the property for the model. In other words, if you want to delete a property, upload the same with value of an empty string in the input CSV file.
 
-## Reading the assembly structure
+## <a id="read-asm"></a>Reading the assembly structure
 
 The command **assembly-tree** will query for a specific model and return as result the assembly structure.
 Obviously, this is ony useful when working with assemblies. The assembly tree could be recursive with 
@@ -791,7 +843,7 @@ assemblies having sub-assemblies, and so forth.
 
 The **assembly-tree** command supports the unique output format of "tree".
 
-## Matching models to other models
+## <a id="match-model"></a>Matching models to other models
 
 Physna's core expertise is in finding geometric matches for models. The sub-command **match-model** does
 part-to-part match. This means that a model is matched as a unit to all other models in the system. 
@@ -845,7 +897,7 @@ If --classification is not provided, no new metadata will be created.
 This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
 You can also use the metadata to automate the ML learning for data classification.
 
-## Matching entire folders of models
+## <a id="match-folder"></a>Matching entire folders of models
 
 Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
 achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute **match-model**. It will combine the responses into a single output. The input arguments are the same as the previous command.
@@ -881,7 +933,7 @@ pcli --tenant="mytenant" --format="csv" --pretty match-folder --folder="myfolder
 
 You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.
 
-## Generating a match report
+## <a id="match-report"></a>Generating a match report
 
 The **match-report** command combines multiple operations. It is used to generate comprehensive match report that
 could be used as input for further post processing. For example, machine learning algorithms. It produces multiple
@@ -907,7 +959,6 @@ Options:
 ```
 
 Example:
-
 
 ```bash
 pcli --tenant="mytenant" match-report \
@@ -935,7 +986,7 @@ cat ./my_graph.graphviz | dot -Tsvg > my_graph.svg
 
 This will produce a SVG file, which you can view by opening it in your browser or another graphics viewer.
 
-## Tenant environment status
+## <a id="environment-status"></a>Tenant environment status
 
 ```bash
 pcli help status
@@ -976,7 +1027,7 @@ background processing completed.
 
 The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
 
-## Searching for 3D models by 2D image
+## <a id="2D-to-3D"></a>Searching for 3D models by 2D image
 
 In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
 that corresponds to this image.
@@ -1037,7 +1088,7 @@ pcli --tenant="mytenant" --format=csv --pretty image-search --input my_picture_t
 Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that 
 are repeating in the outputs.
 
-## Model labeling
+## <a id="model-label"></a>Model labeling
 
 The PCLI client provides its own mechanism for label propagation, which is form of object classification. 
 This is implemented in the **label-folder** command. 
@@ -1112,9 +1163,9 @@ In other words, the label values may come from any folder in your tenant unless 
 
 For the initial labeling of models, you can use the "upload-model-meta" command.
 
-# Advanced use
+# <a id="advanced-use"></a>Advanced use
 
-## Using pipes
+## <a id="pipes"></a>Using pipes
 
 The real power of this CLI tool comes when you use it in conjunction with other tools. For example,
 you can filter down the list of models further by piping the output (formatted as JSON) to [JQ](https://stedolan.github.io/jq/):
@@ -1137,7 +1188,7 @@ models found (as example), you will have to ignore the first record. In this cas
 not to include the "--pretty" flag. This argument is binary and does not take a value. If it is present, it
 means that it is active; if not, it is effectively set to false.
 
-## Using NuShell
+## <a id="nushell"></a>Using NuShell
 
 [NuShell](https://www.nushell.sh/) is an excellent partner for PCLI. You can use the combination of the two to a great effect.
 Instead of using the CSV format, you can ask NuShell to parse the JSON output of PCLI and even query the results in interesting ways.
@@ -1164,12 +1215,12 @@ Finally, it will format the output as CSV.
 Please, read the NuShell documentation for all the wonderful ways you can use it for data manipulations.
 
 
-# Support
+# <a id="support"></a>Support
 
 If you have any questions, please e-mail to [jchultarsky@physna.com](mailto:jchultarsky@physna.com).
 
 <!-- ROADMAP -->
-# Roadmap
+# <a id="roadmap"></a>Roadmap
 
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
@@ -1185,7 +1236,7 @@ _The project is work in progress. No release has been provided as of yet. Most o
 See the [open issues](https://github.com/jchultarsky101/pcli/issues) for a full list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
-# Contributing
+# <a id="contributing"></a>Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
@@ -1199,19 +1250,19 @@ Don't forget to give the project a star! Thanks again!
 5. Open a Pull Request
 
 <!-- LICENSE -->
-# License
+# <a id="license"></a>License
 
 Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
-# Contact
+# <a id="contact"></a>Contact
 
 Julian Chultarsky - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
 
 Project Link: [https://jchultarsky101.github.io/pcli](https://jchultarsky101.github.io/pcli)
 
 <!-- ACKNOWLEDGMENTS -->
-# Acknowledgments
+# <a id="acknowledgments"></a>Acknowledgments
 
 * [Choose an Open Source License](https://choosealicense.com)
 * [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
