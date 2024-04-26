@@ -1091,7 +1091,7 @@ Options:
 Example:
 
 ```bash
-pcli --tenant="mytenamt" label-folder --folder="myfolder" --threshold=0.9 --classification="classification"
+pcli --tenant="mytenant" label-folder --folder="myfolder" --threshold=0.9 --classification="classification"
 ```
 
 The optional --search argument may be used to further refine the target list of models. Only models that match the search
