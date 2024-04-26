@@ -228,7 +228,7 @@ Example):
 pcli --tenant="mytenant" model --uuid="82cb38ce-c3e4-4a07-b605-5177602a6xxx"
 ```
 
-Most, but not all command flags support both short and long names. For example, for tenant we can
+Most, but not all command line arguments support both short and long names. For example, for tenant we can
 specify the full name "--tenant" or the short name "-t". Those two are be equivalent. Not all arguments
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.
