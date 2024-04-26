@@ -596,6 +596,7 @@ fn main() {
                 .long("tenant")
                 .num_args(1)
                 .required(true)
+                .env("PCLI_TENANT")
                 .help("Your tenant ID (check with your Physna admin if not sure)")
         )
         .arg(
@@ -605,6 +606,7 @@ fn main() {
                 .num_args(1)
                 .required(false)
                 .default_value("json")
+                .env("PCLI_FORMAT")
                 .help("Output data format (optional: e.g. 'json', 'csv', or 'tree')")
                 .value_parser(["json", "csv", "tree", "table"])
         )

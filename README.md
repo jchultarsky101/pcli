@@ -41,8 +41,6 @@
   </p>
 </div>
 
-
-
 <!-- TABLE OF CONTENTS
 <details>
   <summary>Table of Contents</summary>
@@ -85,7 +83,7 @@ This project is built with the wonderful programming language [Rust](https://www
 
 
 <!-- GETTING STARTED -->
-# Getting Started
+# Getting started
 
 ## Prerequisites
 
@@ -108,13 +106,13 @@ You can download a pre-compiled binary for your platform from the [documentation
 You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:
 
 ````bash
-cargo build
+cargo build release
 ````
 
 This will produce an executable for your operating system.
 
 
-# A Word about Tenants
+## A Word about tenants
 
 Physna is a multi-tenant system. As such, each client organization receives their own environment. 
 For example, if your company is MyCompany, LLC, you may receive an environment and your
@@ -145,23 +143,16 @@ tenants:
 In the example above, "mytenant" is your tenant ID as explained above. Make sure to 
 edit this sample to reflect that correctly.
 
-The only other piece of data you need to provide is the client_id value. This can be obtained
-by your Physna administrator. They would need to login via the web UI, click on their account avatar
-in the upper-right corner of the page, click on their username, and finally click on "PUBLIC API".
-Both the client ID and the client secret will be shown there. The Physna admin is most likelly someone
-in your company that is responsible for your tenant. If unsure, reach out to your Physna representative.
-
-NOTE: In the new version of the Physna's web UI, click on "Manage" under your avatar.
-
-In most cases, you should leave the client secret field unpopulated. Read further to understand how
+The only other piece of data you need to provide is the **client_id** value. This can be obtained
+by your Physna administrator. In most cases, you should leave the client secret field unpopulated. Read further to understand how
 it could be useful sometimes.
 
-# Basic Use
+# Basic use
 
 This is a command line utility. You can use it within a terminal session.
 To see what functions are supported, you can type "help" as the first argument.
 
-For example:
+Example:
 
 ```bash
 pcli help
@@ -229,12 +220,13 @@ Options:
   -V, --version      Print version
 ```
 
-As you can see, here the "model" sub-command takes "--uuid" as an argument
-to specify the UUID of the model we are trying to read. To read a specific model
-in this case, we need to provide the following (just an example):
+As you can see, here the **model** sub-command takes "--uuid" as an argument
+to specify the UUID of the model we are trying to read.
+
+Example):
 
 ```bash
-pcli --tenant="mytenant" model --uuid="82cb38ce-c3e4-4a07-b605-5177602a6d8f"
+pcli --tenant="mytenant" model --uuid="82cb38ce-c3e4-4a07-b605-5177602a6xxx"
 ```
 
 Most, but not all command flags support both short and long names. For example, for tenant we can
@@ -242,7 +234,9 @@ specify the full name "--tenant" or the short name "-t". Those two are be equiva
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.
 
-## Order of Arguments
+## Cummand line arguments
+
+### Order of arguments
 
 There are two types of arguments:
 
@@ -255,7 +249,7 @@ follow that with any sub-command specific arguments. Both the general and specif
 This is the general idea:
 
 ```bash
-$ pcli [general arguments] sub-command [command-specific arguments]
+pcli [general arguments] sub-command [command-specific arguments]
 ```
 
 Here are few examples:
@@ -264,8 +258,8 @@ Here are few examples:
 pcli help models
 ```
 
-In this case, "help" is the subcommand. There are zero generic arguments we need to provide to it.
-We provide one argument "models" to identify the command for which we need specific help.
+In this case, "help" is the subcommand. There are zero general arguments we need to provide for it.
+We provide one more subcommand **models** to identify the exact sub-command for which we need specific help.
 
 That was a very simple example. Here is a more complicated one:
 
@@ -273,26 +267,26 @@ That was a very simple example. Here is a more complicated one:
 pcli --tenant="mytenant" --format="cvs" --pretty models --folder="default" --search="part_name"
 ```
 
-In this case, "tenant", "format", and "pretty" are all generic arguments that may apply accross many sub-commands in a similar way.
-On another hand "folder" and "search" are arguments that are specific to the "models" command.
+In this case, "tenant", "format", and "pretty" are all general arguments that apply accross many sub-commands.
+On another hand "folder" and "search" are arguments that are specific to the **models** command.
 Of course "models" is the sub-command itself.
 
-### How do I know which arguments are generic and which are specific?
+### How do I know which arguments are general and which are specific?
 
-That is easy! If you display the help without specifying a command name, you will see the info about the generic arguments. If you do provide
+That is easy! If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
 a command name in the help request, you will see the command-specific arguments only.
 
-Remember, provide the generic arguments (if any) first, then the command name followed with any specific command arguments.
+Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.
 
 ### Equal sign, quotes, oh mine!
 
 There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.
 
-For example these two ways of executing the "folders" command are both valid and equivalent:
+For example these two ways of executing the **folders** command are both valid and equivalent:
 
 ```bash
-pcli --tenant mycompany folders
+pcli --tenant mytenant folders
 ```
 
 and
@@ -313,17 +307,17 @@ It is a bit more typing, but I recommend to be consistent and wrap all values as
 ### Arguments with multiple values
 
 Few sub-commands can take multiple values for an argument. Such arguments are clearly indicated in the help. 
-For example, in an example you will see further down again:
+In an example you will see further down again:
 
 ```bash
 pcli --tenant="mytenant" --format="csv" --pretty match-folder --folder="myfolder1" --folder="myfolder2" --threshold="0.99"
 ```
 
-This means that the "match-folder" command will search simultaneously in two folders (i.e. foler with name "myfolder1" and a second folder with name "myfolder2") and combine the output 
+This means that the **match-folder** command will search simultaneously in two folders (i.e. foler with name "myfolder1" and a second folder with name "myfolder2") and combine the output 
 for both. This way, you can widen the search in one command.
 
 For connvenience, we provide an alternative method of specifying multiple values. 
-You can use a single parameter name and a comma-separated list of values.
+You can use a single command line argument name and a comma-separated list of values.
 The following is equivalent to the example above:
 
 ```bash
@@ -344,25 +338,51 @@ pcli --tenant="mytenant" --pretty folders
 it means that I would like to print a more human-readable JSON output than the default compact version meant for post-processing tasks. 
 If I ommit "pretty" it is the same as setting a value of false for it, which is the default.
 
-## Working with Tokens
+### Default values for general arguments via environment variables
+
+If you only have one tenant it would be annoying to have to type it every time you use PCLI. Instead, you can setup an environment variable in your command line
+shell. PCLI will use the value to automaically populate the tenant ID for you. How to create an environment variable and how to make that persistent for your shell
+is beyond the scope of this document. It differs between operating systems. Consult online resources if you are not familiar.
+
+Example of using an environment variable to set the tenant ID in Linux:
+
+```bash
+export PCLI_TENANT="mytenant"
+```
+
+Here we set the environment variable "PCLI_TENANT" to have value of "mytenant". When calling PCLI later, we do not need to provide --tenant as argument anymore. 
+The value from the PCLI_TENANT variable is used. If you do specify the argument, it will override the one from the environment. In other words, the environment variable 
+provides a default value for the argument if it is not explicitly specified.
+
+
+```bash
+pcli folders
+```
+
+There are two general arguments that can be configured as environment variables:
+
+* --tenant - as "PCLI_TENANT"
+* --format - as "PCLI_FORMAT"
+
+## Working with tokens
 
 It is important to understand how the authentication and authorization work.
 Physna uses OpenID Connect provider and upon successful authentication will issue the user
 an access token, which will be valid for the duration of the session (several hours). As long
-as your token is valid, you do not need to authenticate every time you run the CLI utility.
+as your token is valid, you do not need to authenticate every time you run the PCLI utility.
 
-The current token is stored by the CLI tool in a hidden file in your home directory. The file name 
+The current token is stored by PCLI in a hidden file in your home directory. The file name 
 is ".pcli.<tenant_id>.token". For example if your tenant is "beta", the file name for that
 environment would be ~/.pcli.beta.token.
 
-You can delete the token file at any time. If you do, the CLI tool will prompt you to authenticate again
+You can delete the token file at any time. If you do, PCLI will prompt you to authenticate again
 and create a new one in its place. There is an easier way however. The CLI supports dedicated sub-commands
 to deal with token generation:
 
-### Invalidating Your Token
+### Invalidating your token
 
-The sub-command "invalidate" will delete the current token for a given tenant. It will leave
-unmodified any other tokens to other tenants you may have.
+The sub-command **invalidate** will delete the current token for a given tenant. It will leave
+unmodified any other tokens belonging to other tenants you may have.
 
 ```bash
 pcli --tenant="mytenant" invalidate
@@ -370,7 +390,7 @@ pcli --tenant="mytenant" invalidate
 
 This operation causes PCLI to start a new session next time it is executed by requesting a new token.
 
-### Displaying Your Token
+### Displaying your token
 
 Your token data is encrypted. It does not reveal anything about yourself or your system.
 In the vast majority of cases, you would not care what it is. However, there may be some
@@ -381,13 +401,13 @@ Postman, or some other client.
 You do not need to execute this command just to get a new token. Every command you execute will attempt to obtain one if
 none currently exist.
 
-The following command will print the current token for your tenant (here is "beta") to the terminal:
+The following command will print the current token for your tenant to the terminal:
 
 ```bash
 pcli --tenant="mytenant" token
 ```
 
-### Best Practices for Handling Tokens
+### Best practices for handling tokens
 
 First of all, make sure your home directory is properly secured with the correct file permissions. 
 It is by default on all popular OS-es, but this is your responsibility. If not secure, there is 
@@ -398,19 +418,19 @@ it is always a good idea to start with a fresh session. In your BASH script, cal
 first and once. You can then iterate over a batch of command executions without concern that your session
 may expire in the middle of your work. This is handy especially when you have unattended executions (e.g. triggered by a cron job, etc.).
 
-Also in the case of unattended executions, you could enter your Client Secret in your configuration file. This is
+Also in the case of unattended executions, you could provide a value for your **client_secret** in your configuration file. This is
 a less secure option, because it will not prompt you to enter it in your terminal every time you authenticate,
 but if there is no human to enter it, it is difficult to automate. If you choose this path, make sure that 
-your configuration file has the proper file permission to secure it against other people that may share your
+your configuration file has the proper file permission to secure it against others that may share your
 computer.
 
-## Listing Available Folders
+## Listing folders
 
-The command "folders" will print the full list of folders currently available for your tenant.
+The command **folders** will print the full list of folders currently available for your tenant.
 Physna organizes data into logical storage units named folders. This is not unlike many other
-systems you are familiar with. Each folder has a name, but most importantly, it has a numeric identifier.
-The folder ID is optional in some of the sub-commands you may want to use, but it is always a good idea
-to provide it.
+systems you are familiar with. Each folder has a name. It also has a numeric identifier.
+The folder ID is may be returned as part of the data Physna provides. For example, for 3D models,
+it indicates which folder they belong to. The folder name is useful as a fiter for some operations (read further).
 
 ```bash
 pcli --tenant="mytenant" folders
@@ -469,10 +489,10 @@ The default output format is "json". The available options are "json", "csv", "t
 
 Adding "--pretty" in this case will add header row to the CSV output containing the column names.
 
-## Listing Models
+## Listing models
 
-To obtain a list of models currently present in your tenant environment, use the "models" sub-command.
-Please, note that there is also "model" (singular) command, which is used for querying a single model.
+To obtain a list of models currently present in your tenant environment, use the **models** sub-command.
+Please, note that there is also **model** (singular) command, which is used for querying a single model.
 
 Example:
 
@@ -492,7 +512,7 @@ Options:
   -V, --version               Print version
 ```
 
-The "models" command takes a an optional argument "--folder", which is the folder name of interest and limits the search. If you use a folder name filter, but such does not exist, you will see an error message to that effect. 
+The **models** command takes a an optional argument "--folder", which is the folder name of interest and limits the search. If you use a folder name filter, but such does not exist, you will see an error message to that effect. 
 
 If do not specify any folder names as a filter, it will return data from all available folders in your tenant.
 
@@ -511,26 +531,28 @@ all models in folder "myfolder" with model name containing the string "mypart", 
 pcli --tenant="mytenant" models --folder="myfolder" --search="mypart"
 ```
 
-As with the "folders" command, you can specify CSV as the output format, use "--pretty" and colors.
 
-The "models" command accepts multiple values for the folder name. You can query for the combined list of models from several folders in one command.
+As with the **folders** command, you can specify CSV as the output format, use "--pretty" and "--color".
+
+The **models** command accepts multiple values for the folder name. You can query for the combined list of models from several folders in one command.
 In the following example, you will get all models belonging in either folder "myfolder1" or folder "myfolder2":
 
 ```bash
 pcli --tenant="mytenant" models --folder="myfolder1" --folder="myfolder2"
 ```
 
-You can use the alternative notation using a comma-separated values to achieve the same result:
+You can use the alternative notation with comma-separated values to achieve the same result:
 
 ```bash
 pcli --tenant="mytenant" models --folder="myfolder1,myfolder2"
 ```
 
-In this case, the search parameter will apply across the folders.
+If one is provided, the search argument applies across the folders.
 
-## Querying for a Specific Model
 
-The "model" command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
+## Querying for a specific model
+
+The **model** command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
 argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.
 
 ```
@@ -554,9 +576,9 @@ pcli --tenant="mytenant" model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 
 As explained before you can use different output formats, pretty-print, color.
 
-## Uploading a Model
+## Uploading a model
 
-The "upload" command assists you with uploading new 3D models to Physna. It takes the following arguments:
+The **upload** command assists you with uploading new 3D models to Physna. It takes the following arguments:
 
 ```bash
 pcli help upload
@@ -580,10 +602,10 @@ Options:
 Here is an example of how all this comes together:
 
 ```bash
-$ pcli --tenant="mycompany" upload --folder="myfolder" --input="/path/to/my/file" --units="mm"
+pcli --tenant="mycompany" upload --folder="myfolder" --input="/path/to/my/file" --units="mm"
 ```
 
-If successful, we will upload the model in the file named "file".
+If successful, it will upload the model in the file named "file".
 
 Be aware of the following restrictions:
 
@@ -597,7 +619,7 @@ Be aware of the following restrictions:
 ## Uploading multiple models in one step
 
 You can upload multiple models in one step if they are located in the same directory on your computer. In this case,
-you can use the 'upload-many' command. It is esentially the same as 'upload', but in this case the --input argument
+you can use the **upload-many** command. It is esentially the same as **upload**, but in this case the "--input" argument
 is not a file, but the path to the directory on your computer where the files are staged.
 
 ```bash
@@ -615,15 +637,25 @@ Options:
   -V, --version          Print version
 ````
 
-Alternativelly, you can write a script to call the 'upload' command for each file you want to upload.
+Alternativelly, you can write a script to call the **upload** command for each file you want to upload.
 
-## Reprocessing a Model
+## Reprocessing a model
 
-The "reprocess" command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
+The **reprocess** command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
 in Physna has not completed normally. It takes mandatory parameter: the UUID of the model we want to reprocess.
 
 ```bash
 pcli help reprocess
+```
+```
+Reprocesses a specific model
+
+Usage: pcli --tenant <tenant> reprocess --uuid <uuid>...
+
+Options:
+  -u, --uuid <uuid>...  The model UUID
+  -h, --help            Print help
+  -V, --version         Print version
 ```
 
 Example:
@@ -636,13 +668,13 @@ This will cause the status of the model to be reset to "reprocessing" and the mo
 
 The command produces no output.
 
-The reprocess command has an alias reprocess-model. The following is equivalent to the above:
+The **reprocess** command has an alias **reprocess-model**. The following is equivalent to the above:
 
 ```bash
 pcli --tenant="mytenant" reprocess-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 ```
 
-The reprocess command takes multiple values for the parameter --uuid. Therefore, you can reproces multiple models in one operation:
+The **reprocess** command takes multiple values for the parameter --uuid. Therefore, you can reproces multiple models in one operation:
 
 
 ```bash
@@ -651,9 +683,9 @@ pcli --tenant="mytenant" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 
 Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
 
-## Deleting a Model
+## Deleting a model
 
-This command will delete a model and all related metadata from the Physna database. Please, be careful when using this function.
+This command will delete a model and all related metadata from the Physna database.
 
 Example:
 
@@ -667,16 +699,16 @@ The same command has an alias "delete". The same operation can be performed this
 pcli --tenant="mytenant" delete --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx"
 ```
 
-As with the "reprocess" command, it takes multiple values for --uuid to allow you to delete many models in one execution.
+As with the **reprocess** command, it takes multiple values for --uuid to allow you to delete many models in one execution.
 
 **NOTE:** Please, be extra careful when running bulk delete operations. Once deleted, a model cannot be recovered by Physna.
 You would have to upload it again.
 
-## Reading Metadata
+## Reading metadata
 
 In addition to the 3D geometry data, additional metadata can be associated with the model.
 The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings.
-The metadata is returned as part of the model data when using the commands "model" or "models".
+The metadata is returned as part of the model data when using the commands **model** or **models**.
 However, PCLI offers an additional specialized command to only retrieve the metadata and not the rest of the model data.
 This is useful when scripting more sophisticated solutions. 
 
@@ -705,7 +737,7 @@ The output by default is JSON, but when we specify CSV, the output contains the 
 
 **NOTE:** The property names are case insensitive and are capitalized.
 
-Here is an example:
+Example:
 
 ```bash
 pcli --tenant="mytenant" --format="csv" --pretty model-meta --uuid="97377547-9062-4149-90f7-16daf400148x"
@@ -720,9 +752,9 @@ In this example, the model has two properties ("DESCRIPTION" and "SKU") with the
 
 The reason for the UUID of the model to be included as the first column is simple. You can concatenate the output of many executions of this command into one single file. That larger file will contain metadata for many models. You will see how that becomes helpful in the next section.
 
-## Uploading Metadata
+## Uploading metadata
 
-In some cases, we need to associate additional metadata with the geometry of a model. The command "upload-model-meta" serves this purpose.
+In some cases, we need to associate additional metadata with the geometry of a model. The command **upload-model-meta** serves this purpose.
 
 ```bash
 pcli help upload-model-meta
@@ -738,11 +770,10 @@ Options:
   -V, --version        Print version
 ```
 
-The file format is the same as the CSV-formatted output produced by the command "model-meta".
+The file format is the same as the CSV-formatted output produced by the command **model-meta**.
 
 **NOTE:** This command only works with the CSV format. It does not work with JSON. We may implement that option in a future release.
 
-It is the same format used by the 'upload' command earlier.
 The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
 
 The required argument is "input" - the name of the CSV formatted input file. There is no need for --uuid here because the UUID is included
@@ -753,17 +784,17 @@ If the property does not exist, a new property with the provided (but capitalize
 
 **NOTE:** If the metadata property value is an empty string, this command will delete the property for the model. In other words, if you want to delete a property, upload the same with value of an empty string in the input CSV file.
 
-## Reading the Assembly Structure
+## Reading the assembly structure
 
-The command "assembly-tree" will query for a specific model and return as result the assembly structure.
-Obviously, this is mostly useful when working with assemblies. The assembly tree could be recursive with 
+The command **assembly-tree** will query for a specific model and return as result the assembly structure.
+Obviously, this is ony useful when working with assemblies. The assembly tree could be recursive with 
 assemblies having sub-assemblies, and so forth.
 
-The "assembly-tree" command supports the unique output format of "tree".
+The **assembly-tree** command supports the unique output format of "tree".
 
-## Matching Models to Other Models
+## Matching models to other models
 
-Physna's core expertise is in finding geometric matches for models. The sub-command "--match-model" does
+Physna's core expertise is in finding geometric matches for models. The sub-command **match-model** does
 part-to-part match. This means that a model is matched as a unit to all other models in the system. 
 With this function, we do not cascade from top-level assembly into all of its sub-assemblies, nor we 
 try to determine if this model may be a component of another assembly. 
@@ -815,13 +846,10 @@ If --classification is not provided, no new metadata will be created.
 This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
 You can also use the metadata to automate the ML learning for data classification.
 
-There is a variant of this command named "match-scan". The usage is identical, but the algorythm used to perform the match differs significantly. Instead of detailed tessellation comparison,
-it uses the bounding box and other surface properties. This match is better suited when comparing models produced by scanning technologies, such as photogrammetry, which result in very large number of polygons.
-
-## Matching Entire Folders of Models
+## Matching entire folders of models
 
 Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
-achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute "match-model". It will combine the responses into a single output. The input arguments are the same as the previous command.
+achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute **match-model**. It will combine the responses into a single output. The input arguments are the same as the previous command.
 
 ```bash
 pcli help match-folder
@@ -841,11 +869,11 @@ Options:
   -V, --version                Print version
 ```
 
-As with the "models" command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your serches as much as possible for better performance.
+As with the **models** command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your serches as much as possible for better performance.
 
 Example:
 
-The following command will execute individual matches for all models found in the folder with ID of 4 (--folder=myfolder) at match threshold of 99% (--threshold=0.99).
+The following command will execute individual matches for all models found in the folder with name "myfolder" at match threshold of 99% (--threshold=0.99).
 It will output the result in CSV format (--format=csv) and add header line with column names to it (--pretty).
 
 ```bash
@@ -854,9 +882,9 @@ pcli --tenant="mytenant" --format="csv" --pretty match-folder --folder="myfolder
 
 You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.
 
-## Generating Match Report
+## Generating a match report
 
-The "match-report" command combines multiple operations. It is used to generate comprehensive match report that
+The **match-report** command combines multiple operations. It is used to generate comprehensive match report that
 could be used as input for further post processing. For example, machine learning algorithms. It produces multiple
 outputs and therefore it requires the user to specify file names for each output.
 
@@ -879,7 +907,7 @@ Options:
   -V, --version                  Print version
 ```
 
-Here is an example:
+Example:
 
 
 ```bash
@@ -908,7 +936,11 @@ cat ./my_graph.graphviz | dot -Tsvg > my_graph.svg
 
 This will produce a SVG file, which you can view by opening it in your browser or another graphics viewer.
 
-## Tenant Environment Status
+## Tenant environment status
+
+```bash
+pcli help status
+```
 
 ```
 Generates a tenant's environment status summary
@@ -938,22 +970,25 @@ It will produce a summary report with stats of model types and their processing 
 the model is ready for use. Status of "FAILED" indicates that there is a data issue with the model or perhaps the file does not 
 contain any valid geometry.
 
-The "status" command takes an optional flag "--repair". When specified, PCLI will automatically issue "reprocess" command for any model
-that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline process in Physna. 
-Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the "status" command until all
+The "status" command takes an optional flag "--repair". When specified, PCLI will automatically issue **reprocess** command for any model
+that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline action in Physna. 
+Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the **status** command until all
 background processing completed.
 
 The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
 
-## Searching for 3D models by 2D iamge
+## Searching for 3D models by 2D image
 
 In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
 that corresponds to this image.
 
 Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediatelly.
 
-To search by image, PCLI implements the "iamge-search" command:
+To search by image, PCLI implements the **image-search** command:
 
+```bash
+pcli help image-search
+```
 
 ```
 Usage: pcli --tenant <tenant> image-search [OPTIONS] --input <input>
@@ -976,6 +1011,7 @@ It takes four arguments:
 The search results are sorted where the most likely matches are returned first.
 
 Example:
+
 ````bash
 pcli --tenant="mytenant" --format=csv --pretty --tenant=my_tenant image-search --input my_picture.JPG --limit 30
 ````
@@ -989,7 +1025,7 @@ I would add the following filter expression:
 pcli --tenant="mytenant" --format=csv --pretty --tenant=my_tenant image-search --input my_picture.JPG --limit 30 --filter='folderId(eq(100))'
 ````
 
-This would provide me the result faster and more accuratelly than searching the entire database.
+This would provide the result faster and more accuratelly than searching the entire database.
 
 It is important to take photos that show as many geometric features of the object as possible. In some cases, to get a better match, we need to provide
 multiple images of the same object taken from different angles. PCLI allows you to upload multiple images by repeating the --input argument.
@@ -1002,27 +1038,27 @@ pcli --tenant="mytenant" --format=csv --pretty --tenant=my_tenant image-search -
 Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that 
 are repeating in the outputs.
 
-## Model Labeling
+## Model labeling
 
-the PCLI client also provides its own mechanism for label propagation. 
-This is implemented in the *label-folder" command. 
+The PCLI client provides its own mechanism for label propagation, which is form of object classification. 
+This is implemented in the **label-folder** command. 
 It is based entirely on geometric match scores provided by Physna. 
 
 The user provides 3 mandatory and one optional input arguments:
 
-* "folder" - the target folder identifier in your tenant
+* "folder" - the target folder name in your tenant
 * "classification" - the name of a metadata property that will be used for classification
 * "threshold" - the confidence threshold value
 * "exclusive" - this is a flag and does not take a value. If present, only the models found in the source fodler will be considered for matching. The default is to consider all models in the tenenat regardless of their parent folder.
 
 When executed, PLCI will read the contents of the folder and for each of the models in it, 
-it will perform part-to-part match as in the "match-model" command.
+it will perform part-to-part match as in the **match-model** command.
 The match will be done with the specified threshold. 
 It will then rank the matches by their scores and starting from the highest to the lowest will check if
 the matching models contain a value for the metadata property specified. 
 If they do, the model will also be assigned that same metadata property and value.
 
-The assumption is that if model "A" has metadata property of "classification" with value of "apple" and model "B" is 98.5% geometrically the same as model "A", we can say with
+The assumption is that if model "A" has metadata property of "classification" with value of "apple" and model "B" is 98.5% geometrically the same as model "A", than we can say with
 98.5% confidence that model "B" is also an "apple". 
 We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"
 
@@ -1059,8 +1095,8 @@ Example:
 pcli --tenant="mytenamt" label-folder --folder="myfolder" --threshold=0.9 --classification="classification"
 ```
 
-The optional '--search' argument may be used to further refine the target list of models. Only models that match the search
-criteria will be labeled and all others ignored. The --search option works the same as for the "models" command.
+The optional --search argument may be used to further refine the target list of models. Only models that match the search
+criteria will be labeled and all others ignored. The --search option works the same as for the **models** command.
 
 The command does not have any visible output, except returning success or error status. Once completed, your models should be labeled accordingly.
 
@@ -1077,9 +1113,9 @@ In other words, the label values may come from any folder in your tenant unless 
 
 For the initial labeling of models, you can use the "upload-model-meta" command.
 
-# Advanced Use
+# Advanced use
 
-## Using Pipes
+## Using pipes
 
 The real power of this CLI tool comes when you use it in conjunction with other tools. For example,
 you can filter down the list of models further by piping the output (formatted as JSON) to [JQ](https://stedolan.github.io/jq/):
@@ -1093,7 +1129,7 @@ JQ has many useful features that could help you manipulate the output as needed.
 You can pipe the output to a file on your disk for post-processing of the output:
 
 ```bash
-$ pcli -t="mytenant" --format="csv" models --folders="myfolder" > myfile.csv
+pcli -t="mytenant" --format="csv" models --folders="myfolder" > myfile.csv
 ```
 
 Be aware that "--pretty" adds more to the output. For example, if your output format is CSV, it will add
