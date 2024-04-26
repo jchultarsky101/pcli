@@ -233,7 +233,7 @@ specify the full name "--tenant" or the short name "-t". Those two are be equiva
 have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
 rarely used or it is important to make sure we avoid mistakes.
 
-## Cummand line arguments
+## Command line arguments
 
 ### Order of arguments
 
