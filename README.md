@@ -112,7 +112,7 @@ cargo build release
 This will produce an executable for your operating system.
 
 
-## A Word about tenants
+## A word about tenants
 
 Physna is a multi-tenant system. As such, each client organization receives their own environment. 
 For example, if your company is MyCompany, LLC, you may receive an environment and your
