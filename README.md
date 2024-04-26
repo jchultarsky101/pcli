@@ -81,7 +81,6 @@ This project is built with the wonderful programming language [Rust](https://www
 
 [![Rust][Rust-logo]][Rust-url]
 
-
 <!-- GETTING STARTED -->
 # Getting started
 
@@ -200,7 +199,7 @@ Options:
 
 The application supports sub-commands. To get more detailed help for a
 specific sub-command, enter the command name after "help" or alternatively,
-first enter the command and add"--help" after as shown in the example:
+first enter the command and add "--help" after as shown in the example:
 
 ```bash
 pcli help model
