@@ -707,6 +707,10 @@ impl Api {
         self.client.upload_model(folder, path)
     }
 
+    pub fn download_model(&self, uuid: &Uuid) -> Result<()> {
+        self.client.download_model(uuid)
+    }
+
     pub fn list_all_properties(&self) -> Result<PropertyCollection> {
         trace!("Listing all properties...");
         let response = self.client.get_list_of_properties();

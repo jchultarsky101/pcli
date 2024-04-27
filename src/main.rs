@@ -422,6 +422,7 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
+                        .alias("model-upload")
                         .num_args(1)
                         .help("Folder name (e.g. --folder=default)")
                         .required(true)
@@ -434,6 +435,19 @@ fn main() {
                         .help("Path to the input file")
                         .required(true)
                         .value_parser(clap::value_parser!(PathBuf))
+                )
+        )
+        .subcommand(
+            Command::new("download")
+                .about("Downloads the source CAD file for the model into the default download directory")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .num_args(1)
+                        .help("The model UUID")
+                        .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
                 )
         )
         .subcommand(
@@ -1203,6 +1217,20 @@ fn main() {
 
             let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
             println!("{}", output.unwrap());
+        },
+        Some(("download", sub_matches)) => {
+            let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
+            for uuid in uuids {
+                match api.download_model(&uuid) {
+                    Ok(()) => {
+                        println!();
+                    },
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        ::std::process::exit(exitcode::DATAERR); 
+                    }
+                };
+            }
         },
         Some(("upload-many", sub_matches)) => {
 

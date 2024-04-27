@@ -445,6 +445,12 @@ impl ToString for CustomHeaderName {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct SourceFileResponse {
+    #[serde(rename = "sourceFile")]
+    source_file_url: Url,
+}
+
 #[derive(Clone, Debug)]
 pub struct ApiClient {
     pub client: Client,
@@ -1005,6 +1011,58 @@ impl ApiClient {
             }
             None => Ok(None),
         }
+    }
+
+    pub fn download_model(&self, uuid: &Uuid) -> Result<()> {
+        let url = format!(
+            "{}/v2/models/{}/source-file",
+            self.base_url,
+            uuid.to_string()
+        );
+        let bearer: String = format!("Bearer {}", self.access_token);
+        trace!("Downloading model source file...");
+
+        trace!("GET {}", url.to_string());
+        let response = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(30))
+            .header("Authorization", bearer)
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .send();
+
+        let response_source_file = self.handle_response::<SourceFileResponse>(response)?;
+        let url = response_source_file.source_file_url;
+
+        let url_for_path = url.clone();
+        let file_name = url_for_path.path_segments().unwrap().next_back().unwrap();
+        trace!("Extraced file name is {}", file_name.to_owned());
+
+        trace!("GET {}", url.to_string());
+        let response = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(120))
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .send()?;
+
+        trace!("Download request is a success");
+
+        let path = dirs::download_dir().unwrap();
+        let path = path.join(file_name);
+
+        trace!("Downloading file {}", path.to_string_lossy());
+
+        let body = response.bytes()?;
+        std::fs::write(path, &body)?;
+
+        trace!("File downloaded");
+
+        Ok(())
     }
 
     pub fn get_list_of_properties(&self) -> Result<PropertyCollection, ClientError> {
