@@ -6,12 +6,12 @@
 <#
 .SYNOPSIS
 
-The installer for pcli 1.8.12
+The installer for pcli 1.8.13
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/jchultarsky101/pcli.git/releases/download/v1.8.12
+https://github.com/jchultarsky101/pcli.git/releases/download/v1.8.13
 then unpacks the binaries and installs them to $env:CARGO_HOME\bin ($HOME\.cargo\bin)
 
 It will then add that dir to PATH by editing your Environment.Path registry key
@@ -29,7 +29,7 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/jchultarsky101/pcli.git/releases/download/v1.8.12',
+    [string]$ArtifactDownloadUrl = 'https://github.com/jchultarsky101/pcli.git/releases/download/v1.8.13',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -37,10 +37,10 @@ param (
 )
 
 $app_name = 'pcli'
-$app_version = '1.8.12'
+$app_version = '1.8.13'
 
 $receipt = @"
-{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"0.13.3"},"source":{"app_name":"pcli","name":"pcli","owner":"jchultarsky101","release_type":"github"},"version":"1.8.12"}
+{"binaries":["CARGO_DIST_BINS"],"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"0.13.3"},"source":{"app_name":"pcli","name":"pcli","owner":"jchultarsky101","release_type":"github"},"version":"1.8.13"}
 "@
 $receipt_home = "${env:LOCALAPPDATA}\pcli"
 
