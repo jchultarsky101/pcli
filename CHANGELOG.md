@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## v1.8.14
+## v1.8.13
 
 * Implemented model-download command
 * Updated the documentation
