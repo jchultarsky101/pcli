@@ -1248,7 +1248,10 @@ fn main() {
                                 if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
                                     let extension = extension.to_lowercase();
                                     let extension = extension.as_str();
-                                    if PHYSNA_WHITELIST.contains(&extension) {
+
+                                    trace!("Uploading data file with extension: {}", &extension);
+                                    
+                                    //if PHYSNA_WHITELIST.contains(&extension) {
                                         if let Ok(metadata) = fs::metadata(&path) {
                                             if metadata.len() > 0 {
                                                 trace!("Uploading file {}...", String::from(path.clone().into_os_string().to_string_lossy()));
@@ -1269,9 +1272,9 @@ fn main() {
                                                 trace!("Ignored file {}. It has zero size.", path.into_os_string().to_string_lossy());
                                             }
                                         }
-                                    } else {
-                                        trace!("Ingnored file {}. It is not an approved type.", path.into_os_string().to_string_lossy());
-                                    }
+                                    //} else {
+                                    //    trace!("Ingnored file {}. It is not an approved type.", path.into_os_string().to_string_lossy());
+                                    //}
                                 }
                             }
                         }
