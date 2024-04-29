@@ -104,6 +104,7 @@
         <li><a href="#model-label">Model labeling</a></li>
       </ol>
     </li>
+    i<li><a hred="#errors">Handling errors</a></li>
     <li>
       <a href="#advanced-use">Advanced use</a>
       <ol>
@@ -635,7 +636,6 @@ The **upload** command assists you with uploading new 3D models to Physna. It ta
 
 ```bash
 pcli help upload
-
 ```
 ```
 Uploads a file to Physna
@@ -1222,6 +1222,21 @@ folder will be used for matching.
 In other words, the label values may come from any folder in your tenant unless you specify --exclusive.
 
 For the initial labeling of models, you can use the "upload-model-meta" command.
+
+# <a id="errors"></a>Handling erors
+
+Errors may occur for many different reasons. They can be caused by incorrect user input, network operations, etc. 
+
+When at error occurs, the process is interrupted and an error message is returned to the user.
+
+It is important to understand that CLI commands in general have two seprate [standard output streams(https://en.wikipedia.org/wiki/Standard_streams). 
+One is called STDIN and it is used for normal output. The other is called STDERR and it is used to print erro messages.
+
+PCLI follows this convention and it will print out error messages to STDERR. This way, if you are piping the output from PCLI to another downstream process
+it will not receive confusing data that may include error messages.
+
+Finally, CLI commands normaly return exit code of zero in case of successful operation and exit code other than zero when they encounter errors. PCLI follows
+the same rule. You can check the process exit code from PCLI to determine if the operation was successful or not.
 
 # <a id="advanced-use"></a>Advanced use
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.15
+
+* Improved error messages
+* Updated documentation
+* Bug fixes
+
 ## v1.8.14
 
 * Fixed a bug preventing files with special extensions to be uploaded

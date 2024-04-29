@@ -3,11 +3,25 @@ use crate::model::{
     ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMetadata, PropertyCollection,
     SimpleDuplicatesMatchReport, ToCsv, ToJson,
 };
-use anyhow::{anyhow, Result};
 use colored::*;
 use ptree::print_tree;
 use std::str::FromStr;
+use thiserror::Error;
 use uuid::Uuid;
+
+#[derive(Debug, Error)]
+pub enum FormatError {
+    #[error("Unsupported format '{0}'")]
+    UnsupportedFormat(String),
+    #[error("JSON parsing error")]
+    JsonParsingError(#[from] serde_json::Error),
+    #[error("CSV parsing error")]
+    CsvError(#[from] csv::Error),
+    #[error("Parsing error")]
+    ParsingError(#[from] crate::model::ParsingError),
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Format {
@@ -17,13 +31,23 @@ pub enum Format {
 }
 
 impl FromStr for Format {
-    type Err = ();
+    type Err = FormatError;
     fn from_str(input: &str) -> Result<Format, Self::Err> {
         match input {
             "JSON" => return Ok(Format::Json),
             "CSV" => return Ok(Format::Csv),
             "TREE" => return Ok(Format::Tree),
-            _ => Err(()),
+            _ => Err(FormatError::UnsupportedFormat(input.to_string())),
+        }
+    }
+}
+
+impl ToString for Format {
+    fn to_string(&self) -> String {
+        match self {
+            Format::Json => "JSON".to_string(),
+            Format::Csv => "CSV".to_string(),
+            Format::Tree => "TREE".to_string(),
         }
     }
 }
@@ -40,12 +64,12 @@ pub fn format_list_of_folders(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     let folders = ListOfFolders::from(folders);
     match format {
         Format::Json => Ok(color_string(folders.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(folders.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -54,12 +78,12 @@ pub fn format_folder(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     let folder = Folder::from(folder);
     match format {
         Format::Json => Ok(color_string(folder.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(folder.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -68,11 +92,11 @@ pub fn format_model(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(model.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(model.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -82,14 +106,14 @@ pub fn format_model_metadata(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(meta.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(
             meta.to_enhanced_csv(uuid, pretty)?.as_str(),
             color,
         )),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -98,11 +122,11 @@ pub fn format_list_of_models(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(models.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(models.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -111,7 +135,7 @@ pub fn format_enhanced_assembly_tree(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(
             enhanced_assembly_tree.to_json(pretty)?.as_str(),
@@ -121,7 +145,7 @@ pub fn format_enhanced_assembly_tree(
             print_tree(enhanced_assembly_tree)?;
             Ok(colored::ColoredString::from(""))
         }
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -130,7 +154,7 @@ pub fn format_list_of_model_matches(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(
             list_of_model_matches.to_json(pretty)?.as_str(),
@@ -140,7 +164,7 @@ pub fn format_list_of_model_matches(
             list_of_model_matches.to_csv(pretty)?.as_str(),
             color,
         )),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -149,7 +173,7 @@ pub fn format_list_of_geo_matches(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(
             list_of_model_matches.to_json(pretty)?.as_str(),
@@ -159,7 +183,7 @@ pub fn format_list_of_geo_matches(
             list_of_model_matches.to_csv(pretty)?.as_str(),
             color,
         )),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -168,11 +192,11 @@ pub fn format_list_of_properties(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(properties.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(properties.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -181,11 +205,11 @@ pub fn format_simple_duplicates_match_report(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(bom.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(bom.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
 
@@ -194,10 +218,10 @@ pub fn format_environment_status_report(
     format: &Format,
     pretty: bool,
     color: Option<Color>,
-) -> anyhow::Result<colored::ColoredString> {
+) -> Result<colored::ColoredString, FormatError> {
     match format {
         Format::Json => Ok(color_string(stats.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(stats.to_csv(pretty)?.as_str(), color)),
-        _ => Err(anyhow!("Unsupported format {:?}", format)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }

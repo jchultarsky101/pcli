@@ -5,8 +5,6 @@ use crate::model::{
     ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
-use anyhow::{anyhow, Result};
-use itertools::Itertools;
 use log::debug;
 use log::{error, trace, warn};
 use petgraph::matrix_graph::MatrixGraph;
@@ -18,9 +16,24 @@ use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::rc::Rc;
+use thiserror::Error;
 use unicase::UniCase;
 use url::Url;
 use uuid::Uuid;
+
+#[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("{0}")]
+    ClientError(#[from] ClientError),
+    #[error("Folder not found '{0}'")]
+    FolderNotFound(String),
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+    #[error("CSV error")]
+    CsvError(#[from] csv::Error),
+    #[error("Failed to read data: {0}")]
+    FailedToRead(String),
+}
 
 pub struct Api {
     model_cache: HashMap<Uuid, Model>,
@@ -39,50 +52,41 @@ impl Api {
         }
     }
 
-    pub fn get_list_of_folders(&self) -> Result<ListOfFolders> {
-        let list = self.client.get_list_of_folders();
-        match list {
-            Ok(list) => Ok(ListOfFolders::from(list)),
-            Err(e) => match e {
-                ClientError::Parsing(message) => {
-                    error!("{}", message);
-                    return Err(anyhow!("{}", message));
-                }
-                _ => return Err(anyhow!(e)),
-            },
-        }
+    pub fn get_list_of_folders(&self) -> Result<ListOfFolders, ApiError> {
+        log::trace!("Listing folders...");
+        let list = self.client.get_list_of_folders()?;
+        Ok(ListOfFolders::from(list))
     }
 
-    pub fn create_folder(&self, name: &String) -> Result<Folder> {
-        let folder = self.client.create_folder(name);
-        match folder {
-            Ok(folder) => Ok(Folder::from(folder)),
-            Err(e) => match e {
-                ClientError::Parsing(message) => {
-                    error!("{}", message);
-                    return Err(anyhow!("{}", message));
-                }
-                _ => return Err(anyhow!(e)),
-            },
-        }
+    pub fn create_folder(&self, name: &String) -> Result<Folder, ApiError> {
+        log::trace!("Creating folder {}...", name);
+        let folder = self.client.create_folder(name)?;
+        Ok(Folder::from(folder))
     }
 
-    pub fn delete_folder(&self, folders: HashSet<String>) -> anyhow::Result<()> {
+    pub fn delete_folder(&self, folders: HashSet<String>) -> Result<(), ApiError> {
+        log::trace!("Deleting folder(s)...");
         self.client.delete_folder(&folders)?;
         Ok(())
     }
 
-    pub fn get_model_metadata(&self, uuid: &Uuid) -> anyhow::Result<Option<ModelMetadata>> {
+    pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ApiError> {
         log::trace!("Reading model metadata for {}...", uuid.to_string());
         Ok(self.client.get_model_metadata(uuid)?)
     }
 
-    pub fn delete_model_metadata_property(&self, uuid: &Uuid, id: &u64) -> anyhow::Result<()> {
+    pub fn delete_model_metadata_property(&self, uuid: &Uuid, id: &u64) -> Result<(), ApiError> {
+        log::trace!("Deleting model metadata property...");
         self.client.delete_model_property(uuid, id)?;
         Ok(())
     }
 
-    pub fn get_model(&mut self, uuid: &Uuid, use_cache: bool, meta: bool) -> anyhow::Result<Model> {
+    pub fn get_model(
+        &mut self,
+        uuid: &Uuid,
+        use_cache: bool,
+        meta: bool,
+    ) -> Result<Model, ApiError> {
         if use_cache {
             let model_from_cache = self.model_cache.get(uuid);
             if let Some(model) = model_from_cache {
@@ -90,65 +94,49 @@ impl Api {
                 return Ok(model.clone());
             }
         }
-        let model = self.client.get_model(uuid);
+        let model = self.client.get_model(uuid)?;
+        let mut model = Model::from(model);
 
-        match model {
-            Ok(response) => {
-                let mut model = Model::from(response);
-
-                if meta {
-                    let metadata = self.get_model_metadata(uuid);
-                    match metadata {
-                        Ok(metadata) => match metadata {
-                            Some(metadata) => {
-                                model.metadata = Some(metadata.properties.to_owned());
-                            }
-                            None => model.metadata = None,
-                        },
-                        Err(_) => (),
+        if meta {
+            let metadata = self.get_model_metadata(uuid);
+            match metadata {
+                Ok(metadata) => match metadata {
+                    Some(metadata) => {
+                        model.metadata = Some(metadata.properties.to_owned());
                     }
-                }
-
-                self.model_cache
-                    .insert(model.uuid.to_owned(), model.to_owned());
-                Ok(model)
+                    None => model.metadata = None,
+                },
+                Err(_) => (),
             }
-            Err(e) => Err(anyhow!(
-                "Failed to read model {}, because of: {}",
-                uuid.to_string(),
-                e
-            )),
         }
+
+        self.model_cache
+            .insert(model.uuid.to_owned(), model.to_owned());
+        Ok(model)
     }
 
-    pub fn reprocess_model(&self, uuid: &Uuid) -> anyhow::Result<()> {
+    pub fn reprocess_model(&self, uuid: &Uuid) -> Result<(), ApiError> {
         trace!("Reprocessing {}...", uuid.to_string());
         self.client.reprocess_model(uuid)?;
         Ok(())
     }
 
-    pub fn delete_model(&self, uuid: &Uuid) -> anyhow::Result<()> {
+    pub fn delete_model(&self, uuid: &Uuid) -> Result<(), ApiError> {
         self.client.delete_model(uuid)?;
         Ok(())
     }
 
-    pub fn get_model_assembly_tree(&mut self, uuid: &Uuid) -> anyhow::Result<ModelAssemblyTree> {
+    pub fn get_model_assembly_tree(&mut self, uuid: &Uuid) -> Result<ModelAssemblyTree, ApiError> {
         trace!("Reading assembly tree data for {}...", uuid.to_string());
-        match self.client.get_assembly_tree_for_model(uuid) {
-            Ok(tree) => Ok(self.enhance_assembly_tree_with_model(uuid, &tree)?),
-            Err(e) => Err(anyhow!(
-                "Failed to read assembly tree for model {}, because of: {}",
-                uuid.to_string(),
-                e
-            )),
-        }
+        let tree = self.client.get_assembly_tree_for_model(uuid)?;
+        Ok(self.enhance_assembly_tree_with_model(uuid, &tree)?)
     }
 
     fn enhance_assembly_tree_with_model(
         &mut self,
         uuid: &Uuid,
         tree: &AssemblyTree,
-    ) -> anyhow::Result<ModelAssemblyTree> {
+    ) -> Result<ModelAssemblyTree, ApiError> {
         trace!("Enhancing model data for {}...", uuid.to_string());
 
         let model = self.get_model(uuid, true, false)?;
@@ -156,7 +144,7 @@ impl Api {
             Some(tree_children) => {
                 let mut assembly_children: Vec<ModelAssemblyTree> = Vec::new();
                 for child in tree_children {
-                    let child_uuid = Uuid::parse_str(&child.uuid.as_str())?;
+                    let child_uuid = Uuid::parse_str(&child.uuid.as_str()).unwrap();
                     assembly_children
                         .push(self.enhance_assembly_tree_with_model(&child_uuid, child)?);
                 }
@@ -179,7 +167,7 @@ impl Api {
         &self,
         folders: HashSet<String>,
         search: Option<&String>,
-    ) -> Result<ListOfModels> {
+    ) -> Result<ListOfModels, ApiError> {
         trace!("Listing all models for folders {:?}...", folders);
 
         let folder_ids: HashSet<u32> = if folders.len() > 0 {
@@ -199,26 +187,22 @@ impl Api {
         let mut page: u32 = 1;
         let per_page: u32 = 50;
         while has_more {
-            match self.client.get_list_of_models_page(
+            let result = self.client.get_list_of_models_page(
                 folder_ids.clone(),
                 search.to_owned(),
                 per_page,
                 page,
-            ) {
-                Ok(result) => {
-                    if result.page_data.total > 0 {
-                        let models = result.models;
-                        if !models.is_empty() {
-                            for m in models {
-                                list_of_models.push(Model::from(m.clone()));
-                            }
-                        }
+            )?;
+            if result.page_data.total > 0 {
+                let models = result.models;
+                if !models.is_empty() {
+                    for m in models {
+                        list_of_models.push(Model::from(m.clone()));
                     }
-                    has_more = result.page_data.current_page < result.page_data.last_page;
-                    page = result.page_data.current_page + 1;
                 }
-                Err(e) => return Err(anyhow!("{}", e)),
-            };
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
         }
 
         let result = ListOfModels::from(list_of_models);
@@ -234,7 +218,7 @@ impl Api {
         with_meta: bool,
         classification: Option<&String>,
         tag: Option<&String>,
-    ) -> anyhow::Result<ListOfModelMatches> {
+    ) -> Result<ListOfModelMatches, ApiError> {
         trace!("Matching model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
 
@@ -242,85 +226,71 @@ impl Api {
         let mut page: u32 = 1;
         let per_page: u32 = 50;
         while has_more {
-            match self
+            let result = self
                 .client
-                .get_model_match_page(uuid, threshold, per_page, page)
-            {
-                Ok(result) => {
-                    if result.page_data.total > 0 {
-                        let matches = result.matches;
-                        if !matches.is_empty() {
-                            debug!("Reading the list of properties for model {}...", uuid);
-                            let properties = match classification {
-                                Some(_) => Some(self.client.get_list_of_properties()?),
-                                None => None,
-                            };
+                .get_model_match_page(uuid, threshold, per_page, page)?;
+            if result.page_data.total > 0 {
+                let matches = result.matches;
+                if !matches.is_empty() {
+                    debug!("Reading the list of properties for model {}...", uuid);
+                    let properties = match classification {
+                        Some(_) => Some(self.client.get_list_of_properties()?),
+                        None => None,
+                    };
 
-                            for m in matches {
-                                let mut model_match = ModelMatch::from(m);
-                                let model = model_match.model.clone();
-                                let metadata: Option<ModelMetadata> = if with_meta {
-                                    self.get_model_metadata(&model.uuid)?
-                                } else {
-                                    None
+                    for m in matches {
+                        let mut model_match = ModelMatch::from(m);
+                        let model = model_match.model.clone();
+                        let metadata: Option<ModelMetadata> = if with_meta {
+                            self.get_model_metadata(&model.uuid)?
+                        } else {
+                            None
+                        };
+
+                        log::trace!("Model metadata: {:?}", &metadata);
+
+                        match classification {
+                            Some(classification) => {
+                                let property =
+                                    properties.as_ref().unwrap().properties.iter().find(|p| {
+                                        p.name.eq_ignore_ascii_case(classification.as_str())
+                                    });
+                                let property = match property {
+                                    Some(property) => property.clone(),
+                                    None => {
+                                        self.client.post_property(&String::from(classification))?
+                                    }
                                 };
 
-                                log::trace!("Model metadata: {:?}", &metadata);
+                                let item = ModelMetadataItem::new(
+                                    property.id.clone(),
+                                    String::from(classification),
+                                    String::from(tag.unwrap()),
+                                );
 
-                                match classification {
-                                    Some(classification) => {
-                                        let property = properties
-                                            .as_ref()
-                                            .unwrap()
-                                            .properties
-                                            .iter()
-                                            .find(|p| {
-                                                p.name.eq_ignore_ascii_case(classification.as_str())
-                                            });
-                                        let property = match property {
-                                            Some(property) => property.clone(),
-                                            None => self
-                                                .client
-                                                .post_property(&String::from(classification))?,
-                                        };
-
-                                        let item = ModelMetadataItem::new(
-                                            property.id.clone(),
-                                            String::from(classification),
-                                            String::from(tag.unwrap()),
-                                        );
-
-                                        debug!(
-                                            "Setting property {} to value of {} for model {}",
-                                            classification,
-                                            tag.unwrap(),
-                                            model.uuid
-                                        );
-                                        self.client.put_model_property(
-                                            &uuid,
-                                            &property.id,
-                                            &item,
-                                        )?;
-                                    }
-                                    None => (),
-                                }
-
-                                match metadata {
-                                    Some(metadata) => {
-                                        model_match.model.metadata =
-                                            Some(metadata.properties.to_owned())
-                                    }
-                                    None => model_match.model.metadata = None,
-                                }
-                                list_of_matches.push(model_match);
+                                debug!(
+                                    "Setting property {} to value of {} for model {}",
+                                    classification,
+                                    tag.unwrap(),
+                                    model.uuid
+                                );
+                                self.client.put_model_property(&uuid, &property.id, &item)?;
                             }
+                            None => (),
                         }
+
+                        match metadata {
+                            Some(metadata) => {
+                                model_match.model.metadata = Some(metadata.properties.to_owned())
+                            }
+                            None => model_match.model.metadata = None,
+                        }
+                        list_of_matches.push(model_match);
                     }
-                    has_more = result.page_data.current_page < result.page_data.last_page;
-                    page = result.page_data.current_page + 1;
                 }
-                Err(e) => return Err(anyhow!("{}", e)),
-            };
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
         }
 
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
@@ -333,7 +303,7 @@ impl Api {
         with_meta: bool,
         classification: Option<&String>,
         tag: Option<&String>,
-    ) -> anyhow::Result<ListOfModelMatches> {
+    ) -> Result<ListOfModelMatches, ApiError> {
         trace!("Scan match model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
 
@@ -341,91 +311,77 @@ impl Api {
         let mut page: u32 = 1;
         let per_page: u32 = 50;
         while has_more {
-            match self
+            let result = self
                 .client
-                .get_model_scan_match_page(uuid, threshold, per_page, page)
-            {
-                Ok(result) => {
-                    if result.page_data.total > 0 {
-                        let matches = result.matches;
-                        if !matches.is_empty() {
-                            debug!("Reading the list of properties for model {}...", uuid);
-                            let properties = match classification {
-                                Some(_) => Some(self.client.get_list_of_properties()?),
-                                None => None,
-                            };
+                .get_model_scan_match_page(uuid, threshold, per_page, page)?;
+            if result.page_data.total > 0 {
+                let matches = result.matches;
+                if !matches.is_empty() {
+                    debug!("Reading the list of properties for model {}...", uuid);
+                    let properties = match classification {
+                        Some(_) => Some(self.client.get_list_of_properties()?),
+                        None => None,
+                    };
 
-                            for m in matches {
-                                let mut model_match = ModelMatch::from(m);
-                                let model = model_match.model.clone();
-                                let metadata: Option<ModelMetadata>;
-                                if with_meta {
-                                    metadata = self.get_model_metadata(&model.uuid)?;
-                                } else {
-                                    metadata = None;
-                                }
-
-                                match classification {
-                                    Some(classification) => {
-                                        let property = properties
-                                            .as_ref()
-                                            .unwrap()
-                                            .properties
-                                            .iter()
-                                            .find(|p| {
-                                                p.name.eq_ignore_ascii_case(classification.as_str())
-                                            });
-                                        let property = match property {
-                                            Some(property) => property.clone(),
-                                            None => self
-                                                .client
-                                                .post_property(&String::from(classification))?,
-                                        };
-
-                                        let item = ModelMetadataItem::new(
-                                            property.id.clone(),
-                                            String::from(classification),
-                                            String::from(tag.unwrap()),
-                                        );
-
-                                        debug!(
-                                            "Setting property {} to value of {} for model {}",
-                                            classification,
-                                            tag.unwrap(),
-                                            model.uuid
-                                        );
-                                        self.client.put_model_property(
-                                            &uuid,
-                                            &property.id,
-                                            &item,
-                                        )?;
-                                    }
-                                    None => (),
-                                }
-
-                                match metadata {
-                                    Some(metadata) => {
-                                        model_match.model.metadata =
-                                            Some(metadata.properties.to_owned())
-                                    }
-                                    None => model_match.model.metadata = None,
-                                }
-                                list_of_matches.push(model_match);
-                            }
+                    for m in matches {
+                        let mut model_match = ModelMatch::from(m);
+                        let model = model_match.model.clone();
+                        let metadata: Option<ModelMetadata>;
+                        if with_meta {
+                            metadata = self.get_model_metadata(&model.uuid)?;
+                        } else {
+                            metadata = None;
                         }
+
+                        match classification {
+                            Some(classification) => {
+                                let property =
+                                    properties.as_ref().unwrap().properties.iter().find(|p| {
+                                        p.name.eq_ignore_ascii_case(classification.as_str())
+                                    });
+                                let property = match property {
+                                    Some(property) => property.clone(),
+                                    None => {
+                                        self.client.post_property(&String::from(classification))?
+                                    }
+                                };
+
+                                let item = ModelMetadataItem::new(
+                                    property.id.clone(),
+                                    String::from(classification),
+                                    String::from(tag.unwrap()),
+                                );
+
+                                debug!(
+                                    "Setting property {} to value of {} for model {}",
+                                    classification,
+                                    tag.unwrap(),
+                                    model.uuid
+                                );
+                                self.client.put_model_property(&uuid, &property.id, &item)?;
+                            }
+                            None => (),
+                        }
+
+                        match metadata {
+                            Some(metadata) => {
+                                model_match.model.metadata = Some(metadata.properties.to_owned())
+                            }
+                            None => model_match.model.metadata = None,
+                        }
+                        list_of_matches.push(model_match);
                     }
-                    has_more = result.page_data.current_page < result.page_data.last_page;
-                    page = result.page_data.current_page + 1;
                 }
-                Err(e) => return Err(anyhow!("{}", e)),
-            };
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
         }
 
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
     }
 
-    pub fn set_property(&self, name: &String) -> Result<Property> {
-        self.client.post_property(name)
+    pub fn set_property(&self, name: &String) -> Result<Property, ApiError> {
+        Ok(self.client.post_property(name)?)
     }
 
     pub fn set_model_property(
@@ -433,8 +389,8 @@ impl Api {
         model_uuid: &Uuid,
         id: &u64,
         item: &ModelMetadataItem,
-    ) -> Result<ModelMetadataItem> {
-        self.client.put_model_property(model_uuid, id, item)
+    ) -> Result<ModelMetadataItem, ApiError> {
+        Ok(self.client.put_model_property(model_uuid, id, item)?)
     }
 
     fn generate_graph_from_assembly_tree(
@@ -484,7 +440,7 @@ impl Api {
         &self,
         existing_folders: &ListOfFolders,
         desired_folder_names: &HashSet<String>,
-    ) -> Result<ListOfFolders> {
+    ) -> Result<ListOfFolders, ApiError> {
         let existing_folder_names: HashSet<String> = existing_folders
             .into_iter()
             .map(|f| f.name.to_owned())
@@ -497,10 +453,9 @@ impl Api {
             .collect();
 
         if diff.len() > 0 {
-            return Err(anyhow!(format!(
-                "Folder not found: {}",
-                diff.iter().join(", ")
-            )));
+            return Err(ApiError::FolderNotFound(
+                diff.into_iter().collect::<Vec<String>>().join(", "),
+            ));
         }
 
         let validated_folders = if desired_folder_names.len() > 0 {
@@ -524,7 +479,7 @@ impl Api {
         folders: HashSet<String>,
         exclusive: bool,
         with_meta: bool,
-    ) -> anyhow::Result<SimpleDuplicatesMatchReport> {
+    ) -> Result<SimpleDuplicatesMatchReport, ApiError> {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         // read the list of folders currently existing in the tenant
@@ -594,7 +549,7 @@ impl Api {
         uuids: Vec<Uuid>,
         threshold: f64,
         with_meta: bool,
-    ) -> anyhow::Result<ModelMatchReport> {
+    ) -> Result<ModelMatchReport, ApiError> {
         let mut flat_bom = FlatBom::empty();
         let mut roots: HashMap<Uuid, ModelAssemblyTree> = HashMap::new();
         let mut dictionary: HashMap<Uuid, PartNodeDictionaryItem> = HashMap::new();
@@ -650,7 +605,7 @@ impl Api {
         folders: HashSet<String>,
         force_fix: bool,
         ignore_assemblies: bool,
-    ) -> anyhow::Result<EnvironmentStatusReport> {
+    ) -> Result<EnvironmentStatusReport, ApiError> {
         let all_folders = self.get_list_of_folders()?;
         let all_folders: HashMap<u32, Folder> =
             all_folders.into_iter().map(|f| (f.id, f)).collect();
@@ -703,24 +658,20 @@ impl Api {
         Ok(stats)
     }
 
-    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>> {
-        self.client.upload_model(folder, path)
+    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>, ApiError> {
+        Ok(self.client.upload_model(folder, path)?)
     }
 
-    pub fn download_model(&self, uuid: &Uuid) -> Result<()> {
-        self.client.download_model(uuid)
+    pub fn download_model(&self, uuid: &Uuid) -> Result<(), ApiError> {
+        Ok(self.client.download_model(uuid)?)
     }
 
-    pub fn list_all_properties(&self) -> Result<PropertyCollection> {
+    pub fn list_all_properties(&self) -> Result<PropertyCollection, ApiError> {
         trace!("Listing all properties...");
-        let response = self.client.get_list_of_properties();
-        match response {
-            Ok(properties) => Ok(properties),
-            Err(e) => return Err(anyhow!("Failed to read properties, because of: {}", e)),
-        }
+        Ok(self.client.get_list_of_properties()?)
     }
 
-    pub fn upload_model_metadata(&self, input_file: &str, clean: bool) -> Result<()> {
+    pub fn upload_model_metadata(&self, input_file: &str, clean: bool) -> Result<(), ApiError> {
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
         let all_props = Rc::new(properties.properties.clone());
@@ -762,7 +713,7 @@ impl Api {
                         }
                     }
                 }
-                Err(e) => return Err(anyhow!("Failed to read input: {}", e)),
+                Err(e) => return Err(ApiError::FailedToRead(e.to_string())),
             };
 
             if property.value.is_empty() {
@@ -835,7 +786,7 @@ impl Api {
         max_results: u32,
         search: Option<&String>,
         filter: Option<&String>,
-    ) -> Result<ListOfModels> {
+    ) -> Result<ListOfModels, ApiError> {
         let mut results: Vec<ListOfModels> = Vec::new();
 
         if paths.len() == 1 {
@@ -861,7 +812,7 @@ impl Api {
         max_results: u32,
         search: Option<&String>,
         filter: Option<&String>,
-    ) -> Result<ListOfModels> {
+    ) -> Result<ListOfModels, ApiError> {
         let path = path.as_path();
         let image_upload = self.client.get_image_upload_specs(&path)?;
         let url = Url::parse(image_upload.upload_url.as_str()).unwrap();

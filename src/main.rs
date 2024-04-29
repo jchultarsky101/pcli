@@ -746,7 +746,7 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while reading folders: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while reading folders: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -776,7 +776,7 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while creating a new folder: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while creating a new folder: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -798,7 +798,7 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while reading folders: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while reading folders: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -824,9 +824,17 @@ fn main() {
                 Ok(meta) => {
                     match meta {
                         Some(meta) => {
-                            let output = format::format_model_metadata(&uuid, &meta, &output_format, pretty, color).unwrap();
-                            println!("{}", output);
-                            ::std::process::exit(exitcode::OK);
+                            let output = format::format_model_metadata(&uuid, &meta, &output_format, pretty, color);
+                            match output {
+                                Ok(output) => {
+                                    println!("{}", output);
+                                    ::std::process::exit(exitcode::OK);
+                                },
+                                Err(e) => {
+                                    eprintln!("Error: {}", e);
+                                    ::std::process::exit(exitcode::DATAERR); 
+                                }
+                            }
                         },
                         None => {
                             println!("");
@@ -859,9 +867,16 @@ fn main() {
             let tree = api.get_model_assembly_tree(&uuid);
             let proper_tree = model::ModelAssemblyTree::from(tree.unwrap());
 
-            let output = format::format_enhanced_assembly_tree(&proper_tree, &output_format, pretty, color);
-            println!("{}", output.unwrap());
-            ::std::process::exit(exitcode::OK);
+            match format::format_enhanced_assembly_tree(&proper_tree, &output_format, pretty, color) {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR); 
+                }
+            }
         },             
         Some(("models", sub_matches)) => {
             let search = sub_matches.get_one::<String>("search");
@@ -874,9 +889,16 @@ fn main() {
             match api.list_all_models(folders, search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
-                    let output = format::format_list_of_models(&models, &output_format, pretty, color);
-                    println!("{}", output.unwrap());
-                    ::std::process::exit(exitcode::OK);
+                    match format::format_list_of_models(&models, &output_format, pretty, color) {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
                 },
                 Err(e) => {
                     eprintln!("Error: {}", e);
@@ -959,9 +981,17 @@ fn main() {
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
                     match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta) {
                         Ok(report) => {
-                            let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color);
-                            println!("{}", output.unwrap());
-                            ::std::process::exit(exitcode::OK);
+                            let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
+                            match output {
+                                Ok(output) => {
+                                    println!("{}", output);
+                                    ::std::process::exit(exitcode::OK);
+                                },
+                                Err(e) => {
+                                    eprintln!("Error: {}", e);
+                                    ::std::process::exit(exitcode::DATAERR);
+                                }
+                            }
                         },
                         Err(e) => {
                             eprintln!("Error: {}", e);
@@ -1184,11 +1214,19 @@ fn main() {
             match result {
                 Ok(result) => {
                     let output = format::format_environment_status_report(&result, &output_format, pretty, color);
-                    println!("{}", output.unwrap());
-                    ::std::process::exit(exitcode::OK);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        }
+                        Err(e) => {
+                            eprintln!("Error occurred while reading environment status: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while reading environment status: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while reading environment status: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
@@ -1210,13 +1248,22 @@ fn main() {
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
+                    eprintln!("Error occurred while uploading: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
 
             let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
-            println!("{}", output.unwrap());
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                }
+                Err(e) => {
+                    eprintln!("Error occurred while reading environment status: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
         },
         Some(("download", sub_matches)) => {
             let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
@@ -1245,13 +1292,20 @@ fn main() {
                         if let Ok(entry) = entry {
                             let path = entry.path();
                             if path.is_file() {
-                                if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+                                if let Some(file_name) = path.file_name() {
+                                    let parts: Vec<&str> = file_name.to_str().unwrap().split('.').collect();
+                                    let extension = if parts.len() > 1 {
+                                        parts[1]
+                                    } else {
+                                        ""
+                                    };
+                                    trace!("File extension detected: {}", &extension);
+
                                     let extension = extension.to_lowercase();
-                                    let extension = extension.as_str();
 
                                     trace!("Uploading data file with extension: {}", &extension);
                                     
-                                    //if PHYSNA_WHITELIST.contains(&extension) {
+                                    if PHYSNA_WHITELIST.contains(&extension.as_str()) {
                                         if let Ok(metadata) = fs::metadata(&path) {
                                             if metadata.len() > 0 {
                                                 trace!("Uploading file {}...", String::from(path.clone().into_os_string().to_string_lossy()));
@@ -1264,7 +1318,7 @@ fn main() {
                                                         }
                                                     },
                                                     Err(e) => {
-                                                        eprintln!("Error occurred while uploading: {}. Try invalidating the token.", e);
+                                                        eprintln!("Error occurred while uploading: {}", e);
                                                         ::std::process::exit(exitcode::DATAERR);
                                                     }
                                                 }                                             
@@ -1272,9 +1326,9 @@ fn main() {
                                                 trace!("Ignored file {}. It has zero size.", path.into_os_string().to_string_lossy());
                                             }
                                         }
-                                    //} else {
-                                    //    trace!("Ingnored file {}. It is not an approved type.", path.into_os_string().to_string_lossy());
-                                    //}
+                                    } else {
+                                        trace!("Ingnored file {}. It is not an approved type.", path.into_os_string().to_string_lossy());
+                                    }
                                 }
                             }
                         }
@@ -1286,7 +1340,16 @@ fn main() {
             }
 
             let output = format::format_list_of_models(&model::ListOfModels::from(list_of_models), &output_format, pretty, color);
-            println!("{}", output.unwrap());
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                }
+                Err(e) => {
+                    eprintln!("Error occurred while reading environment status: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
         },
         Some(("match-report", sub_matches)) => {
             let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();

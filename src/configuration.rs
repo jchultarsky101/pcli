@@ -1,37 +1,40 @@
+use crate::token::TokenError;
 use crate::{model, token};
-use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::Path;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum ConfigurationError {
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+    #[error("JSON parsing error")]
+    YamlParsingError(#[from] serde_yaml::Error),
+    #[error("Token error")]
+    TokenError(#[from] TokenError),
+}
 
 /// Returns a configuration object used for HTTP calls from the more generic configuration struct
 pub fn from_client_configuration(
     configuration: &ClientConfiguration,
     tenant: &String,
-) -> Result<model::Configuration> {
+) -> Result<model::Configuration, ConfigurationError> {
     let base_path = configuration.base_path.clone();
-    let token = token::get_token_for_tenant(configuration, tenant);
+    let token = token::get_token_for_tenant(configuration, tenant)?;
 
-    match token {
-        Ok(token) => Ok(model::Configuration {
-            base_url: base_path,
-            access_token: token.clone(),
-        }),
-        Err(e) => return Err(e),
-    }
+    Ok(model::Configuration {
+        base_url: base_path,
+        access_token: token.clone(),
+    })
 }
 
 /// Reads the client configuration from a file
-pub fn initialize(configuration: &String) -> Result<ClientConfiguration> {
+pub fn initialize(configuration: &String) -> Result<ClientConfiguration, ConfigurationError> {
     let configuration = Path::new(configuration.as_str());
-    match read_to_string(configuration) {
-        Ok(configuration) => Ok(serde_yaml::from_str(&configuration)?),
-        Err(message) => Err(anyhow!(format!(
-            "Cannot open configuration file {:?}, because of: {}",
-            configuration, message
-        ))),
-    }
+    let configuration = read_to_string(configuration)?;
+    Ok(serde_yaml::from_str(&configuration)?)
 }
 
 /// Represents a Physna tenant

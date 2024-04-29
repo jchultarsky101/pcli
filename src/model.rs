@@ -1,6 +1,5 @@
 use crate::client;
-use anyhow::Result;
-use csv::{Terminator, WriterBuilder};
+use csv::{Terminator, Writer, WriterBuilder};
 use log::trace;
 use petgraph::matrix_graph::MatrixGraph;
 use ptree::style::Style;
@@ -15,7 +14,24 @@ use std::io::BufWriter;
 use std::iter::Extend;
 use std::iter::IntoIterator;
 use std::vec::IntoIter;
+use thiserror::Error;
 use uuid::Uuid;
+
+#[derive(Debug, Error)]
+pub enum ParsingError {
+    #[error("CSV parsing error")]
+    CsvParsingError(#[from] csv::Error),
+    #[error("Failed to extract value")]
+    FailedToExtractCsvValue(#[from] csv::IntoInnerError<csv::Error>),
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+    #[error("Failed to extract value from byte buffer")]
+    FailedToExtractValueFromByteBuffer(#[from] std::io::IntoInnerError<BufWriter<Vec<u8>>>),
+    #[error("Failed to extract value from CSV buffer")]
+    FailedToExtractValueFromCsvBuffer(#[from] csv::IntoInnerError<Writer<BufWriter<Vec<u8>>>>),
+    #[error("Conversion error")]
+    ConversionError(#[from] std::string::FromUtf8Error),
+}
 
 #[derive(Clone, Debug)]
 pub struct Configuration {
@@ -38,7 +54,7 @@ pub trait ToJson {
 
 /// Marshals the state into CSV
 pub trait ToCsv {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String>;
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError>;
 }
 
 #[derive(Clone, Debug, Eq, Default, Serialize, Deserialize)]
@@ -98,7 +114,7 @@ impl ToJson for Folder {
 }
 
 impl ToCsv for Folder {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -114,7 +130,6 @@ impl ToCsv for Folder {
         values.push(self.id.to_string());
         values.push(self.name.to_owned());
         writer.write_record(&values)?;
-
         writer.flush()?;
 
         let bytes = writer.into_inner()?.into_inner()?;
@@ -173,7 +188,7 @@ impl ToJson for ListOfFolders {
 }
 
 impl ToCsv for ListOfFolders {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let folders = self.folders.clone();
 
         let buf = BufWriter::new(Vec::new());
@@ -292,7 +307,7 @@ impl ToJson for PropertyCollection {
 }
 
 impl ToCsv for PropertyCollection {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -312,8 +327,7 @@ impl ToCsv for PropertyCollection {
         writer.flush()?;
 
         let bytes = writer.into_inner()?.into_inner()?;
-        let result = String::from_utf8(bytes)?;
-        Ok(result)
+        Ok(String::from_utf8(bytes)?)
     }
 }
 
@@ -406,7 +420,7 @@ impl ModelMetadata {
         ModelMetadata { properties }
     }
 
-    pub fn to_enhanced_csv(&self, uuid: &Uuid, pretty: bool) -> anyhow::Result<String> {
+    pub fn to_enhanced_csv(&self, uuid: &Uuid, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -443,7 +457,7 @@ impl ToJson for ModelMetadata {
 }
 
 impl ToCsv for ModelMetadata {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -479,8 +493,8 @@ impl ToJson for Model {
 }
 
 impl ToCsv for Model {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
-        trace!("Preparing CSV output for a model...");
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
+        log::trace!("Preparing CSV output for a model...");
 
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
@@ -567,8 +581,7 @@ impl ToCsv for Model {
         writer.flush()?;
 
         let bytes = writer.into_inner()?.into_inner()?;
-        let result = String::from_utf8(bytes)?;
-        Ok(result)
+        Ok(String::from_utf8(bytes)?)
     }
 }
 
@@ -579,7 +592,7 @@ pub struct ListOfModels {
 }
 
 impl ToCsv for ListOfModels {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let models = self.models.clone();
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
@@ -844,7 +857,7 @@ impl ToJson for FlatBom {
 }
 
 impl ToCsv for FlatBom {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let models = self.inner.clone();
 
         let buf = BufWriter::new(Vec::new());
@@ -933,7 +946,7 @@ impl ToJson for ListOfModelMatches {
 }
 
 impl ToCsv for ListOfModelMatches {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let matches = *self.inner.clone();
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
@@ -1070,7 +1083,7 @@ impl ToJson for SimpleDuplicatesMatchReport {
 }
 
 impl ToCsv for SimpleDuplicatesMatchReport {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -1233,7 +1246,7 @@ impl ToJson for EnvironmentStatusReport {
 }
 
 impl ToCsv for EnvironmentStatusReport {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -1386,7 +1399,7 @@ impl ToJson for ListOfGeoLabels {
 }
 
 impl ToCsv for ListOfGeoLabels {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)
@@ -1492,7 +1505,7 @@ impl ToJson for ListOfGeoClassifierPredictions {
 }
 
 impl ToCsv for ListOfGeoClassifierPredictions {
-    fn to_csv(&self, pretty: bool) -> anyhow::Result<String> {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
             .terminator(Terminator::CRLF)

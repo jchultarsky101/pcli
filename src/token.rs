@@ -1,66 +1,68 @@
-use anyhow::{anyhow, Result};
 use base64::engine::general_purpose;
 use base64::Engine;
 use dirs::home_dir;
 use http::StatusCode;
 use jsonwebtoken::decode_header;
-use log::trace;
+use log;
 use rpassword;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::io::Error;
 use std::time::Duration;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum TokenError {
+    #[error("Failed to decode token")]
+    FailedToDecode,
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+    #[error("Empty client ID provided")]
+    EmptyClientId,
+    #[error("HTTP error")]
+    HttpError(#[from] reqwest::Error),
+    #[error("Failed to obtain security token from provider")]
+    FailedToObtainTokenFromProvider,
+    #[error("Unknown tenant {0}")]
+    UnknownTenant(String),
+}
 
 pub fn get_token_for_tenant(
     configuration: &crate::configuration::ClientConfiguration,
     tenant: &String,
-) -> Result<String> {
-    trace!("Obtaining new token from the provider...");
+) -> Result<String, TokenError> {
+    log::trace!("Obtaining new token from the provider...");
     let token = read_token_from_file(tenant);
 
     match token {
         Ok(token) => {
-            trace!("Validating previously acquired token...");
+            log::trace!("Validating previously acquired token...");
             match validate_token(token) {
                 Ok(token) => {
-                    trace!("The current token is still valid");
-                    return Ok(token);
+                    log::trace!("The current token is still valid");
+                    Ok(token)
                 }
                 Err(_) => {
-                    trace!("The existing token is no longer valid!");
-                    let token = request_new_token_from_provider(configuration, tenant);
-                    match token {
-                        Ok(token) => match write_token_to_file(tenant, &token) {
-                            Ok(()) => return Ok(token),
-                            Err(_e) => return Err(anyhow!("Failed to write token to file")),
-                        },
-                        Err(e) => return Err(anyhow!(e)),
-                    }
+                    log::trace!("The existing token is no longer valid!");
+                    let token = request_new_token_from_provider(configuration, tenant)?;
+                    write_token_to_file(tenant, &token)?;
+                    Ok(token)
                 }
             }
         }
         Err(_e) => {
-            trace!("No existing token found.");
-            let token = request_new_token_from_provider(configuration, tenant);
-            match token {
-                Ok(token) => {
-                    match write_token_to_file(tenant, &token) {
-                        Ok(()) => {}
-                        Err(_e) => return Err(anyhow!("Failed to write token to file")),
-                    }
-                    return Ok(token);
-                }
-                Err(e) => return Err(anyhow!(e)),
-            }
+            log::trace!("No existing token found");
+            let token = request_new_token_from_provider(configuration, tenant)?;
+            write_token_to_file(tenant, &token)?;
+            Ok(token)
         }
     }
 }
 
-pub fn validate_token(token: String) -> Result<String> {
+pub fn validate_token(token: String) -> Result<String, TokenError> {
     match decode_header(&token) {
-        Ok(_header) => return Ok(token),
-        Err(e) => return Err(anyhow!("Failed to decode token: {}", e)),
+        Ok(_header) => Ok(token),
+        Err(_) => Err(TokenError::FailedToDecode),
     }
 }
 
@@ -77,29 +79,31 @@ pub fn resolve_file_name(tenant: &String) -> String {
     file_name
 }
 
-pub fn write_token_to_file(tenant: &String, token: &String) -> Result<(), Error> {
+pub fn write_token_to_file(tenant: &String, token: &String) -> Result<(), TokenError> {
     let file_name = resolve_file_name(&tenant);
-    trace!(
+    log::trace!(
         "Writing access token for tenant {} from file {}...",
         tenant,
         file_name
     );
-    fs::write(file_name, token)
+    fs::write(file_name, token)?;
+
+    Ok(())
 }
 
-pub fn read_token_from_file(tenant: &String) -> Result<String, Error> {
+pub fn read_token_from_file(tenant: &String) -> Result<String, TokenError> {
     let file_name = resolve_file_name(&tenant);
-    trace!(
+    log::trace!(
         "Reading access token for tenant {} to file {}...",
         tenant,
         file_name
     );
-    fs::read_to_string(file_name)
+    Ok(fs::read_to_string(file_name)?)
 }
 
-pub fn invalidate_token(tenant: &String) -> Result<()> {
+pub fn invalidate_token(tenant: &String) -> Result<(), TokenError> {
     let file_name = resolve_file_name(&tenant);
-    trace!(
+    log::trace!(
         "Invalidating access token for tenant {} in file {}...",
         tenant,
         file_name
@@ -121,15 +125,15 @@ struct AuthenticationResponse {
 }
 
 fn read_client_secret_from_console() -> String {
-    trace!("User is required to enter the client secret via the console.");
+    log::trace!("User is required to enter the client secret via the console.");
     rpassword::prompt_password("Enter client secret: ").unwrap()
 }
 
 fn request_new_token_from_provider(
     configuration: &crate::configuration::ClientConfiguration,
     tenant: &String,
-) -> Result<String> {
-    trace!("Requesting new token...");
+) -> Result<String, TokenError> {
+    log::trace!("Requesting new token...");
     let active_tenant = configuration.tenants.get(tenant);
 
     match active_tenant {
@@ -139,7 +143,7 @@ fn request_new_token_from_provider(
             let actual_client_secret;
             let security_provider_url = configuration.identity_provider_url.clone();
 
-            trace!("Requesting for tenant {:?}...", tenant.to_owned());
+            log::trace!("Requesting for tenant {:?}...", tenant.to_owned());
 
             match client_secret {
                 Some(client_secret) => {
@@ -151,7 +155,7 @@ fn request_new_token_from_provider(
             }
 
             if client_id.is_empty() {
-                return Err(anyhow!("Empty cliend ID provided!"));
+                return Err(TokenError::EmptyClientId);
             }
 
             // 0. Encode Base64: clientId + ":" + clientSecret
@@ -204,24 +208,16 @@ fn request_new_token_from_provider(
                                 let token = response.access_token;
                                 Ok(token)
                             }
-                            Err(_) => Err(anyhow!(format!(
-                                "Failed to obtain security token from the provider! Status: {:?}",
-                                status
-                            ))),
+                            Err(_) => Err(TokenError::FailedToObtainTokenFromProvider),
                         }
                     } else {
-                        Err(anyhow!(format!(
-                            "Failed to obtain security token from the provider! Status: {:?}",
-                            status
-                        )))
+                        Err(TokenError::FailedToObtainTokenFromProvider)
                     }
                 }
-                Err(_) => Err(anyhow!(
-                    "Failed to obtain security token from the provider!"
-                )),
+                Err(_) => Err(TokenError::FailedToObtainTokenFromProvider),
             }
         }
-        None => Err(anyhow!("Unknown tenant {}", tenant)),
+        None => Err(TokenError::UnknownTenant(tenant.to_owned())),
     }
 }
 

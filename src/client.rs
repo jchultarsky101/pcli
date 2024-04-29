@@ -2,9 +2,8 @@ use crate::model::{
     FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, Model, ModelCreateMetadataResponse,
     ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
 };
-use anyhow::{anyhow, Result};
 use core::str::FromStr;
-use log::trace;
+use log;
 use reqwest::{
     self,
     blocking::Client,
@@ -19,6 +18,7 @@ use std::{
 };
 use std::{fs::File, path::Path};
 use std::{io::Read, path::PathBuf};
+use thiserror::Error;
 use url::{self, Url};
 use uuid::Uuid;
 
@@ -26,41 +26,42 @@ fn urlencode<T: AsRef<str>>(s: T) -> String {
     url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Error)]
 pub enum ClientError {
+    #[error("Parsing error")]
     Parsing(String),
+    #[error("Action is unauthorized")]
     Unauthorized,
+    #[error("Action is forbidden")]
     Forbidden,
+    #[error("Resource not found")]
     NotFound,
+    #[error("Failed to delete folder")]
     FailedToDeleteFolder(String),
+    #[error("Unsupported operation")]
     Unsupported(String),
+    #[error("{0}")]
     ServerError(String),
+    #[error("The request is badly formed")]
     BadRequest,
-}
-
-impl std::error::Error for ClientError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
-    }
-
-    fn description(&self) -> &str {
-        ""
-    }
-
-    fn cause(&self) -> Option<&dyn std::error::Error> {
-        None
-    }
-}
-
-impl From<reqwest::Error> for ClientError {
-    fn from(err: reqwest::Error) -> ClientError {
-        let code = err.status();
-        if let Some(StatusCode::UNAUTHORIZED) = code {
-            ClientError::Unauthorized
-        } else {
-            ClientError::Unsupported(format!("{}", err))
-        }
-    }
+    #[error("Resource already exists on the server")]
+    Conflict(String),
+    #[error("Invalid input file")]
+    InvalidInputFile,
+    #[error("I/O error")]
+    InputOutputError(#[from] std::io::Error),
+    #[error("HTTP error")]
+    HttpError(#[from] reqwest::Error),
+    #[error("JSON parsing error")]
+    JsonError(#[from] serde_json::Error),
+    #[error("The input is not a file")]
+    InputNotFile,
+    #[error("Failed to extract the file ane from the path")]
+    CannotExtractFileNameFromPath,
+    #[error("The file size is too large")]
+    FileTooLarge,
+    #[error("Failed to find any matches for image")]
+    FailedToFindMatchesForImage,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -73,30 +74,6 @@ struct ServerErrorDetails {
 pub struct ServerError {
     #[serde(rename = "error")]
     error_details: ServerErrorDetails,
-}
-
-impl std::convert::From<serde_json::Error> for ClientError {
-    fn from(err: serde_json::Error) -> ClientError {
-        ClientError::Parsing(format!("{}", err))
-    }
-}
-
-impl std::fmt::Display for ClientError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Parsing(message) => write!(f, "Parsing error: {}", message),
-            Self::Unauthorized => write!(
-                f,
-                "Request is unauthorized! Please, renew your access token"
-            ),
-            Self::Forbidden => write!(f, "Request is forbidden"),
-            Self::NotFound => write!(f, "Resource not found"),
-            Self::FailedToDeleteFolder(message) => write!(f, "{}", message),
-            Self::Unsupported(message) => write!(f, "{}", message),
-            Self::ServerError(message) => write!(f, "{}", message),
-            Self::BadRequest => write!(f, "Bad client request"),
-        }
-    }
 }
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -185,9 +162,25 @@ pub struct Folder {
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct FolderListPageResponse {
+    #[serde(rename = "folders")]
+    pub folders: Vec<Folder>,
+    #[serde(rename = "pageData")]
+    pub page_data: Box<PageData>,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct FolderListResponse {
     #[serde(rename = "folders")]
     pub folders: Vec<Folder>,
+}
+
+impl From<FolderListPageResponse> for FolderListResponse {
+    fn from(page_response: FolderListPageResponse) -> Self {
+        Self {
+            folders: page_response.folders,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -474,7 +467,8 @@ impl ApiClient {
         }
     }
 
-    fn evaluate_status(&self, status: StatusCode) -> Result<(), ClientError> {
+    fn evaluate_response(&self, response: &Response) -> Result<(), ClientError> {
+        let status = response.status();
         if status.is_success() {
             ()
         }
@@ -490,6 +484,11 @@ impl ApiClient {
             StatusCode::NOT_FOUND => return Err(ClientError::NotFound),
             StatusCode::UNAUTHORIZED => return Err(ClientError::Unauthorized),
             StatusCode::BAD_REQUEST => return Err(ClientError::BadRequest),
+            StatusCode::CONFLICT => {
+                return Err(ClientError::Conflict(String::from(
+                    "Resource already exists on the server",
+                )))
+            }
             StatusCode::CONTINUE
             | StatusCode::SWITCHING_PROTOCOLS
             | StatusCode::PROCESSING
@@ -510,7 +509,6 @@ impl ApiClient {
             | StatusCode::NOT_ACCEPTABLE
             | StatusCode::PROXY_AUTHENTICATION_REQUIRED
             | StatusCode::REQUEST_TIMEOUT
-            | StatusCode::CONFLICT
             | StatusCode::GONE
             | StatusCode::LENGTH_REQUIRED
             | StatusCode::PRECONDITION_FAILED
@@ -555,39 +553,35 @@ impl ApiClient {
         Ok(())
     }
 
-    pub fn get(
-        &self,
-        url: &str,
-        query_parameters: Option<Vec<(String, String)>>,
-    ) -> Result<String, ClientError> {
-        let mut builder = self
-            .client
-            .request(reqwest::Method::GET, url)
-            .timeout(Duration::from_secs(180))
-            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
-            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+    /*
+        pub fn get(
+            &self,
+            url: &str,
+            query_parameters: Option<Vec<(String, String)>>,
+        ) -> Result<String, ClientError> {
+            let mut builder = self
+                .client
+                .request(reqwest::Method::GET, url)
+                .timeout(Duration::from_secs(180))
+                .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+                .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
-        match query_parameters {
-            Some(query_parametes) => {
-                for (key, value) in query_parametes {
-                    builder = builder.query(&[(key.to_owned(), value.to_owned())]);
+            match query_parameters {
+                Some(query_parametes) => {
+                    for (key, value) in query_parametes {
+                        builder = builder.query(&[(key.to_owned(), value.to_owned())]);
+                    }
                 }
+                None => (),
             }
-            None => (),
+
+            let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+            log::trace!("GET {}", request.url());
+            let response = self.client.execute(request);
+
+            self.handle_response::<String>(response)
         }
-
-        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
-        trace!("GET {}", request.url());
-        let response = self.client.execute(request)?;
-
-        trace!("Status: {}", response.status());
-
-        self.evaluate_status(response.status())?;
-
-        let content = response.text()?;
-        //trace!("{}", content);
-        Ok(content)
-    }
+    */
 
     pub fn get_model_match_page(
         &self,
@@ -602,15 +596,23 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
-        let mut query_parameters: Vec<(String, String)> = Vec::new();
-        query_parameters.push(("threshold".to_string(), threshold.to_string()));
-        query_parameters.push(("perPage".to_string(), per_page.to_string()));
-        query_parameters.push(("page".to_string(), page.to_string()));
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .query(&[
+                ("threshold", threshold.to_string().as_str()),
+                ("perPage", per_page.to_string().as_str()),
+                ("page", page.to_string().as_str()),
+            ])
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
-        let json = self.get(url.as_str(), Some(query_parameters))?;
-        //trace!("{}", json);
-        let result: PartToPartMatchResponse = serde_json::from_str(&json)?;
-        Ok(result)
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        Ok(self.handle_response::<PartToPartMatchResponse>(response)?)
     }
 
     pub fn get_model_scan_match_page(
@@ -626,34 +628,75 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
-        let mut query_parameters: Vec<(String, String)> = Vec::new();
-        query_parameters.push(("threshold".to_string(), threshold.to_string()));
-        query_parameters.push(("perPage".to_string(), per_page.to_string()));
-        query_parameters.push(("page".to_string(), page.to_string()));
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .query(&[
+                ("threshold", threshold.to_string().as_str()),
+                ("perPage", per_page.to_string().as_str()),
+                ("page", page.to_string().as_str()),
+            ])
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
-        let json = self.get(url.as_str(), Some(query_parameters))?;
-        // trace!("{}", json);
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
 
-        //trace!("Parsing JSON to PartToPartMatchResponse...");
-        //std::fs::write("scan.json", &json).expect("Unable to write file");
+        Ok(self.handle_response::<PartToPartMatchResponse>(response)?)
+    }
 
-        let result: PartToPartMatchResponse = serde_json::from_str(&json)?;
-        trace!("Object deserialized");
-        Ok(result)
+    fn get_list_of_folders_page(
+        &self,
+        page: u32,
+        per_page: u32,
+    ) -> Result<FolderListPageResponse, ClientError> {
+        let url = format!("{}/v2/folders", self.base_url);
+
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(30))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header(
+                reqwest::header::ACCEPT,
+                HeaderValue::from_static("application/json"),
+            )
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
+            .query(&[
+                ("page", page.to_string().as_str()),
+                ("perPage", per_page.to_string().as_str()),
+                ("order", "name"),
+            ]);
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+        Ok(self.handle_response::<FolderListPageResponse>(response)?)
     }
 
     pub fn get_list_of_folders(&self) -> Result<FolderListResponse, ClientError> {
-        trace!("Reading list of folders...");
-        let url = format!("{}/v2/folders", self.base_url);
+        log::trace!("Reading list of folders...");
 
-        let json = self.get(url.as_str(), None)?;
-        //trace!("{}", json);
-        let result: FolderListResponse = serde_json::from_str(&json)?;
-        Ok(result)
+        let mut current_page: u32 = 1;
+        let per_page: u32 = 1000;
+
+        let mut folders: Vec<Folder> = Vec::new();
+        loop {
+            let page = self.get_list_of_folders_page(current_page, per_page)?;
+            folders.extend(page.folders);
+            if current_page >= page.page_data.last_page {
+                break;
+            }
+            current_page += 1;
+        }
+
+        Ok(FolderListResponse { folders })
     }
 
     pub fn delete_folder(&self, folders: &HashSet<String>) -> Result<(), ClientError> {
-        trace!("Deleting folder {:?}...", folders);
+        log::trace!("Deleting folder {:?}...", folders);
         let url = format!("{}/v2/folders", self.base_url);
         let mut query_parameters: Vec<(String, String)> = Vec::new();
 
@@ -663,7 +706,7 @@ impl ApiClient {
 
         let builder = self
             .client
-            .request(reqwest::Method::DELETE, url)
+            .delete(url)
             .timeout(Duration::from_secs(180))
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
@@ -671,26 +714,17 @@ impl ApiClient {
             .json(&folders);
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
-        let response = self.client.execute(request)?;
-        let status = response.status();
-
-        if status.is_client_error() {
-            return Err(ClientError::FailedToDeleteFolder("Error deleting folder. Make sure the folder is empty first or use the --force flag".to_string()));
-        } else {
-            self.evaluate_status(status)?;
-        }
-
-        Ok(())
+        log::trace!("DELETE {}", request.url());
+        let response = self.client.execute(request);
+        self.handle_response::<()>(response)
     }
 
     pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
-        trace!("Creating folder {}...", &name);
+        log::trace!("Creating folder {}...", &name);
         let url = format!("{}/v2/folders", self.base_url);
-        let mut query_parameters: Vec<(String, String)> = Vec::new();
-        query_parameters.push(("name".to_string(), name.clone()));
 
         let bearer: String = format!("Bearer {}", self.access_token);
-        let response = self
+        let builder = self
             .client
             .post(url)
             .timeout(Duration::from_secs(180))
@@ -700,16 +734,12 @@ impl ApiClient {
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
             .header("Content-Length", 0)
-            .query(&query_parameters)
-            .send()?;
+            .query(&[("name", name.to_owned())]);
 
-        let status = response.status();
-        self.evaluate_status(status)?;
-        let json = response.text().unwrap();
-        trace!("{}", json);
-        let result: FolderCreateResponse = serde_json::from_str(&json)?;
-
-        Ok(result)
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("POST {}", request.url());
+        let response = self.client.execute(request);
+        self.handle_response::<FolderCreateResponse>(response)
     }
 
     pub fn get_model(&self, uuid: &Uuid) -> Result<SingleModelResponse, ClientError> {
@@ -718,12 +748,20 @@ impl ApiClient {
             self.base_url,
             id = urlencode(uuid.to_string())
         );
-        trace!("Reading model {}...", uuid.to_string());
+        log::trace!("Reading model {}...", uuid.to_string());
 
-        let json = self.get(url.as_str(), None)?;
-        //trace!("{}", json);
-        let result: SingleModelResponse = serde_json::from_str(&json)?;
-        Ok(result)
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        Ok(self.handle_response::<SingleModelResponse>(response)?)
     }
 
     pub fn delete_model(&self, uuid: &Uuid) -> Result<(), ClientError> {
@@ -732,47 +770,37 @@ impl ApiClient {
             self.base_url,
             id = urlencode(uuid.to_string())
         );
-        trace!("Deleting model {}...", uuid.to_string());
+        log::trace!("Deleting model {}...", uuid.to_string());
 
         let builder = self
             .client
-            .request(reqwest::Method::DELETE, url)
+            .delete(url)
             .timeout(Duration::from_secs(180))
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
-        let response = self.client.execute(request)?;
-        self.evaluate_status(response.status())?;
-        Ok(())
+        log::trace!("DELETE {}", request.url());
+        let response = self.client.execute(request);
+        self.handle_response::<()>(response)
     }
 
-    pub fn reprocess_model(&self, uuid: &Uuid) -> Result<()> {
+    pub fn reprocess_model(&self, uuid: &Uuid) -> Result<(), ClientError> {
         let url = format!("{}/v2/models/{}/reprocess", self.base_url, uuid.to_string());
-        let bearer: String = format!("Bearer {}", self.access_token);
+        log::trace!("Reprocessing model {}", url);
 
-        trace!("Reprocessing model {}", url);
-
-        let response = self
+        let builder = self
             .client
             .post(url)
             .timeout(Duration::from_secs(180))
-            .header("Authorization", bearer)
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
-            .header("X-PHYSNA-TENANTID", &self.tenant)
-            .header("scope", "tenantApp")
-            .body("")
-            .send()?;
+            .header("X-PHYSNA-TENANTID", &self.tenant);
 
-        let status = self.evaluate_status(response.status());
-        let json = response.text().unwrap();
-        trace!("{}", json);
-
-        match status {
-            Ok(_) => Ok(()),
-            Err(e) => return Err(anyhow!(e)),
-        }
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("POST {}", request.url());
+        let response = self.client.execute(request);
+        self.handle_response::<()>(response)
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ClientError> {
@@ -781,17 +809,26 @@ impl ApiClient {
             self.base_url,
             id = urlencode(uuid.to_string())
         );
-
-        let mut query_parameters: Vec<(String, String)> = Vec::new();
         let per_page = 10000;
         let page = 1;
-        query_parameters.push(("perPage".to_string(), per_page.to_string()));
-        query_parameters.push(("page".to_string(), page.to_string()));
 
-        let json = self.get(url.as_str(), Some(query_parameters))?;
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .query(&[
+                ("perPage", per_page.to_string().as_str()),
+                ("page", page.to_string().as_str()),
+            ])
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
-        //trace!("{}", &json);
-        let response: Option<ModelMetadataResponse> = serde_json::from_str(&json)?;
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        let response: Option<ModelMetadataResponse> =
+            self.handle_response::<Option<ModelMetadataResponse>>(response)?;
 
         match response {
             Some(response) => {
@@ -819,10 +856,20 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
-        let json = self.get(url.as_str(), None)?;
-        //trace!("{}", json);
-        let result: AssemblyTree = serde_json::from_str(&json)?;
-        Ok(result)
+        let builder = self
+            .client
+            .post(url)
+            .timeout(Duration::from_secs(180))
+            .header("cache-control", "no-cache")
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", &self.tenant)
+            .header("scope", "tenantApp")
+            .header("Content-Length", 0);
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("POST {}", request.url());
+        let response = self.client.execute(request);
+        Ok(self.handle_response::<AssemblyTree>(response)?)
     }
 
     /// Returns a single-page response for list of models
@@ -841,7 +888,6 @@ impl ApiClient {
         page: u32,
     ) -> Result<ModelListResponse, ClientError> {
         let url = format!("{}/v2/models", self.base_url);
-        let bearer: String = format!("Bearer {}", self.access_token);
 
         let mut query_parameters: Vec<(String, String)> = Vec::new();
 
@@ -861,19 +907,20 @@ impl ApiClient {
         query_parameters.push(("page".to_string(), page.to_string()));
 
         log::trace!("GET {}", url.to_string());
-        let response = self
+        let builder = self
             .client
             .get(url)
             .timeout(Duration::from_secs(60))
-            .header("Authorization", bearer)
             .header("Cache-Control", "no-cache")
             .header("Content-Length", "0")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
-            .query(&query_parameters)
-            .send();
+            .query(&query_parameters);
 
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
         self.handle_response::<ModelListResponse>(response)
     }
 
@@ -887,26 +934,28 @@ impl ApiClient {
         response: Result<Response, reqwest::Error>,
     ) -> Result<T, ClientError>
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + 'static,
     {
+        log::trace!("Analyzing HTTP response...");
         match response {
             Ok(response) => {
-                match self.evaluate_status(response.status()) {
+                log::trace!("Evaluating the HTTP status ({})...", response.status());
+                match self.evaluate_response(&response) {
                     Ok(_) => {
                         // normal exit status from the HTTP operation
+                        log::trace!("The exit status code indicates normal operation");
 
                         // get the JSON from the response body
                         let json = response.text();
                         match json {
                             Ok(json) => {
-                                // the JSON was extracted OK
-                                log::trace!("Response: {}", json.to_owned());
-
-                                // parse the JSON in the final object form
-                                let object = serde_json::from_str::<T>(&json)?;
-
-                                // return the list of models
-                                Ok(object)
+                                if std::any::TypeId::of::<T>() == std::any::TypeId::of::<()>() {
+                                    // Correctly return `()` for `T`
+                                    unsafe { return Ok(std::mem::transmute_copy(&())) }
+                                } else {
+                                    let object = serde_json::from_str::<T>(&json)?;
+                                    Ok(object)
+                                }
                             }
                             Err(e) => Err(ClientError::ServerError(e.to_string())),
                         }
@@ -922,15 +971,9 @@ impl ApiClient {
                                 log::trace!("Response: {}", json.to_owned());
 
                                 match serde_json::from_str::<ServerError>(&json) {
-                                    Ok(server_error) => {
-                                        // we were able to parse the payload into a proper server error type
-                                        log::trace!(
-                                            "Server Error: {}",
-                                            server_error.error_details.message
-                                        );
-
-                                        Err(ClientError::ServerError(e.to_string()))
-                                    }
+                                    Ok(server_error) => Err(ClientError::ServerError(
+                                        server_error.error_details.message,
+                                    )),
                                     Err(_) => Err(e),
                                 }
                             }
@@ -943,42 +986,37 @@ impl ApiClient {
         }
     }
 
-    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>> {
+    pub fn upload_model(&self, folder: &str, path: &PathBuf) -> Result<Option<Model>, ClientError> {
         let url = format!("{}/v2/models", self.base_url);
-        let bearer: String = format!("Bearer {}", self.access_token);
 
         let name = path.file_name();
         if name.is_none() {
-            return Err(anyhow!("Invalid input file"));
+            return Err(ClientError::InvalidInputFile);
         }
         let name = String::from(name.unwrap().to_string_lossy());
 
-        trace!("Uploading model data...");
+        log::trace!("Uploading model data...");
         let request = ModelUploadRequest::new(folder, name.as_str());
 
         log::trace!("POST {}", url.to_string());
-        let response = self
+        let builder = self
             .client
             .post(url)
             .timeout(Duration::from_secs(30))
-            .header("Authorization", bearer)
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
-            .header("scope", "tenantApp")
             .query(&[("createMissingFolders", "false")])
             //.header("Content-Range", range_value.to_owned())
-            .json(&request)
-            .send();
+            .json(&request);
 
-        let json = match response {
-            Ok(response) => response.text(),
-            Err(e) => return Err(anyhow!(e)),
-        };
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+        let response: ModelUploadResponse =
+            self.handle_response::<ModelUploadResponse>(response)?;
 
-        let json = json.unwrap();
-        trace!("{}", json);
-        let response: ModelUploadResponse = serde_json::from_str(&json)?;
+        log::trace!("Response: {:?}", response);
 
         let response_model = response.models.get(0);
         match response_model {
@@ -1013,16 +1051,16 @@ impl ApiClient {
         }
     }
 
-    pub fn download_model(&self, uuid: &Uuid) -> Result<()> {
+    pub fn download_model(&self, uuid: &Uuid) -> Result<(), ClientError> {
         let url = format!(
             "{}/v2/models/{}/source-file",
             self.base_url,
             uuid.to_string()
         );
         let bearer: String = format!("Bearer {}", self.access_token);
-        trace!("Downloading model source file...");
+        log::trace!("Downloading model source file...");
 
-        trace!("GET {}", url.to_string());
+        log::trace!("GET {}", url.to_string());
         let response = self
             .client
             .get(url)
@@ -1039,9 +1077,9 @@ impl ApiClient {
 
         let url_for_path = url.clone();
         let file_name = url_for_path.path_segments().unwrap().next_back().unwrap();
-        trace!("Extraced file name is {}", file_name.to_owned());
+        log::trace!("Extraced file name is {}", file_name.to_owned());
 
-        trace!("GET {}", url.to_string());
+        log::trace!("GET {}", url.to_string());
         let response = self
             .client
             .get(url)
@@ -1050,42 +1088,50 @@ impl ApiClient {
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .send()?;
 
-        trace!("Download request is a success");
+        log::trace!("Download request is a success");
 
         let path = dirs::download_dir().unwrap();
         let path = path.join(file_name);
 
-        trace!("Downloading file {}", path.to_string_lossy());
+        log::trace!("Downloading file {}", path.to_string_lossy());
 
         let body = response.bytes()?;
         std::fs::write(path, &body)?;
 
-        trace!("File downloaded");
+        log::trace!("File downloaded");
 
         Ok(())
     }
 
     pub fn get_list_of_properties(&self) -> Result<PropertyCollection, ClientError> {
         let url = format!("{}/v2/metadata-keys", self.base_url);
-        let json = self.get(url.as_str(), None)?;
-        //trace!("{}", json);
-        let result: PropertyCollection = serde_json::from_str(&json)?;
 
-        Ok(result)
+        let builder = self
+            .client
+            .request(reqwest::Method::GET, url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        Ok(self.handle_response::<PropertyCollection>(response)?)
     }
 
-    pub fn post_property(&self, name: &String) -> Result<Property> {
+    pub fn post_property(&self, name: &String) -> Result<Property, ClientError> {
         let url = format!("{}/v2/metadata-keys", self.base_url);
         let bearer: String = format!("Bearer {}", self.access_token);
 
-        trace!(
+        log::trace!(
             "Registering a new property with name of \"{}\"...",
             name.clone()
         );
-        trace!("POST {}", url);
+        log::trace!("POST {}", url);
 
         let request = PropertyRequest::new(name.to_owned());
-        trace!("Request: {:?}", &request);
+        log::trace!("Request: {:?}", &request);
 
         let response = self
             .client
@@ -1098,18 +1144,9 @@ impl ApiClient {
             .header("scope", "tenantApp")
             //.header("Content-Range", range_value.to_owned())
             .json(&request)
-            .send()?;
+            .send();
 
-        let status = self.evaluate_status(response.status());
-        let json = response.text().unwrap();
-        //trace!("{}", json);
-
-        match status {
-            Ok(_) => (),
-            Err(e) => return Err(anyhow!(e)),
-        }
-
-        let result: PropertyResponse = serde_json::from_str(&json)?;
+        let result = self.handle_response::<PropertyResponse>(response)?;
         Ok(result.property)
     }
 
@@ -1118,11 +1155,11 @@ impl ApiClient {
         model_uuid: &Uuid,
         id: &u64,
         item: &ModelMetadataItem,
-    ) -> Result<ModelMetadataItem> {
+    ) -> Result<ModelMetadataItem, ClientError> {
         let url = format!("{}/v2/models/{}/metadata/{}", self.base_url, model_uuid, id);
         let bearer: String = format!("Bearer {}", self.access_token);
 
-        trace!("PUT {}", url);
+        log::trace!("PUT {}", url);
 
         let response = self
             .client
@@ -1135,26 +1172,17 @@ impl ApiClient {
             .header("scope", "tenantApp")
             //.header("Content-Range", range_value.to_owned())
             .json(&PropertyValueRequest::new(item.value.to_owned()))
-            .send()?;
+            .send();
 
-        let status = self.evaluate_status(response.status());
-        let json = response.text().unwrap();
-        trace!("{}", json);
-
-        match status {
-            Ok(_) => (),
-            Err(e) => return Err(anyhow!(e)),
-        }
-
-        let result: ModelCreateMetadataResponse = serde_json::from_str(&json)?;
+        let result = self.handle_response::<ModelCreateMetadataResponse>(response)?;
         Ok(result.metadata)
     }
 
-    pub fn delete_model_property(&self, model_uuid: &Uuid, id: &u64) -> Result<()> {
+    pub fn delete_model_property(&self, model_uuid: &Uuid, id: &u64) -> Result<(), ClientError> {
         let url = format!("{}/v2/models/{}/metadata/{}", self.base_url, model_uuid, id);
         let bearer: String = format!("Bearer {}", self.access_token);
 
-        trace!("DELETE {}", url);
+        log::trace!("DELETE {}", url);
 
         let response = self
             .client
@@ -1166,23 +1194,14 @@ impl ApiClient {
             .header("X-PHYSNA-TENANTID", &self.tenant)
             .header("scope", "tenantApp")
             //.header("Content-Range", range_value.to_owned())
-            .send()?;
+            .send();
 
-        let status = self.evaluate_status(response.status());
-        let json = response.text().unwrap();
-        trace!("{}", json);
-
-        match status {
-            Ok(_) => (),
-            Err(e) => return Err(anyhow!(e)),
-        }
-
-        Ok(())
+        self.handle_response::<()>(response)
     }
 
-    pub fn get_image_upload_specs(&self, path: &Path) -> Result<ImageUploadResponse> {
+    pub fn get_image_upload_specs(&self, path: &Path) -> Result<ImageUploadResponse, ClientError> {
         if !path.is_file() {
-            return Err(anyhow!("Input is not a file"));
+            return Err(ClientError::InputNotFile);
         }
 
         let url = format!("{}/v2/images", self.base_url);
@@ -1190,10 +1209,10 @@ impl ApiClient {
 
         let filename = match path.file_name() {
             Some(filename) => filename.to_str().unwrap(),
-            None => return Err(anyhow!("Error extracting file name from input path")),
+            None => return Err(ClientError::CannotExtractFileNameFromPath),
         };
 
-        trace!("Requesting upload specs for image {}", &filename);
+        log::trace!("Requesting upload specs for image {}", &filename);
         let response = self
             .client
             .post(url)
@@ -1221,36 +1240,25 @@ impl ApiClient {
         path: &Path,
         mime: String,
         content_range: String,
-    ) -> Result<()> {
-        trace!("Uploading image file {}...", path.to_str().unwrap());
+    ) -> Result<(), ClientError> {
+        log::trace!("Uploading image file {}...", path.to_str().unwrap());
         //trace!("Upload URL: {}", url.to_string());
 
         let max_size = upload_size_requirements.max_size_in_bytes;
         let file = File::open(path)?;
         let file_size = file.metadata().unwrap().len();
         if file_size > max_size {
-            return Err(anyhow!("File too large"));
+            return Err(ClientError::FileTooLarge);
         }
 
-        //let curl = format!("curl -X PUT --upload-file {} -H 'Content-Type: {mime}' -H 'X-Goog-Content-Length-Range: {content_range}' {}", path.to_str().unwrap(), url.to_string());
-        //trace!("Example: {}", curl);
-
-        let response = self
+        let _response = self
             .client
             .put(url)
             .timeout(Duration::from_secs(180))
             .header("Content-Type", mime)
             .header("X-Goog-Content-Length-Range", content_range)
             .body(file)
-            .send();
-
-        let _json = match response {
-            Ok(response) => response.text(),
-            Err(e) => return Err(anyhow!(e)),
-        };
-
-        //let json = json.unwrap();
-        //trace!("{}", json);
+            .send()?;
 
         Ok(())
     }
@@ -1262,8 +1270,8 @@ impl ApiClient {
         filter: Option<&String>,
         page: u32,
         per_page: u32,
-    ) -> Result<ImageMatchPageResponse> {
-        trace!("Searching matching models for image with ID {id}...");
+    ) -> Result<ImageMatchPageResponse, ClientError> {
+        log::trace!("Searching matching models for image with ID {id}...");
 
         let url = format!("{}/v2/images/model-matches", self.base_url);
         let mut query_parameters: Vec<(String, String)> = Vec::new();
@@ -1280,13 +1288,18 @@ impl ApiClient {
             None => (),
         }
 
-        let json = self.get(url.as_str(), Some(query_parameters));
-        let json = match json {
-            Ok(json) => json,
-            Err(e) => return Err(anyhow!("Failed to find matches for image: {}", e)),
-        };
-        let result: ImageMatchPageResponse = serde_json::from_str(&json)?;
-        Ok(result)
+        let builder = self
+            .client
+            .request(reqwest::Method::GET, url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        Ok(self.handle_response::<ImageMatchPageResponse>(response)?)
     }
 
     pub fn get_image_search_maches(
@@ -1296,12 +1309,12 @@ impl ApiClient {
         filter: Option<&String>,
         max_matches: u32,
         per_page: u32,
-    ) -> Result<ListOfModels> {
+    ) -> Result<ListOfModels, ClientError> {
         let mut page = 1;
         // let per_page = 20;
         let mut models: Vec<Model> = Vec::new();
 
-        trace!("Limit={}", max_matches);
+        log::trace!("Limit={}", max_matches);
 
         loop {
             let page_result = self.get_image_search_matches_page(
@@ -1322,9 +1335,9 @@ impl ApiClient {
                 models.truncate(max_matches as usize);
             }
 
-            trace!("Page {}", page);
-            trace!("size={}", local_size);
-            trace!("models.size={}", models.len());
+            log::trace!("Page {}", page);
+            log::trace!("size={}", local_size);
+            log::trace!("models.size={}", models.len());
 
             page += 1;
             if local_size < per_page as usize || models.len() >= max_matches as usize {

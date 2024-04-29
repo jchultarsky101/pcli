@@ -1,6 +1,6 @@
 [package]
 name = "pcli"
-version = "1.8.14"
+version = "1.8.15"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"
@@ -31,9 +31,8 @@ sha2 = "0.10.6"
 jsonwebtoken = "8.3.0"
 rpassword = "7.2.0"
 indicatif = { version = "0.17.3", features = ["rayon"] }
-csv = "1.2.1"
+csv = "1.3.0"
 #claim = "0.5.0"
-anyhow = "1.0.70"
 thiserror = "1.0.40"
 #html-builder = "0.4"
 uuid = { version = "1.3.1", features = ["v4", "serde"] }
