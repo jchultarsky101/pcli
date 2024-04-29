@@ -805,7 +805,7 @@ fn main() {
         },        
         Some(("model", sub_matches)) => {
             let meta: bool = sub_matches.get_flag("meta");
-            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap(); // it is safe to call unwrap() here because the argument is required
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
             match api.get_model(&uuid, false, meta) {
                 Ok(model) => {
                     let output = format::format_model(&model, &output_format, pretty, color).unwrap();
