@@ -1227,9 +1227,9 @@ For the initial labeling of models, you can use the "upload-model-meta" command.
 
 Errors may occur for many different reasons. They can be caused by incorrect user input, network operations, etc. 
 
-When at error occurs, the process is interrupted and an error message is returned to the user.
+When an error occurs, the process is interrupted and an error message is returned to the user.
 
-It is important to understand that CLI commands in general have two seprate [standard output streams(https://en.wikipedia.org/wiki/Standard_streams). 
+It is important to understand that CLI commands in general have two seprate [standard output streams](https://en.wikipedia.org/wiki/Standard_streams). 
 One is called STDIN and it is used for normal output. The other is called STDERR and it is used to print erro messages.
 
 PCLI follows this convention and it will print out error messages to STDERR. This way, if you are piping the output from PCLI to another downstream process
