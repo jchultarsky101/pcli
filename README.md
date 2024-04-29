@@ -111,7 +111,7 @@
         <li><a href="#pipes">Using pipes</a></li>
         <li><a href="#nushell">Using NuShell</a></li>
       </ol>
-    <li>
+    </li>
     <li><a href="#support">Support</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
