@@ -104,7 +104,7 @@
         <li><a href="#model-label">Model labeling</a></li>
       </ol>
     </li>
-    i<li><a hred="#errors">Handling errors</a></li>
+    <li><a href="#errors">Handling errors</a></li>
     <li>
       <a href="#advanced-use">Advanced use</a>
       <ol>
