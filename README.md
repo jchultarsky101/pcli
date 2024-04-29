@@ -300,7 +300,7 @@ There are two types of arguments:
 When composing your command line, you need to provide the general arguments first. If using a sub-command, type that next and
 follow that with any sub-command specific arguments. Both the general and specific arguments could be optional. 
 
-This is the general idea:
+This is the idea:
 
 ```bash
 pcli [general arguments] sub-command [command-specific arguments]
@@ -327,7 +327,13 @@ Of course "models" is the sub-command itself.
 
 ### <a id="general-vs-specific-args"></a>How do I know which arguments are general and which are specific?
 
-That is easy! If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
+The general arguments are:
+
+* --tenant
+* --format
+* --pretty
+
+If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
 a command name in the help request, you will see the command-specific arguments only.
 
 Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.

@@ -24,6 +24,14 @@ use sysinfo::{
 };
 
 const PHYSNA_WHITELIST: [&str; 17] = ["3ds", "catpart", "catproduct", "glb", "igs", "iges", "prt", "x_b", "x_t", "asm", "par", "sldasm", "sldprt", "step", "stp", "stl", "ojb"];
+const BANNER: &'static str = r#"
+
+╔═╗╔═╗╦  ╦
+╠═╝║  ║  ║
+╩  ╚═╝╩═╝╩
+          
+Physna Command Line Interface
+"#;
 
 /// The main application entry point
 fn main() {
@@ -47,6 +55,7 @@ fn main() {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
+        .before_long_help(BANNER)
         .propagate_version(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
