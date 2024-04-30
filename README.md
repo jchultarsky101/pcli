@@ -34,7 +34,7 @@
     <a href="https://jchultarsky101.github.io/pcli/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/jchultarsky101/pcli/tree/main/images">View Demo</a>
+    <a href="https://github.com/jchultarsky101/pcli/tree/main/images/demo.mov">View Demo</a>
     ·
     <a href="https://github.com/jchultarsky101/pcli/issues">Report Bug</a>
     ·
@@ -212,44 +212,97 @@ Example:
 pcli help
 ```
 ```
+╔═╗╔═╗╦  ╦
+╠═╝║  ║  ║
+╩  ╚═╝╩═╝╩
+
+Physna Command Line Interface
+
+
 CLI client utility to the Physna public API/V2
 
 Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 
 Commands:
-  sysinfo            Prints details of the current host system
-  token              Obtains security access token from the provider
-  invalidate         Invalidates the current access token, which will cause new token to be created next execution
-  model              Reads data for a specific model
-  reprocess          Reprocesses a specific model
-  delete-model       Deletes a specific model
-  model-meta         Reads the metadata (properties) for a specific model
-  models             Lists all available models in a folder
-  assembly-tree      Reads the model's assembly tree
-  match-model        Matches all models to the specified one
-  match-scan         Scan-match all models to the specified one
-  match-folder       Matches all models in a folder to other models
-  label-folder       Labels models in a folder based on KNN algorithm and geometric match score as distance
-  delete-folder      Deletes a specific folder
-  assembly-bom       Generates flat BoM of model IDs for model
-  status             Generates a tenant's environment status summary
-  upload             Uploads a file to Physna
-  upload-many        Performs a bulk upload of all files in a directory
-  upload-model-meta  Reads metadata from an input CSV file and uploads it for a model specified by UUID
-  match-report       Generates a match report for the specified models
-  folders            Lists all available folders
-  create-folder      Creates a new folder
-  properties         Lists all available metadata propertie names and their IDs
-  image-search       Search for 3D model based on 2D image(s) (object identification)
-  help               Print this message or the help of the given subcommand(s)
+  sysinfo
+          Prints details of the current host system
+  token
+          Obtains security access token from the provider
+  invalidate
+          Invalidates the current access token, which will cause new token to be created next execution
+  model
+          Reads data for a specific model
+  reprocess
+          Reprocesses a specific model
+  delete-model
+          Deletes a specific model
+  model-meta
+          Reads the metadata (properties) for a specific model
+  models
+          Lists available models that meet the search criteria
+  assembly-tree
+          Reads the model's assembly tree
+  match-model
+          Matches all models to the specified one
+  match-scan
+          Scan-match all models to the specified one
+  match-folder
+          Matches all models in a folder to other models
+  label-folder
+          Labels models in a folder based on KNN algorithm and geometric match score as distance
+  delete-folder
+          Deletes a specific folder
+  assembly-bom
+          Generates flat BoM of model IDs for model
+  status
+          Generates a tenant's environment status summary
+  upload
+          Uploads a file to Physna
+  download
+          Downloads the source CAD file for the model into the default download directory
+  upload-many
+          Performs a bulk upload of all files in a directory
+  upload-model-meta
+          Reads metadata from an input CSV file and uploads it for a model specified by UUID
+  match-report
+          Generates a match report for the specified models
+  folders
+          Lists all available folders
+  create-folder
+          Creates a new folder
+  properties
+          Lists all available metadata propertie names and their IDs
+  image-search
+          Search for 3D model based on 2D image(s) (object identification)
+  help
+          Print this message or the help of the given subcommand(s)
 
 Options:
-  -t, --tenant <tenant>  Your tenant ID (check with your Physna admin if not sure)
-  -f, --format <format>  Output data format (optional: e.g. 'json', 'csv', or 'tree') [default: json] [possible values: json, csv, tree, table]
-  -p, --pretty           Produces pretty output (optional: default is 'false')
-      --color <color>    Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white') [possible values: black, red, green, yellow, blue, magenta, cyan, white]
-  -h, --help             Print help
-  -V, --version          Print version
+  -t, --tenant <tenant>
+          Your tenant ID (check with your Physna admin if not sure)
+
+          [env: PCLI_TENANT=pre-prod-enterprise]
+
+  -f, --format <format>
+          Output data format (optional: e.g. 'json', 'csv', or 'tree')
+
+          [env: PCLI_FORMAT=]
+          [default: json]
+          [possible values: json, csv, tree, table]
+
+  -p, --pretty
+          Produces pretty output (optional: default is 'false')
+
+      --color <color>
+          Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white')
+
+          [possible values: black, red, green, yellow, blue, magenta, cyan, white]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
 ```
 
 The application supports sub-commands. To get more detailed help for a
@@ -492,6 +545,24 @@ systems you are familiar with. Each folder has a name. It also has a numeric ide
 The folder ID is may be returned as part of the data Physna provides. For example, for 3D models,
 it indicates which folder they belong to. The folder name is useful as a fiter for some operations (read further).
 
+If you ask for the help screen of this command, you will see the following:
+
+```bash
+pcli help folders
+```
+```
+Lists all available folders
+
+Usage: pcli --tenant <tenant> folders [OPTIONS]
+
+Options:
+  -d, --folder [<folder>...]  Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+  -h, --help                  Print help
+  -V, --version               Print version
+```
+
+Example:
+
 ```bash
 pcli --tenant="mytenant" folders
 ```
@@ -524,7 +595,24 @@ pcli --tenant="mytenant" --pretty folders
   }
 ```
 
-You can add the option "--color" to make the output colorful if you wish:
+The **folders** command has the optional argiment "--folder". This allows you to narrow down your result. For example, if you are only interested in folder "myfolders",
+you could add the following filter:
+
+```bash
+pcli --tenant="mytenant" --pretty folders --folder myfolder
+```
+```
+[
+  {
+    "id": 3,
+    "name": "myfolder"
+  }
+]
+```
+
+You can provide more than one "--folder" value or none at all. If you have none, it will list all available folders. If you have some, it will provide only the folders that have matching names in the list you specified.
+
+You can also add the option "--color" to make the output colorful if you wish:
 
 ```bash
 $ pcli --tenant="mytenant" --pretty --color="green" folders

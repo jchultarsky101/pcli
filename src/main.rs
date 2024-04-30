@@ -146,7 +146,7 @@ fn main() {
                         .num_args(0..)
                         .value_delimiter(',')
                         .action(clap::ArgAction::Append) 
-                        .help("Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .help("Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
                         .required(false)
                 )
                 .arg(
@@ -280,7 +280,7 @@ fn main() {
                         .num_args(0..)
                         .value_delimiter(',')
                         .action(clap::ArgAction::Append) 
-                        .help("Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .help("Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
                         .required(false)
                 )
                 .arg(
@@ -433,7 +433,7 @@ fn main() {
                         .long("folder")
                         .alias("model-upload")
                         .num_args(1)
-                        .help("Folder name (e.g. --folder=default)")
+                        .help("Folder name (e.g. --folder=myfolder)")
                         .required(true)
                 )
                 .arg(
@@ -467,7 +467,7 @@ fn main() {
                         .short('d')
                         .long("folder")
                         .num_args(1)
-                        .help("Folder name (e.g. --folder=default)")
+                        .help("Folder name (e.g. --folder=myfolder)")
                         .required(true)
                 )
                 .arg(
@@ -555,7 +555,17 @@ fn main() {
         )
         .subcommand(
             Command::new("folders")
-                .about("Lists all available folders"),
+                .about("Lists all available folders")
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .num_args(0..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
+                        .help("Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .required(false)
+                )
         )
         .subcommand(
             Command::new("create-folder")
@@ -738,8 +748,14 @@ fn main() {
                 }
             }
         },
-        Some(("folders", _sub_matches)) => {
-            let folders = api.get_list_of_folders();
+        Some(("folders", sub_matches)) => {
+            let folders: Option<HashSet<String>> = match sub_matches.get_many::<String>("folder") {
+                Some(folders) => Some(folders.cloned().map(String::from).collect()),
+                None => None,
+            };
+            trace!("List of folders: {:?}", folders);
+
+            let folders = api.get_list_of_folders(folders);
             match folders {
                 Ok(folders) => {
                     let output = format::format_list_of_folders(folders, &output_format, pretty, color);
@@ -1068,7 +1084,7 @@ fn main() {
                     match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true) {
                         Ok(report) => {
 
-                            let existing_folders = match api.get_list_of_folders() {
+                            let existing_folders = match api.get_list_of_folders(None) {
                                 Ok(folders) => folders,
                                 Err(e) => {
                                     eprintln!("Failed to retrieve the list of folders: {}", e);
