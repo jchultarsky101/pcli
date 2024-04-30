@@ -1021,7 +1021,7 @@ impl ApiClient {
         let builder = self
             .client
             .post(url)
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(360))
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
