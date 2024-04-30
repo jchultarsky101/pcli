@@ -780,9 +780,21 @@ Usage: pcli --tenant <tenant> upload-many --folder <folder> --input <input>
 Options:
   -d, --folder <folder>  Folder name (e.g. --folder=default)
   -i, --input <input>    Path to the input directory
+      --on-error <on-error>  Optional: Action to perform on individual upload error [default: error] [possible values: error, warn, ignore]
+      --show-stats           If specified, prints the upload stats after execution
   -h, --help             Print help
   -V, --version          Print version
 ````
+
+Arguments:
+
+* folder - the name of the destination folder in your tenant
+* input - the local path to a directory containing the files you want to upload
+* on-error - (Optional) can be one of the following:
+  - error - if error is encountered when uploading an individual file, the entire upload will be interrupted and the program will exit
+  - warn - if error is encountered, PCLI will print it on screen, but will continue with the next upload
+  - ignore - no errors will be shown and PCLI will continue with the next upload
+* show-stats - (Optional) if specified, PCLI will print simple stats for the upload session
 
 Alternativelly, you can write a script to call the **upload** command for each file you want to upload.
 
