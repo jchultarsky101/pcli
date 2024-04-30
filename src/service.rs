@@ -52,9 +52,12 @@ impl Api {
         }
     }
 
-    pub fn get_list_of_folders(&self) -> Result<ListOfFolders, ApiError> {
+    pub fn get_list_of_folders(
+        &self,
+        desired_folders: Option<HashSet<String>>,
+    ) -> Result<ListOfFolders, ApiError> {
         log::trace!("Listing folders...");
-        let list = self.client.get_list_of_folders()?;
+        let list = self.client.get_list_of_folders(desired_folders)?;
         Ok(ListOfFolders::from(list))
     }
 
@@ -171,7 +174,7 @@ impl Api {
         trace!("Listing all models for folders {:?}...", folders);
 
         let folder_ids: HashSet<u32> = if folders.len() > 0 {
-            let existing_folders = self.get_list_of_folders()?;
+            let existing_folders = self.get_list_of_folders(None)?;
 
             let folders = self.validate_folders(&existing_folders, &folders)?;
 
@@ -483,7 +486,7 @@ impl Api {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         // read the list of folders currently existing in the tenant
-        let existing_folders = self.get_list_of_folders()?;
+        let existing_folders = self.get_list_of_folders(None)?;
 
         // create a sublist only from folders that a validated to be found in the tenant
         let folders = self.validate_folders(&existing_folders, &folders)?;
@@ -606,7 +609,7 @@ impl Api {
         force_fix: bool,
         ignore_assemblies: bool,
     ) -> Result<EnvironmentStatusReport, ApiError> {
-        let all_folders = self.get_list_of_folders()?;
+        let all_folders = self.get_list_of_folders(None)?;
         let all_folders: HashMap<u32, Folder> =
             all_folders.into_iter().map(|f| (f.id, f)).collect();
 

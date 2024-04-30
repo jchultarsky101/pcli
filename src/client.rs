@@ -651,8 +651,16 @@ impl ApiClient {
         &self,
         page: u32,
         per_page: u32,
+        filter: Option<String>,
     ) -> Result<FolderListPageResponse, ClientError> {
         let url = format!("{}/v2/folders", self.base_url);
+
+        let mut query: Vec<(&str, String)> = Vec::new();
+        query.push(("page", page.to_string()));
+        query.push(("perPage", per_page.to_string()));
+        if filter.is_some() {
+            query.push(("filter", filter.unwrap_or_default()));
+        };
 
         let builder = self
             .client
@@ -664,11 +672,7 @@ impl ApiClient {
                 HeaderValue::from_static("application/json"),
             )
             .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
-            .query(&[
-                ("page", page.to_string().as_str()),
-                ("perPage", per_page.to_string().as_str()),
-                ("order", "name"),
-            ]);
+            .query(&query);
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
         log::trace!("GET {}", request.url());
@@ -676,15 +680,30 @@ impl ApiClient {
         Ok(self.handle_response::<FolderListPageResponse>(response)?)
     }
 
-    pub fn get_list_of_folders(&self) -> Result<FolderListResponse, ClientError> {
+    pub fn get_list_of_folders(
+        &self,
+        desired_folders: Option<HashSet<String>>,
+    ) -> Result<FolderListResponse, ClientError> {
         log::trace!("Reading list of folders...");
 
         let mut current_page: u32 = 1;
         let per_page: u32 = 1000;
+        let filter: Option<String> = match desired_folders {
+            Some(desired_folders) => {
+                let folder_filter: Vec<String> = desired_folders
+                    .into_iter()
+                    .map(|f| format!("'{}'", f))
+                    .collect();
+                let folder_filter: String = folder_filter.join(",");
+                let folder_filter = format!("name(in({}))", folder_filter);
+                Some(folder_filter)
+            }
+            None => Some(String::default()),
+        };
 
         let mut folders: Vec<Folder> = Vec::new();
         loop {
-            let page = self.get_list_of_folders_page(current_page, per_page)?;
+            let page = self.get_list_of_folders_page(current_page, per_page, filter.to_owned())?;
             folders.extend(page.folders);
             if current_page >= page.page_data.last_page {
                 break;
