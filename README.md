@@ -34,7 +34,7 @@
     <a href="https://jchultarsky101.github.io/pcli/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/jchultarsky101/pcli/tree/main/images">View Demo</a>
+    <a href="https://github.com/jchultarsky101/pcli/tree/main/images/demo.mov">View Demo</a>
     ·
     <a href="https://github.com/jchultarsky101/pcli/issues">Report Bug</a>
     ·
