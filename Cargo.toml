@@ -1,6 +1,6 @@
 [package]
 name = "pcli"
-version = "1.8.16"
+version = "1.8.17"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"

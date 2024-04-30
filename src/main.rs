@@ -453,6 +453,7 @@ fn main() {
                     Arg::new("uuid")
                         .short('u')
                         .long("uuid")
+                        .alias("model-download")
                         .num_args(1)
                         .help("The model UUID")
                         .required(true)
@@ -478,6 +479,22 @@ fn main() {
                         .help("Path to the input directory")
                         .required(true)
                         .value_parser(clap::value_parser!(PathBuf))
+                )
+                .arg(
+                    Arg::new("on-error")
+                        .long("on-error")
+                        .help("Optional: Action to perform on individual upload error")
+                        .required(false)
+                        .num_args(1)
+                        .default_value("error")
+                        .value_parser(["error", "warn", "ignore"])
+                )
+                .arg(
+                    Arg::new("show-stats")
+                        .long("show-stats")
+                        .required(false)
+                        .help("If specified, prints the upload stats after execution")
+                        .action(clap::ArgAction::SetTrue)
                 )
         )
         .subcommand(
@@ -1308,8 +1325,19 @@ fn main() {
 
             let folder = sub_matches.get_one::<String>("folder").unwrap();
             let path = sub_matches.get_one::<PathBuf>("input").unwrap();
+            let on_error = sub_matches.get_one::<String>("on-error").unwrap();
+            let show_stats = sub_matches.get_flag("show-stats");
             let mut list_of_models: Vec<model::Model> = Vec::new();
 
+            struct UploadStats {
+                success: u32,
+                failures: u32,
+            }
+
+            let mut stats = UploadStats{
+                success: 0,
+                failures: 0,
+            };
             
             if path.is_dir() {
                 if let Ok(entries) = fs::read_dir(path) {
@@ -1337,14 +1365,27 @@ fn main() {
                                                 let result = api.upload_model(&folder.to_owned(), &path);
                                                 match result {
                                                     Ok(model) => {
+                                                        stats.success += 1;
+                                                        
                                                         match model {
                                                             Some(model) => list_of_models.push(model.clone()),
                                                             None => (),
                                                         }
                                                     },
                                                     Err(e) => {
-                                                        eprintln!("Error occurred while uploading: {}", e);
-                                                        ::std::process::exit(exitcode::DATAERR);
+                                                        stats.failures += 1;
+
+                                                        match on_error.as_str() {
+                                                            "error" => {
+                                                                eprintln!("Failed to upload file {}, because of: {}", path.clone().to_string_lossy(), e);
+                                                                ::std::process::exit(exitcode::DATAERR);
+                                                            },
+                                                            "warn" => {
+                                                                eprintln!("Failed to upload file {}, because of: {}", path.clone().to_string_lossy(), e);
+                                                            },
+                                                            "ignore" => (),
+                                                            _ => unreachable!(),
+                                                        }
                                                     }
                                                 }                                             
                                             } else {
@@ -1357,6 +1398,12 @@ fn main() {
                                 }
                             }
                         }
+                    }
+
+                    if show_stats {
+                        println!("Successed: {}", stats.success);
+                        println!("Failures:  {}", stats.failures);
+                        println!("Total:     {}", (stats.success + stats.failures));
                     }
                 }
             } else {
