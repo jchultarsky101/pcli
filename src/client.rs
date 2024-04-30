@@ -1083,7 +1083,7 @@ impl ApiClient {
         let response = self
             .client
             .get(url)
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(360))
             .header("Authorization", bearer)
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
