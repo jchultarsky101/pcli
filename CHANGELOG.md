@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.17
+
+* Enhanced the "upload-many" command to add --show-stats and --on-error arguments
+* Updated the documentation
+
 ## v1.8.16
 
 * Added optional folder name filters to the "folders" command
