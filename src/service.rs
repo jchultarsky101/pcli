@@ -69,7 +69,9 @@ impl Api {
 
     pub fn delete_folder(&self, folders: HashSet<String>) -> Result<(), ApiError> {
         log::trace!("Deleting folder(s)...");
-        self.client.delete_folder(&folders)?;
+        let folders = self.get_list_of_folders(Some(folders))?;
+        let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
+        self.client.delete_folder(&folder_ids)?;
         Ok(())
     }
 
