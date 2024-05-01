@@ -68,11 +68,22 @@ impl Api {
     }
 
     pub fn delete_folder(&self, folders: HashSet<String>) -> Result<(), ApiError> {
-        log::trace!("Deleting folder(s)...");
+        let folder_names = folders
+            .iter()
+            .map(|f| f.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
+
+        log::trace!("Deleting folder(s): {}...", folder_names.to_owned());
         let folders = self.get_list_of_folders(Some(folders))?;
         let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
-        self.client.delete_folder(&folder_ids)?;
-        Ok(())
+
+        if folder_ids.len() > 0 {
+            self.client.delete_folder(&folder_ids)?;
+            Ok(())
+        } else {
+            Err(ApiError::FolderNotFound(folder_names))
+        }
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ApiError> {

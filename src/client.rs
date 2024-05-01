@@ -38,6 +38,8 @@ pub enum ClientError {
     NotFound,
     #[error("Failed to delete folder")]
     FailedToDeleteFolder(String),
+    #[error("No valid folder name/ID provided")]
+    InvalidFolderName,
     #[error("Unsupported operation")]
     Unsupported(String),
     #[error("{0}")]
@@ -723,35 +725,36 @@ impl ApiClient {
             query_parameters.push(("ids".to_string(), folder.to_string()));
         }
 
-        let builder = self
-            .client
-            .delete(url)
-            .timeout(Duration::from_secs(180))
-            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
-            .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
-            .query(&query_parameters)
-            .json(&folders);
+        if query_parameters.len() > 0 {
+            let builder = self
+                .client
+                .delete(url)
+                .timeout(Duration::from_secs(180))
+                .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+                .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
+                .query(&query_parameters)
+                .json(&folders);
 
-        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
-        log::trace!("DELETE {}", request.url());
-        let response = self.client.execute(request);
-        self.handle_response::<()>(response)
+            let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+            log::trace!("DELETE {}", request.url());
+            let response = self.client.execute(request);
+            self.handle_response::<()>(response)
+        } else {
+            Err(ClientError::InvalidFolderName)
+        }
     }
 
     pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
         log::trace!("Creating folder {}...", &name);
         let url = format!("{}/v2/folders", self.base_url);
 
-        let bearer: String = format!("Bearer {}", self.access_token);
         let builder = self
             .client
             .post(url)
-            .timeout(Duration::from_secs(180))
-            .header("Authorization", bearer)
+            .timeout(Duration::from_secs(30))
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", &self.tenant)
-            .header("scope", "tenantApp")
             .header("Content-Length", 0)
             .query(&[("name", name.to_owned())]);
 
@@ -959,15 +962,22 @@ impl ApiClient {
         match response {
             Ok(response) => {
                 log::trace!("Evaluating the HTTP status ({})...", response.status());
+
                 match self.evaluate_response(&response) {
                     Ok(_) => {
                         // normal exit status from the HTTP operation
                         log::trace!("The exit status code indicates normal operation");
 
-                        // get the JSON from the response body
-                        let json = response.text();
+                        let exit_status = &response.status();
+                        let json = &response.text();
+
                         match json {
                             Ok(json) => {
+                                log::trace!(
+                                    "HTTP response [{}]: \"{}\"",
+                                    exit_status.to_string(),
+                                    json.to_owned()
+                                );
                                 if std::any::TypeId::of::<T>() == std::any::TypeId::of::<()>() {
                                     // Correctly return `()` for `T`
                                     unsafe { return Ok(std::mem::transmute_copy(&())) }
@@ -981,13 +991,17 @@ impl ApiClient {
                     }
                     Err(e) => {
                         // the response status indicates an error
-
+                        let exit_status = &response.status();
                         // attempting to get the message sent by the server...
                         let json = response.text();
                         match json {
                             Ok(json) => {
                                 // the response has a payload
-                                log::trace!("Response: {}", json.to_owned());
+                                log::trace!(
+                                    "HTTP response [{}]: {}",
+                                    exit_status.to_string(),
+                                    json.to_owned()
+                                );
 
                                 match serde_json::from_str::<ServerError>(&json) {
                                     Ok(server_error) => Err(ClientError::ServerError(
