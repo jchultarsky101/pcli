@@ -714,7 +714,7 @@ impl ApiClient {
         Ok(FolderListResponse { folders })
     }
 
-    pub fn delete_folder(&self, folders: &HashSet<String>) -> Result<(), ClientError> {
+    pub fn delete_folder(&self, folders: &HashSet<u32>) -> Result<(), ClientError> {
         log::trace!("Deleting folder {:?}...", folders);
         let url = format!("{}/v2/folders", self.base_url);
         let mut query_parameters: Vec<(String, String)> = Vec::new();
