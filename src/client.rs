@@ -817,6 +817,7 @@ impl ApiClient {
             .timeout(Duration::from_secs(180))
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("Content-Length", 0)
             .header("X-PHYSNA-TENANTID", &self.tenant);
 
         let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
