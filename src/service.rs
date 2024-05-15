@@ -498,62 +498,69 @@ impl Api {
     ) -> Result<SimpleDuplicatesMatchReport, ApiError> {
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
-        // read the list of folders currently existing in the tenant
+        // Read the list of folders currently existing in the tenant
         let existing_folders = self.get_list_of_folders(None)?;
 
-        // create a sublist only from folders that a validated to be found in the tenant
+        // Validate the folders against the existing folders
         let folders = self.validate_folders(&existing_folders, &folders)?;
 
         for uuid in uuids {
-            let model = self.get_model(&uuid, true, with_meta);
-            match model {
-                Ok(model) => {
-                    if model.state.eq("finished") {
-                        let matches =
-                            self.match_model(&uuid, threshold.clone(), with_meta, None, None)?;
-
-                        let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
-
-                        for m in *matches.inner {
-                            if !exclusive
-                                || (exclusive
-                                    && folders.get_folder_by_id(&m.model.folder_id).is_some())
-                                    && (!model.name.eq(&m.model.name)
-                                        && !simple_duplicate_matches.contains(&m))
-                            {
-                                let mut m1 = m.clone();
-                                let comparison_url: String = format!(
-                                    "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
-                                    self.client.tenant,
-                                    uuid.to_string(),
-                                    m1.model.uuid.to_string()
-                                );
-
-                                m1.comparison_url = Some(comparison_url);
-                                m1.model_one_thumbnail = m.model_one_thumbnail.to_owned();
-                                m1.model_two_thumbnail = m.model_two_thumbnail.to_owned();
-                                simple_duplicate_matches.push(m1.to_owned());
-                            }
-                        }
-
-                        if !simple_duplicate_matches.is_empty() {
-                            let item = ModelMatchReportItem {
-                                uuid: uuid.to_string(),
-                                name: model.name.to_owned(),
-                                folder_id: model.folder_id.to_owned(),
-                                matches: simple_duplicate_matches,
-                            };
-
-                            simple_match_report.inner.insert(uuid.to_string(), item);
-                        }
-                    } else {
-                        warn!(
-                            "Model {} has state of {}. Skipping model match!",
-                            uuid, model.state
-                        );
-                    }
+            let model = match self.get_model(&uuid, true, with_meta) {
+                Ok(model) => model,
+                Err(e) => {
+                    warn!("Failed to query for model {}: {}", uuid, e);
+                    continue;
                 }
-                Err(e) => warn!("Failed to query for model {}, because of: {}", uuid, e),
+            };
+
+            if model.state != "finished" {
+                warn!(
+                    "Model {} has state {}. Skipping model match!",
+                    uuid, model.state
+                );
+                continue;
+            }
+
+            let matches = match self.match_model(&uuid, threshold.clone(), with_meta, None, None) {
+                Ok(matches) => matches,
+                Err(e) => {
+                    warn!("Failed to match model {}: {}", uuid, e);
+                    continue;
+                }
+            };
+
+            let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
+
+            for m in matches.inner.iter() {
+                let is_exclusive_valid =
+                    !exclusive || folders.get_folder_by_id(&m.model.folder_id).is_some();
+                let is_name_different = model.name != m.model.name;
+                let is_type_different = model.is_assembly != m.model.is_assembly;
+                let is_not_duplicate = !simple_duplicate_matches.contains(&m);
+
+                if is_exclusive_valid
+                    && (is_name_different || is_type_different)
+                    && is_not_duplicate
+                {
+                    let mut m1 = m.clone();
+                    m1.comparison_url = Some(format!(
+                        "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
+                        self.client.tenant, uuid, m1.model.uuid
+                    ));
+                    m1.model_one_thumbnail = m.model_one_thumbnail.clone();
+                    m1.model_two_thumbnail = m.model_two_thumbnail.clone();
+                    simple_duplicate_matches.push(m1);
+                }
+            }
+
+            if !simple_duplicate_matches.is_empty() {
+                let item = ModelMatchReportItem {
+                    uuid: uuid.to_string(),
+                    name: model.name.clone(),
+                    folder_id: model.folder_id.clone(),
+                    matches: simple_duplicate_matches,
+                };
+                simple_match_report.inner.insert(uuid.to_string(), item);
             }
         }
 
