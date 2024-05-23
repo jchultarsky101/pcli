@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.21
+
+* Added "upgrade" command to automatically update the executable when new version is available
+
 ## v1.8.20
 
 * Fixed a bug in the match report which was causing model matches not to be included if an assembly and a model have the same name

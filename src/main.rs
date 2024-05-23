@@ -22,6 +22,7 @@ use sysinfo::{
     System, 
     SystemExt
 };
+use self_update::cargo_crate_version;
 
 const PHYSNA_WHITELIST: [&str; 17] = ["3ds", "catpart", "catproduct", "glb", "igs", "iges", "prt", "x_b", "x_t", "asm", "par", "sldasm", "sldprt", "step", "stp", "stl", "ojb"];
 const BANNER: &'static str = r#"
@@ -62,6 +63,10 @@ fn main() {
         .subcommand(
             Command::new("sysinfo")
                 .about("Prints details of the current host system"),
+        )
+        .subcommand(
+            Command::new("upgrade")
+                .about("Checks if a new version of PCLI is available and upgrades it to the latest")
         )
         .subcommand(
             Command::new("token")
@@ -741,6 +746,15 @@ fn main() {
             println!("System OS version:       {:?}", sys.os_version().unwrap_or("unknown".to_string()));
             println!("NB CPUs: {}", sys.cpus().len());
         },
+        Some(("upgrade", _)) => {
+            match update() {
+                Ok(()) => (),
+                Err(e) => {
+                    eprint!("{}", e.to_string());
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        }
         Some(("token", _sub_matches)) => {
             let token = token::get_token_for_tenant(&configuration, &tenant);
             match token {
@@ -1500,3 +1514,16 @@ fn main() {
     ::std::process::exit(exitcode::OK);
 }
 
+fn update() -> Result<(), Box<dyn std::error::Error>> {
+    let status = self_update::backends::github::Update::configure()
+        .repo_owner("jchultarsky101")
+        .repo_name("pcli")
+        .bin_name("pcli")
+        .show_download_progress(true)
+        .current_version(cargo_crate_version!())
+        .build()?
+        .update()?;
+
+    println!("Update status: `{}`!", status.version());
+    Ok(())
+}
