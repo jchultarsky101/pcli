@@ -1517,8 +1517,8 @@ fn main() {
 fn update() -> Result<(), Box<dyn std::error::Error>> {
     let status = self_update::backends::github::Update::configure()
         .repo_owner("jchultarsky101")
-        .repo_name("updater")
-        .bin_name("updater")
+        .repo_name("pcli")
+        .bin_name("pcli")
         .show_download_progress(true)
         .current_version(cargo_crate_version!())
         .build()?
