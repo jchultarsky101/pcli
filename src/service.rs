@@ -638,7 +638,10 @@ impl Api {
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
         for model in models {
-            if force_fix && !model.state.eq_ignore_ascii_case("FINISHED") {
+            if force_fix
+                && !model.state.eq_ignore_ascii_case("FINISHED")
+                && !model.state.eq_ignore_ascii_case("NO 3D DATA")
+            {
                 if !model.is_assembly || !ignore_assemblies {
                     let _ = self.reprocess_model(&model.uuid);
                 }
