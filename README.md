@@ -108,6 +108,7 @@
     <li>
       <a href="#advanced-use">Advanced use</a>
       <ol>
+        <li><a href="#upgrade">Upgrading the PCLI version</a></li>
         <li><a href="#pipes">Using pipes</a></li>
         <li><a href="#nushell">Using NuShell</a></li>
       </ol>
@@ -226,6 +227,8 @@ Usage: pcli [OPTIONS] --tenant <tenant> <COMMAND>
 Commands:
   sysinfo
           Prints details of the current host system
+  upgrade
+          Checks if a new version of PCLI is available and upgrades it to the latest
   token
           Obtains security access token from the provider
   invalidate
@@ -281,7 +284,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=pre-prod-enterprise]
+          [env: PCLI_TENANT=ford]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -1051,13 +1054,14 @@ Matches all models in a folder to other models
 Usage: pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold>
 
 Options:
-  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5'
-  -d, --folder [<folder>...]   Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant
-  -s, --search <search>        Search clause to further filter output (optional: e.g. a model name)
-  -e, --exclusive              If specified, the output will include only models that belong to the input folder
-  -m, --meta                   Enhance output with model's metadata
-  -h, --help                   Print help
-  -V, --version                Print version
+  -t, --threshold <threshold>         Match threshold percentage (e.g. '96.5'
+  -d, --folder [<folder>...]          Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+  -s, --search <search>               Search clause to further filter output (optional: e.g. a model name)
+  -e, --exclusive                     If specified, the output will include only models that belong to the input folder
+  -m, --meta                          Enhance output with model's metadata
+      --meta-filter [<KEY=VALUE>...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+  -h, --help                          Print help
+  -V, --version                       Print version
 ```
 
 As with the **models** command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your serches as much as possible for better performance.
@@ -1072,6 +1076,18 @@ pcli --tenant="mytenant" --format="csv" --pretty match-folder --folder="myfolder
 ```
 
 You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.
+
+If you specify "--meta", you have the option to also specify "--meta-filter". For a value of this argument, you need to provie a name/value pair. You can have multiple occurrences of "--meta-filter" to add as many name/value pairs as required.
+
+Example:
+
+```bash
+pcli match-folder --threshold=0.9 --folder="test" --meta --meta-filter="Keyword=Test"
+```
+
+The effect of the above is that PCLI will read the metadata for all models and only match those models that contain a property with name "Keyword" and value of "Test". All other matches will be ignored.
+
+This filter may be very helpful when you have large library of models across many folders and the only way to reduce the list is by specific metadata property(ies).
 
 ## <a id="match-scan"></a>Matching scanned model
 
@@ -1345,6 +1361,23 @@ Finally, CLI commands normaly return exit code of zero in case of successful ope
 the same rule. You can check the process exit code from PCLI to determine if the operation was successful or not.
 
 # <a id="advanced-use"></a>Advanced use
+
+## <a id="upgrade"></a>Upgrading the PCLI version
+
+You can automatically upgrade PCLI to the latest available version via the built-in "upgrade" command.
+
+```bash
+pcli help upgrade
+```
+```
+Checks if a new version of PCLI is available and upgrades it to the latest
+
+Usage: pcli --tenant <tenant> upgrade
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print versio
+
 
 ## <a id="pipes"></a>Using pipes
 

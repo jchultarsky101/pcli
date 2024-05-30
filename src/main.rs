@@ -311,7 +311,16 @@ fn main() {
                         .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
-                ),
+                )
+                .arg(
+                    Arg::new("meta-filter")
+                        .long("meta-filter")
+                        .value_name("KEY=VALUE")
+                        .help("List of name/value pairs that will be used as a filter against the model's metadata properties")
+                        .num_args(0..)
+                        .requires("meta")
+                        .required(false)
+                ),    
         )        
         .subcommand(
             Command::new("label-folder")
@@ -572,6 +581,15 @@ fn main() {
                         .long("meta")
                         .num_args(0)
                         .help("Enhance output with model's metadata")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("meta-filter")
+                        .long("meta-filter")
+                        .value_name("KEY=VALUE")
+                        .help("List of name/value pairs that will be used as a filter against the model's metadata properties")
+                        .num_args(0..)
+                        .requires("meta")
                         .required(false)
                 ),    
         )
@@ -1030,12 +1048,35 @@ fn main() {
             let with_meta = sub_matches.get_flag("meta");
             let search = sub_matches.get_one::<String>("search");
             let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
+            
+            let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
+                Some(meta_filter) => {
+                    debug!("Using metadata filter...");
+                    let mut map = HashMap::new();
+                    for pair in meta_filter {
+                        let parts: Vec<&str> = pair.split('=').collect();
+                        if parts.len() == 2 {
+                            let key = parts[0].to_string();
+                            let value = parts[1].to_string();
+
+                            debug!("Filter: {}/{}", &key, &value);
+                            map.insert(key, value);
+                        } else {
+                            error!("Invalid key-value pair: {}", pair);
+                            ::std::process::exit(exitcode::USAGE);
+                        }
+                    }
+
+                    Some(map)
+                }
+                None => None,
+            };
 
             match api.list_all_models(folders.clone(), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta, meta_filter) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
                             match output {
@@ -1112,7 +1153,7 @@ fn main() {
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true, None) {
                         Ok(report) => {
 
                             let existing_folders = match api.get_list_of_folders(None) {
@@ -1447,8 +1488,25 @@ fn main() {
 
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
             let with_meta = sub_matches.get_flag("meta");
+            let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
+                Some(meta_filter) => {
+                    let mut map = HashMap::new();
+                    for pair in meta_filter {
+                        let parts: Vec<&str> = pair.split('=').collect();
+                        if parts.len() == 2 {
+                            map.insert(parts[0].to_string(), parts[1].to_string());
+                        } else {
+                            error!("Invalid key-value pair: {}", pair);
+                            ::std::process::exit(exitcode::USAGE);
+                        }
+                    }
 
-            match api.generate_model_match_report(uuids, threshold, with_meta) {
+                    Some(map)
+                }
+                None => None,
+            };
+
+            match api.generate_model_match_report(uuids, threshold, with_meta, meta_filter) {
                 Ok(report) => {
 
                     let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
