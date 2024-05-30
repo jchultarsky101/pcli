@@ -1376,8 +1376,12 @@ Usage: pcli --tenant <tenant> upgrade
 
 Options:
   -h, --help     Print help
-  -V, --version  Print versio
+  -V, --version  Print version
+```
 
+You will be promted to confirm and if you do, the latest version of the binary for your platform will be automatically downloaded and installed.
+
+You can always manually install any version of PCLI from the GitHub repository.
 
 ## <a id="pipes"></a>Using pipes
 
