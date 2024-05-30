@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.23
+
+* Enhanced the 'match-folder' command by adding --meta-filter argument
+
+## v1.8.22
+
+* Excluded models with "No 3D Data" status from automatic reprocessing
+
 ## v1.8.21
 
 * Added "upgrade" command to automatically update the executable when new version is available

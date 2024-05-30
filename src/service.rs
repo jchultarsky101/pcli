@@ -248,7 +248,7 @@ impl Api {
             if result.page_data.total > 0 {
                 let matches = result.matches;
                 if !matches.is_empty() {
-                    debug!("Reading the list of properties for model {}...", uuid);
+                    trace!("Reading the list of properties for model {}...", uuid);
                     let properties = match classification {
                         Some(_) => Some(self.client.get_list_of_properties()?),
                         None => None,
@@ -284,7 +284,7 @@ impl Api {
                                     String::from(tag.unwrap()),
                                 );
 
-                                debug!(
+                                trace!(
                                     "Setting property {} to value of {} for model {}",
                                     classification,
                                     tag.unwrap(),
@@ -333,7 +333,7 @@ impl Api {
             if result.page_data.total > 0 {
                 let matches = result.matches;
                 if !matches.is_empty() {
-                    debug!("Reading the list of properties for model {}...", uuid);
+                    trace!("Reading the list of properties for model {}...", uuid);
                     let properties = match classification {
                         Some(_) => Some(self.client.get_list_of_properties()?),
                         None => None,
@@ -368,7 +368,7 @@ impl Api {
                                     String::from(tag.unwrap()),
                                 );
 
-                                debug!(
+                                trace!(
                                     "Setting property {} to value of {} for model {}",
                                     classification,
                                     tag.unwrap(),
@@ -495,7 +495,10 @@ impl Api {
         folders: HashSet<String>,
         exclusive: bool,
         with_meta: bool,
+        metadata_filter: Option<HashMap<String, String>>,
     ) -> Result<SimpleDuplicatesMatchReport, ApiError> {
+        trace!("Generating simple match report...");
+
         let mut simple_match_report = SimpleDuplicatesMatchReport::new();
 
         // Read the list of folders currently existing in the tenant
@@ -519,6 +522,35 @@ impl Api {
                     uuid, model.state
                 );
                 continue;
+            }
+
+            debug!("Checking for metadata filter...");
+            match &metadata_filter {
+                Some(filter) => {
+                    debug!("Applying metadata filter...");
+                    match model.get_metadata_as_properties() {
+                        Some(metadata) => {
+                            let all_exist = filter.iter().all(|(k, v)| match metadata.get(k) {
+                                Some(value) => value == v,
+                                None => false,
+                            });
+
+                            if !all_exist {
+                                debug!("Failed metadata filter condition(s)");
+                                continue;
+                            } else {
+                                debug!("Filter matches the metadata")
+                            }
+                        }
+                        None => {
+                            debug!("There is no metadata to be compared to the filter");
+                            continue;
+                        }
+                    }
+                }
+                None => {
+                    trace!("No metadata filter specified");
+                }
             }
 
             let matches = match self.match_model(&uuid, threshold.clone(), with_meta, None, None) {
@@ -572,6 +604,7 @@ impl Api {
         uuids: Vec<Uuid>,
         threshold: f64,
         with_meta: bool,
+        meta_filter: Option<HashMap<String, String>>,
     ) -> Result<ModelMatchReport, ApiError> {
         let mut flat_bom = FlatBom::empty();
         let mut roots: HashMap<Uuid, ModelAssemblyTree> = HashMap::new();
@@ -602,6 +635,7 @@ impl Api {
             HashSet::new(),
             false,
             with_meta,
+            meta_filter,
         )?;
 
         // Create the DAG
@@ -638,7 +672,10 @@ impl Api {
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
         for model in models {
-            if force_fix && !model.state.eq_ignore_ascii_case("FINISHED") {
+            if force_fix
+                && !model.state.eq_ignore_ascii_case("FINISHED")
+                && !model.state.eq_ignore_ascii_case("NO 3D DATA")
+            {
                 if !model.is_assembly || !ignore_assemblies {
                     let _ = self.reprocess_model(&model.uuid);
                 }

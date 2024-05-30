@@ -266,6 +266,21 @@ pub struct Model {
     pub metadata: Option<Vec<ModelMetadataItem>>,
 }
 
+impl Model {
+    pub fn get_metadata_as_properties(&self) -> Option<HashMap<String, String>> {
+        match &self.metadata {
+            Some(metadata) => {
+                let mut properties: HashMap<String, String> = HashMap::new();
+                for property in metadata.iter() {
+                    properties.insert(property.name.to_owned(), property.value.to_owned());
+                }
+                Some(properties)
+            }
+            None => None,
+        }
+    }
+}
+
 use serde::de::Deserializer;
 fn deserialize_with_nullable_name<'de, D>(d: D) -> Result<String, D::Error>
 where
