@@ -96,7 +96,7 @@
         <li><a href="#upload-meta">Uploading metadata</a></li>
         <li><a href="#read-asm">Reading the assembly structure</a></li>
         <li><a href="#match-model">Matching models to other models</a></li>
-        <li><a href="#match-folders">Matching entire folders of models</a></li>
+        <li><a href="#match-folder">Matching entire folders of models</a></li>
         <li><a href="#match-scan">Matching scanned model</a></li>
         <li><a href="#match-report">Generating a match report</a></li>
         <li><a href="#environment-status">Tenant environment status</a></li>
