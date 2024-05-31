@@ -1388,6 +1388,10 @@ you can filter down the list of models further by piping the output (formatted a
 pcli -t="mytenant" models --folders="myfolder" | jq '.[] | select(.id=="96049555-b55a-45b1-bdcb-2555cb0012fe")'
 ```
 
+You will be prompted to confirm. If you do, the latest version for your platform will be automatically downloaded and installed.
+
+## <a id="pipes"></a> Pipes
+
 JQ has many useful features that could help you manipulate the output as needed.
 
 You can pipe the output to a file on your disk for post-processing of the output:
