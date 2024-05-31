@@ -1047,7 +1047,20 @@ fn main() {
             let exclusive = sub_matches.get_flag("exclusive");
             let with_meta = sub_matches.get_flag("meta");
             let search = sub_matches.get_one::<String>("search");
-            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
+
+            let folders = sub_matches.get_many::<String>("folder");            
+            let folders: HashSet<String> = match folders {
+                Some(folders) => folders.cloned().collect(),
+                None => {
+                    match api.get_list_of_folders(None) {
+                        Ok(folders) => folders.into_iter().map(|f| f.name).collect(),
+                        Err(e) => {
+                            eprint!("Error: {}", e.to_string());
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+                }
+            };
             
             let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
                 Some(meta_filter) => {
@@ -1062,7 +1075,7 @@ fn main() {
                             debug!("Filter: {}/{}", &key, &value);
                             map.insert(key, value);
                         } else {
-                            error!("Invalid key-value pair: {}", pair);
+                            eprint!("Error: Invalid key-value pair: {}", pair);
                             ::std::process::exit(exitcode::USAGE);
                         }
                     }
