@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.25
+
+* Fixed a bug in match-folder
+
 ## v1.8.24
 
 * Enhanced the 'match-folder' command. The --folder argument is now optional. If not folder names are provided, it will match all models in all folders in the tenant
