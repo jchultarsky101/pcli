@@ -181,20 +181,25 @@ impl Api {
     /// meta - if true, the metadata is included in the response
     pub fn list_all_models(
         &self,
-        folders: HashSet<String>,
+        folders: Option<HashSet<String>>,
         search: Option<&String>,
     ) -> Result<ListOfModels, ApiError> {
-        trace!("Listing all models for folders {:?}...", folders);
+        trace!("Listing all models...");
 
-        let folder_ids: HashSet<u32> = if folders.len() > 0 {
-            let existing_folders = self.get_list_of_folders(None)?;
+        let folder_ids: Option<HashSet<u32>> = match folders {
+            Some(folders) => {
+                if folders.len() > 0 {
+                    let existing_folders = self.get_list_of_folders(None)?;
 
-            let folders = self.validate_folders(&existing_folders, &folders)?;
+                    let folders = self.validate_folders(&existing_folders, &folders)?;
 
-            let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
-            folder_ids
-        } else {
-            HashSet::new()
+                    let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
+                    Some(folder_ids)
+                } else {
+                    None
+                }
+            }
+            None => None,
         };
 
         let mut list_of_models: Vec<Model> = Vec::new();
@@ -492,7 +497,7 @@ impl Api {
         &mut self,
         uuids: Vec<Uuid>,
         threshold: &f64,
-        folders: HashSet<String>,
+        folders: Option<HashSet<String>>,
         exclusive: bool,
         with_meta: bool,
         metadata_filter: Option<HashMap<String, String>>,
@@ -505,7 +510,10 @@ impl Api {
         let existing_folders = self.get_list_of_folders(None)?;
 
         // Validate the folders against the existing folders
-        let folders = self.validate_folders(&existing_folders, &folders)?;
+        let folders = match folders {
+            Some(folders) => self.validate_folders(&existing_folders, &folders)?,
+            None => existing_folders.clone(),
+        };
 
         for uuid in uuids {
             let model = match self.get_model(&uuid, true, with_meta) {
@@ -632,7 +640,7 @@ impl Api {
         let simple_match_report = self.generate_simple_model_match_report(
             target_uuids,
             &threshold,
-            HashSet::new(),
+            None,
             false,
             with_meta,
             meta_filter,
@@ -667,7 +675,7 @@ impl Api {
         let all_folders: HashMap<u32, Folder> =
             all_folders.into_iter().map(|f| (f.id, f)).collect();
 
-        let models = self.list_all_models(folders, None)?;
+        let models = self.list_all_models(Some(folders), None)?;
         let models = models.models.to_owned();
         let mut result: HashMap<u64, ModelStatusRecord> = HashMap::new();
 
