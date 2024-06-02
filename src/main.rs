@@ -960,7 +960,7 @@ fn main() {
             };
             trace!("List of folders: {:?}", folders);
 
-            match api.list_all_models(folders, search) {
+            match api.list_all_models(Some(folders), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     match format::format_list_of_models(&models, &output_format, pretty, color) {
@@ -1049,17 +1049,9 @@ fn main() {
             let search = sub_matches.get_one::<String>("search");
 
             let folders = sub_matches.get_many::<String>("folder");            
-            let folders: HashSet<String> = match folders {
-                Some(folders) => folders.cloned().collect(),
-                None => {
-                    match api.get_list_of_folders(None) {
-                        Ok(folders) => folders.into_iter().map(|f| f.name).collect(),
-                        Err(e) => {
-                            eprint!("Error: {}", e.to_string());
-                            ::std::process::exit(exitcode::DATAERR);
-                        }
-                    }
-                }
+            let folders: Option<HashSet<String>> = match folders {
+                Some(folders) => Some(folders.cloned().collect()),
+                None => None,
             };
             
             let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
@@ -1121,7 +1113,7 @@ fn main() {
 
             // delete all models in the folders if forced
             if force {
-                match api.list_all_models(folders.clone(), None) {
+                match api.list_all_models(Some(folders.clone()), None) {
                     Ok(physna_models) => {
                         let models = model::ListOfModels::from(physna_models);
                         let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
@@ -1159,14 +1151,14 @@ fn main() {
             let search = sub_matches.get_one::<String>("search");
             let mut model_meta_cache: HashMap<Uuid, ModelMetadata> = HashMap::new();
 
-            match api.list_all_models(folders.clone(), search) {
+            match api.list_all_models(Some(folders.clone()), search) {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, folders.clone(), false, true, None) {
+                    match api.generate_simple_model_match_report(uuids, threshold, Some(folders.clone()), false, true, None) {
                         Ok(report) => {
 
                             let existing_folders = match api.get_list_of_folders(None) {

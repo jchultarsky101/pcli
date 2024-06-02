@@ -905,7 +905,7 @@ impl ApiClient {
     /// page - the current page number
     pub fn get_list_of_models_page(
         &self,
-        folders: HashSet<u32>,
+        folders: Option<HashSet<u32>>,
         search: Option<&String>,
         per_page: u32,
         page: u32,
@@ -914,12 +914,17 @@ impl ApiClient {
 
         let mut query_parameters: Vec<(String, String)> = Vec::new();
 
-        if folders.len() > 0 {
-            let filter: Vec<String> = folders.iter().map(|f| f.to_string()).collect();
-            let filter_operations = format!("folderId(in({}))", filter.join(","));
+        match folders {
+            Some(folders) => {
+                if folders.len() > 0 {
+                    let filter: Vec<String> = folders.iter().map(|f| f.to_string()).collect();
+                    let filter_operations = format!("folderId(in({}))", filter.join(","));
 
-            log::trace!("Filter Operations: {}", filter_operations.to_owned());
-            query_parameters.push(("filter".to_string(), filter_operations));
+                    log::trace!("Filter Operations: {}", filter_operations.to_owned());
+                    query_parameters.push(("filter".to_string(), filter_operations));
+                }
+            }
+            None => (),
         }
 
         if search.is_some() {
