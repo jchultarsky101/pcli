@@ -1330,6 +1330,7 @@ impl ApiClient {
         let builder = self
             .client
             .request(reqwest::Method::GET, url)
+            .query(&query_parameters)
             .timeout(Duration::from_secs(180))
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", self.tenant.to_owned());

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.8.26
+
+* Fixed a bug in image-search
+
 ## v1.8.25
 
 * Fixed a bug in match-folder
