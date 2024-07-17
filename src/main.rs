@@ -17,14 +17,14 @@ use log::{
     error
 };
 use petgraph::dot::Dot;
-use std::fs;
+use std::fs::{self, File};
 use sysinfo::{
     System, 
     SystemExt
 };
 use self_update::cargo_crate_version;
 
-const PHYSNA_WHITELIST: [&str; 17] = ["3ds", "catpart", "catproduct", "glb", "igs", "iges", "prt", "x_b", "x_t", "asm", "par", "sldasm", "sldprt", "step", "stp", "stl", "ojb"];
+const PHYSNA_WHITELIST: [&str; 18] = ["3ds", "catpart", "catproduct", "glb", "igs", "iges", "prt", "x_b", "x_t", "asm", "par", "sldasm", "sldprt", "step", "stp", "stl", "ojb", "jt"];
 const BANNER: &'static str = r#"
 
 ╔═╗╔═╗╦  ╦
@@ -374,6 +374,44 @@ fn main() {
                         .num_args(0)
                         .help("If specified, the output will include only models that belong to the input folder")
                         .required(false)
+                ),
+        )
+        .subcommand(
+            Command::new("label-inference")
+                .about("Infere metadata values for a model based on metadata values of other geometrically similar models")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .num_args(1)
+                        .help("The model UUID")
+                        .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
+                )
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. '96.5')")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+                .arg(
+                    Arg::new("meta-key")
+                        .short('k')
+                        .long("key")
+                        .num_args(1..10)
+                        .help("Optional: Metadata property key subject to inference (you can provide up to 10 keys)")
+                        .required(false)
+                        .value_parser(clap::value_parser!(String))
+                )
+                .arg(
+                    Arg::new("apply")
+                        .long("apply")
+                        .num_args(0)
+                        .required(false)
+                        .help("Optional: When this flag is specified, the infered values will be automatically applied to the model")
                 ),
         )
         .subcommand(
@@ -926,7 +964,15 @@ fn main() {
         Some(("upload-model-meta", sub_matches)) => {
             let input_file = sub_matches.get_one::<String>("input").unwrap();
             let clean = sub_matches.get_flag("clean");
-            match api.upload_model_metadata(&input_file, clean) {
+            let file = match File::open(input_file) {
+                Ok(file) => file,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::IOERR);
+                }
+            };
+            
+            match api.upload_model_metadata(&file, clean) {
                 Ok(_) => {
                     ::std::process::exit(exitcode::OK);
                 },
@@ -1276,9 +1322,36 @@ fn main() {
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }
-            
-            
         },
+        Some(("label-inference", sub_matches)) => {
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let keys = sub_matches.get_many::<String>("meta-key").map(|iter| iter.cloned().collect::<Vec<String>>());
+            let apply = sub_matches.get_flag("apply");
+
+            match api.label_inference(uuid, *threshold, &keys, apply) {
+                Ok(output) => {
+                    let output = format::format_list_of_matched_properties(&output, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                    
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+
+            
+        }
         Some(("reprocess", sub_matches)) => {
             let uuids: Vec<Uuid> = sub_matches.get_many::<Uuid>("uuid").unwrap().copied().collect();
             trace!("Reprocess arguments: {:?}", uuids);
