@@ -1563,7 +1563,7 @@ dependencies = [
 
 [[package]]
 name = "pcli"
-version = "1.8.26"
+version = "1.9.0"
 dependencies = [
  "base64 0.21.0",
  "clap",
@@ -1597,6 +1597,7 @@ dependencies = [
  "sha2",
  "substring",
  "sysinfo",
+ "tempfile",
  "thiserror",
  "tokio",
  "unicase",

@@ -1,8 +1,10 @@
 use crate::client::{ApiClient, AssemblyTree, ClientError};
+use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
-    EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfModelMatches, ListOfModels,
-    Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
-    ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfMatchedMetadataItems,
+    ListOfModelMatches, ListOfModels, MatchedMetadataItem, Model, ModelAssemblyTree, ModelMatch,
+    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use log::debug;
@@ -14,8 +16,10 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
+use std::io::{Seek, SeekFrom, Write};
 use std::path::PathBuf;
 use std::rc::Rc;
+use tempfile::tempfile;
 use thiserror::Error;
 use unicase::UniCase;
 use url::Url;
@@ -33,6 +37,8 @@ pub enum ApiError {
     CsvError(#[from] csv::Error),
     #[error("Failed to read data: {0}")]
     FailedToRead(String),
+    #[error("Data format error: {0}")]
+    FormatError(#[from] crate::format::FormatError),
 }
 
 pub struct Api {
@@ -739,7 +745,7 @@ impl Api {
         Ok(self.client.get_list_of_properties()?)
     }
 
-    pub fn upload_model_metadata(&self, input_file: &str, clean: bool) -> Result<(), ApiError> {
+    pub fn upload_model_metadata(&self, input_file: &File, clean: bool) -> Result<(), ApiError> {
         // Get all properties and cache them. The Physna API V2 does not allow me to get property by name
         let properties = self.list_all_properties()?;
         let all_props = Rc::new(properties.properties.clone());
@@ -751,7 +757,7 @@ impl Api {
 
         let mut uuids: Vec<Uuid> = Vec::new();
 
-        let mut rdr = csv::Reader::from_reader(File::open(input_file)?);
+        let mut rdr = csv::Reader::from_reader(input_file);
         for record in rdr.records() {
             let (id, property) = match record {
                 Ok(record) => {
@@ -788,6 +794,12 @@ impl Api {
                 self.client
                     .delete_model_property(&property.model_uuid, &id)?;
             } else {
+                trace!(
+                    "Set property '{}'='{}' for model {}",
+                    &property.name.to_owned(),
+                    &property.value.to_owned(),
+                    &property.model_uuid
+                );
                 self.client
                     .put_model_property(&property.model_uuid, &id, &property.to_item())?;
             }
@@ -897,5 +909,81 @@ impl Api {
             .get_image_search_maches(id, search, filter, max_results, 100)?;
 
         Ok(matches)
+    }
+
+    pub fn label_inference(
+        &self,
+        uuid: &Uuid,
+        threshold: f64, // Changed from &f64 to f64 for simplicity
+        keys: &Option<Vec<String>>,
+        apply: bool,
+    ) -> Result<ListOfMatchedMetadataItems, ApiError> {
+        let matches = self.match_model(uuid, threshold, true, None, None)?;
+
+        // Sort matches by score in descending order (largest percentage first)
+        let mut matches = matches.inner;
+        matches.sort_by(|a, b| {
+            b.percentage
+                .partial_cmp(&a.percentage)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        let mut props: HashMap<String, MatchedMetadataItem> = HashMap::new();
+
+        // populate with the original values, so that they do not get overrided
+        match self.get_model_metadata(uuid)? {
+            Some(original_metadata) => {
+                for p in original_metadata.properties.iter() {
+                    let name = p.to_owned().name;
+                    props.insert(
+                        name.to_owned(),
+                        MatchedMetadataItem::new(
+                            uuid.to_owned(),
+                            name.to_owned(),
+                            p.value.to_owned(),
+                            1.0,
+                        ),
+                    );
+                }
+            }
+            None => (),
+        };
+
+        for m in matches.into_iter() {
+            let score = m.percentage;
+            if let Some(ref metadata) = m.model.metadata {
+                for p in metadata {
+                    let name = &p.name;
+                    if keys.as_ref().map_or(true, |k| k.contains(name)) {
+                        if props.get(name).is_none() {
+                            let property = MatchedMetadataItem::new(
+                                uuid.to_owned(),
+                                name.clone(),
+                                p.value.clone(),
+                                score,
+                            );
+                            props.insert(name.clone(), property);
+                        }
+                    }
+                }
+            }
+        }
+
+        let result = ListOfMatchedMetadataItems::new(props.into_values().collect());
+
+        if apply {
+            trace!("Applying infered metadata...");
+
+            // add the infered properties automatically
+            let mut file = tempfile()?;
+            let output = format_list_of_matched_properties(&result, &Format::Csv, true, None)?;
+            file.write_all(output.as_bytes())?;
+            file.flush()?;
+            file.seek(SeekFrom::Start(0))?;
+
+            self.upload_model_metadata(&file, false)?;
+        }
+
+        Ok(result)
     }
 }

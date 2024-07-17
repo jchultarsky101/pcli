@@ -1,6 +1,6 @@
 [package]
 name = "pcli"
-version = "1.8.26"
+version = "1.9.0"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "CLI client utility to the Physna public API/V2"
@@ -51,6 +51,7 @@ serde_with = "2.1.0"
 ntapi = "0.4.1"
 itertools = "0.12.1"
 self_update = { version = "0.40.0", features = ["archive-tar", "archive-zip", "tar", "zip", "compression-flate2", "compression-zip-bzip2", "compression-zip-deflate"] }
+tempfile = "3.10.1"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

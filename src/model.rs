@@ -1554,3 +1554,81 @@ impl ToCsv for ListOfGeoClassifierPredictions {
         Ok(result)
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct MatchedMetadataItem {
+    #[serde(rename = "MODEL_UUID")]
+    pub uuid: Uuid,
+    #[serde(rename = "NAME")]
+    pub name: String,
+    #[serde(rename = "VALUE")]
+    pub value: String,
+    #[serde(rename = "MATCH_PERCENT")]
+    pub score: f64,
+}
+
+impl MatchedMetadataItem {
+    pub fn new(uuid: Uuid, name: String, value: String, score: f64) -> Self {
+        Self {
+            uuid,
+            name,
+            value,
+            score,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ListOfMatchedMetadataItems {
+    items: Vec<MatchedMetadataItem>,
+}
+
+impl ListOfMatchedMetadataItems {
+    pub fn new(items: Vec<MatchedMetadataItem>) -> Self {
+        Self { items }
+    }
+}
+
+impl ToJson for ListOfMatchedMetadataItems {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
+    }
+}
+
+impl ToCsv for ListOfMatchedMetadataItems {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec!["MODEL_UUID", "NAME", "VALUE", "MATCH_SCORE"];
+            writer.write_record(&columns)?;
+        }
+
+        for item in &self.items {
+            let uuid = item.uuid.to_string();
+            let name = item.name.to_owned();
+            let value = item.value.to_owned();
+            let score = item.score.to_string();
+
+            let mut values: Vec<String> = Vec::new();
+            values.push(uuid);
+            values.push(name);
+            values.push(value);
+            values.push(score);
+
+            writer.write_record(&values)?;
+        }
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
