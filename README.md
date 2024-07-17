@@ -101,7 +101,8 @@
         <li><a href="#match-report">Generating a match report</a></li>
         <li><a href="#environment-status">Tenant environment status</a></li>
         <li><a href="#2D-to-3D">Searching for 3D models by 2D image</a></li>
-        <li><a href="#model-label">Model labeling</a></li>
+        <li><a href="#label-folder">Model labeling</a></li>
+        <li><a href="#label-inference">Labeling of models by inference</a></li>
       </ol>
     </li>
     <li><a href="#errors">Handling errors</a></li>
@@ -253,6 +254,8 @@ Commands:
           Matches all models in a folder to other models
   label-folder
           Labels models in a folder based on KNN algorithm and geometric match score as distance
+  label-inference
+          Infere metadata values for a model based on metadata values of other geometrically similar models
   delete-folder
           Deletes a specific folder
   assembly-bom
@@ -284,7 +287,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=ford]
+          [env: PCLI_TENANT=delta]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -1270,7 +1273,7 @@ pcli --tenant="mytenant" --format=csv --pretty image-search --input my_picture_t
 Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that 
 are repeating in the outputs.
 
-## <a id="model-label"></a>Model labeling
+## <a id="label-folder"></a>Model labeling
 
 The PCLI client provides its own mechanism for label propagation, which is form of object classification. 
 This is implemented in the **label-folder** command. 
@@ -1344,6 +1347,75 @@ folder will be used for matching.
 In other words, the label values may come from any folder in your tenant unless you specify --exclusive.
 
 For the initial labeling of models, you can use the "upload-model-meta" command.
+
+Here's a refined version of your documentation for clarity and correctness:
+
+## <a id="label-inference"></a>Labeling Models by Inference
+
+The command `label-inference` enables users to automatically derive metadata properties from geometrically similar models, though it operates distinctively.
+
+You provide the UUID of a single model as an input argument. The command then attempts to find all matching models that meet or exceed a specified threshold (also provided as input). It lists the distinct properties available, sorted by the highest matching scores first, and outputs these inferred properties in a format compatible with the `upload-model-meta` command.
+
+This functionality allows users to infer property values for a model lacking them from those that are geometrically similar.
+
+For example, if model "A" is 99.5% similar to model "B", and model "B" has the property Material = Steel, then it is logical to infer that model "A" should also have the same property with the same value.
+
+When used judiciously, this command can be incredibly useful for processing large datasets.
+
+### Command Help
+
+```bash
+pcli help label-inference
+```
+
+### Usage
+
+```plaintext
+Infer metadata values for a model based on metadata values of other geometrically similar models.
+
+Usage: pcli --tenant <tenant> label-inference [OPTIONS] --uuid <uuid> --threshold <threshold>
+
+Options:
+  -u, --uuid <uuid>              The model UUID.
+  -t, --threshold <threshold>    Match threshold percentage (e.g., '96.5').
+  -k, --key <meta-key>...        Optional: Metadata property key subject to inference (up to 10 keys can be specified).
+      --apply                    Optional: Automatically applies the inferred values to the model. Existing values are not overridden for safety.
+  -h, --help                     Print help information.
+  -V, --version                  Print version information.
+```
+
+### Input Arguments
+
+- **"uuid"**: The reference model UUID.
+- **"threshold"**: The confidence threshold value.
+- **"key"**: This optional argument allows you to specify explicitly which property names are to be considered for inference. Properties not specified are ignored.
+- **"apply"**: This optional flag, when specified, automatically sets the inferred properties in the reference model. Existing property values are not overridden to maintain data integrity.
+
+### Example
+
+Consider inferring potential metadata properties for a model with UUID `d915cc6d-5daa-4597-8f75-3d786b671790`, based on models that are at least 88% geometrically similar:
+
+```bash
+pcli --format=csv --pretty label-inference --uuid=d915cc6d-5daa-4597-8f75-3d786b671790 --threshold=0.88
+```
+
+Output:
+
+```plaintext
+MODEL_UUID,NAME,VALUE,MATCH_SCORE
+d915cc6d-5daa-4597-8f75-3d786b671790,Material,PLA,0.9430817258938444
+d915cc6d-5daa-4597-8f75-3d786b671790,3D Printable,Yes,0.8887639114858723
+```
+
+According to the output, the following properties were inferred from other models:
+- Material: "PLA"
+- 3D Printable: "Yes"
+
+If multiple matches occur with the same property name but varying values, the value from the match with the highest percentage is used.
+
+Users can save the output to a CSV file and manually edit it if necessary. Afterwards, they can use the `upload-model-meta` command to upload the same file and persist the changes.
+
+If you trust the output, adding the `--apply` flag will automatically apply the changes to the model.
 
 # <a id="errors"></a>Handling erors
 

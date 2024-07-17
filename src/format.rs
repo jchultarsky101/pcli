@@ -1,7 +1,7 @@
 use crate::model::{
     EnvironmentStatusReport, Folder, ListOfFolders, ListOfGeoClassifierPredictions,
-    ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree, ModelMetadata, PropertyCollection,
-    SimpleDuplicatesMatchReport, ToCsv, ToJson,
+    ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree,
+    ModelMetadata, PropertyCollection, SimpleDuplicatesMatchReport, ToCsv, ToJson,
 };
 use colored::*;
 use ptree::print_tree;
@@ -222,6 +222,19 @@ pub fn format_environment_status_report(
     match format {
         Format::Json => Ok(color_string(stats.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(stats.to_csv(pretty)?.as_str(), color)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
+    }
+}
+
+pub fn format_list_of_matched_properties(
+    props: &ListOfMatchedMetadataItems,
+    format: &Format,
+    pretty: bool,
+    color: Option<Color>,
+) -> Result<colored::ColoredString, FormatError> {
+    match format {
+        Format::Json => Ok(color_string(props.to_json(pretty)?.as_str(), color)),
+        Format::Csv => Ok(color_string(props.to_csv(pretty)?.as_str(), color)),
         _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
