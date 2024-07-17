@@ -917,8 +917,14 @@ impl Api {
         threshold: f64, // Changed from &f64 to f64 for simplicity
         keys: &Option<Vec<String>>,
         apply: bool,
+        folders: Option<HashSet<String>>,
     ) -> Result<ListOfMatchedMetadataItems, ApiError> {
         let matches = self.match_model(uuid, threshold, true, None, None)?;
+
+        let folders = self.get_list_of_folders(folders)?;
+
+        // retrieve the list of valid folders. If no filter explicitly specified, all existing folders
+        let folders: HashMap<u32, String> = folders.into_iter().map(|f| (f.id, f.name)).collect();
 
         // Sort matches by score in descending order (largest percentage first)
         let mut matches = matches.inner;
@@ -951,18 +957,24 @@ impl Api {
 
         for m in matches.into_iter() {
             let score = m.percentage;
-            if let Some(ref metadata) = m.model.metadata {
-                for p in metadata {
-                    let name = &p.name;
-                    if keys.as_ref().map_or(true, |k| k.contains(name)) {
-                        if props.get(name).is_none() {
-                            let property = MatchedMetadataItem::new(
-                                uuid.to_owned(),
-                                name.clone(),
-                                p.value.clone(),
-                                score,
-                            );
-                            props.insert(name.clone(), property);
+            let folder_id = m.model.folder_id;
+
+            if folders.get(&folder_id).is_some() {
+                // the model belongs to a folder that is in the whitelist
+
+                if let Some(ref metadata) = m.model.metadata {
+                    for p in metadata {
+                        let name = &p.name;
+                        if keys.as_ref().map_or(true, |k| k.contains(name)) {
+                            if props.get(name).is_none() {
+                                let property = MatchedMetadataItem::new(
+                                    uuid.to_owned(),
+                                    name.clone(),
+                                    p.value.clone(),
+                                    score,
+                                );
+                                props.insert(name.clone(), property);
+                            }
                         }
                     }
                 }
