@@ -401,10 +401,22 @@ fn main() {
                     Arg::new("meta-key")
                         .short('k')
                         .long("key")
-                        .num_args(1..10)
+                        .num_args(0..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
                         .help("Optional: Metadata property key subject to inference (you can provide up to 10 keys)")
                         .required(false)
                         .value_parser(clap::value_parser!(String))
+                )
+                .arg(
+                    Arg::new("folder")
+                        .short('d')
+                        .long("folder")
+                        .num_args(0..)
+                        .value_delimiter(',')
+                        .action(clap::ArgAction::Append) 
+                        .help("Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant")
+                        .required(false)
                 )
                 .arg(
                     Arg::new("apply")
@@ -1328,8 +1340,12 @@ fn main() {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let keys = sub_matches.get_many::<String>("meta-key").map(|iter| iter.cloned().collect::<Vec<String>>());
             let apply = sub_matches.get_flag("apply");
+            let folders: Option<HashSet<String>> = match sub_matches.get_many::<String>("folder") {
+                Some(folders) => Some(folders.cloned().map(String::from).collect()),
+                None => None,
+            };
 
-            match api.label_inference(uuid, *threshold, &keys, apply) {
+            match api.label_inference(uuid, *threshold, &keys, apply, folders) {
                 Ok(output) => {
                     let output = format::format_list_of_matched_properties(&output, &output_format, pretty, color);
                     match output {

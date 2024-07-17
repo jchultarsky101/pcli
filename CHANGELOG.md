@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.9.1
+
+* Enhanced the 'label-inference' command to include 'folder' filter
+
 ## v1.9.0
 
 * Added command 'label-inference'

@@ -1371,17 +1371,18 @@ pcli help label-inference
 ### Usage
 
 ```plaintext
-Infer metadata values for a model based on metadata values of other geometrically similar models.
+Infere metadata values for a model based on metadata values of other geometrically similar models
 
 Usage: pcli --tenant <tenant> label-inference [OPTIONS] --uuid <uuid> --threshold <threshold>
 
 Options:
-  -u, --uuid <uuid>              The model UUID.
-  -t, --threshold <threshold>    Match threshold percentage (e.g., '96.5').
-  -k, --key <meta-key>...        Optional: Metadata property key subject to inference (up to 10 keys can be specified).
-      --apply                    Optional: Automatically applies the inferred values to the model. Existing values are not overridden for safety.
-  -h, --help                     Print help information.
-  -V, --version                  Print version information.
+  -u, --uuid <uuid>            The model UUID
+  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5')
+  -k, --key [<meta-key>...]    Optional: Metadata property key subject to inference (you can provide multiple keys)
+  -d, --folder [<folder>...]   Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+      --apply                  Optional: When this flag is specified, the infered values will be automatically applied to the model
+  -h, --help                   Print help
+  -V, --version                Print version
 ```
 
 ### Input Arguments
@@ -1390,6 +1391,7 @@ Options:
 - **"threshold"**: The confidence threshold value.
 - **"key"**: This optional argument allows you to specify explicitly which property names are to be considered for inference. Properties not specified are ignored.
 - **"apply"**: This optional flag, when specified, automatically sets the inferred properties in the reference model. Existing property values are not overridden to maintain data integrity.
+- **"folder"**: This is optional argument. You can specify it multiple times. If provided, it will filter the list of matching models only to those that belong in a folder that is listed. If none are specified, it will include matches from all existing folders, which is the default.
 
 ### Example
 
