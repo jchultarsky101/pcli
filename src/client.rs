@@ -1304,17 +1304,17 @@ impl ApiClient {
 
     fn get_image_search_matches_page(
         &self,
-        id: String,
+        ids: Vec<String>,
         search: Option<&String>,
         filter: Option<&String>,
         page: u32,
         per_page: u32,
     ) -> Result<ImageMatchPageResponse, ClientError> {
-        log::trace!("Searching matching models for image with ID {id}...");
-
         let url = format!("{}/v2/images/model-matches", self.base_url);
         let mut query_parameters: Vec<(String, String)> = Vec::new();
-        query_parameters.push(("id".to_string(), id));
+        for id in ids {
+            query_parameters.push(("id".to_string(), id));
+        }
         query_parameters.push(("perPage".to_string(), per_page.to_string()));
         query_parameters.push(("page".to_string(), page.to_string()));
 
@@ -1344,7 +1344,7 @@ impl ApiClient {
 
     pub fn get_image_search_maches(
         &self,
-        id: String,
+        id: Vec<String>,
         search: Option<&String>,
         filter: Option<&String>,
         max_matches: u32,

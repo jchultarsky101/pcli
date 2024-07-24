@@ -808,58 +808,6 @@ impl Api {
         Ok(())
     }
 
-    fn average_image_search_results(
-        &self,
-        max_results: u32,
-        results: Vec<ListOfModels>,
-    ) -> ListOfModels {
-        let mut rank_map: HashMap<Uuid, Vec<usize>> = HashMap::new();
-        let mut model_map: HashMap<Uuid, Model> = HashMap::new();
-        let mut seen_uuids: Vec<Uuid> = Vec::new();
-        let number_of_lists = results.len();
-
-        for models in results {
-            let models = models.models.to_owned();
-            for (rank, model) in models.iter().enumerate() {
-                model_map.insert(model.uuid, model.clone());
-                rank_map
-                    .entry(model.uuid)
-                    .or_insert_with(Vec::new)
-                    .push(rank);
-
-                seen_uuids.push(model.uuid);
-            }
-
-            for (&uuid, ranks) in &mut rank_map {
-                if !seen_uuids.contains(&uuid) {
-                    ranks.push(max_results as usize)
-                }
-            }
-        }
-
-        // Calculating average ranks
-        let mut average_ranks: HashMap<Uuid, f64> = HashMap::new();
-        for (uuid, ranks) in rank_map {
-            let sum: usize = ranks.iter().sum();
-            let avg = sum as f64 / number_of_lists as f64;
-            average_ranks.insert(uuid, avg);
-        }
-
-        // sort by average rank in assending order
-        let mut sorted_average_ranks: Vec<(Uuid, f64)> = average_ranks.into_iter().collect();
-        sorted_average_ranks.sort_by(|&(_, v1), &(_, v2)| {
-            v1.partial_cmp(&v2).unwrap_or(std::cmp::Ordering::Greater)
-        });
-
-        let mut result = ListOfModels::default();
-        for (uuid, rank) in sorted_average_ranks {
-            log::trace!("UUID={}, rank={}", uuid, rank);
-            result.models.push(model_map.get(&uuid).unwrap().to_owned());
-        }
-
-        result
-    }
-
     pub fn search_by_multiple_images(
         &self,
         paths: Vec<&PathBuf>,
@@ -867,23 +815,26 @@ impl Api {
         search: Option<&String>,
         filter: Option<&String>,
     ) -> Result<ListOfModels, ApiError> {
-        let mut results: Vec<ListOfModels> = Vec::new();
+        let mut upload_ids: Vec<String> = Vec::new();
+        for path in paths {
+            let path = path.as_path();
+            let image_upload = self.client.get_image_upload_specs(&path)?;
+            let url = Url::parse(image_upload.upload_url.as_str()).unwrap();
+            let size_requirements = image_upload.file_size_requirements;
+            let mime = image_upload.headers.content_type;
+            let content_range = image_upload.headers.content_length_range;
+            let id = image_upload.id;
+            upload_ids.push(id.to_owned());
 
-        if paths.len() == 1 {
-            // optimization for a single image file, which would be most often
-            self.search_by_image(&paths[0], max_results, search, filter)
-        } else {
-            // using miltiple image files
-            for path in paths {
-                let result = self.search_by_image(&path, max_results, search, filter)?;
-                results.push(result);
-            }
-
-            // average the results into a single result
-            let result = self.average_image_search_results(max_results, results);
-
-            Ok(result)
+            self.client
+                .upload_image_file(url, size_requirements, &path, mime, content_range)?;
         }
+
+        let matches =
+            self.client
+                .get_image_search_maches(upload_ids, search, filter, max_results, 100)?;
+
+        Ok(matches)
     }
 
     pub fn search_by_image(
@@ -904,27 +855,31 @@ impl Api {
         self.client
             .upload_image_file(url, size_requirements, &path, mime, content_range)?;
 
-        let matches = self
-            .client
-            .get_image_search_maches(id, search, filter, max_results, 100)?;
+        let matches =
+            self.client
+                .get_image_search_maches(vec![id], search, filter, max_results, 100)?;
 
         Ok(matches)
     }
 
     pub fn label_inference(
-        &self,
+        &mut self,
         uuid: &Uuid,
         threshold: f64, // Changed from &f64 to f64 for simplicity
         keys: &Option<Vec<String>>,
+        cascade: bool,
         apply: bool,
-        folders: Option<HashSet<String>>,
+        folders: &Option<HashSet<String>>,
     ) -> Result<ListOfMatchedMetadataItems, ApiError> {
         let matches = self.match_model(uuid, threshold, true, None, None)?;
 
-        let folders = self.get_list_of_folders(folders)?;
+        let existing_folders = self.get_list_of_folders(folders.clone())?;
 
         // retrieve the list of valid folders. If no filter explicitly specified, all existing folders
-        let folders: HashMap<u32, String> = folders.into_iter().map(|f| (f.id, f.name)).collect();
+        let existing_folders: HashMap<u32, String> = existing_folders
+            .into_iter()
+            .map(|f| (f.id, f.name))
+            .collect();
 
         // Sort matches by score in descending order (largest percentage first)
         let mut matches = matches.inner;
@@ -956,10 +911,27 @@ impl Api {
         };
 
         for m in matches.into_iter() {
+            if cascade && m.model.is_assembly {
+                let uuid = m.model.uuid.to_owned();
+                let tree = self.get_model_assembly_tree(&uuid)?;
+
+                match tree.children {
+                    Some(children) => {
+                        for child in children.into_iter() {
+                            let uuid = child.model.uuid;
+                            let partial_result = self
+                                .label_inference(&uuid, threshold, keys, cascade, false, folders)?;
+                            let _partial_props = partial_result.items;
+                        }
+                    }
+                    None => (),
+                }
+            }
+
             let score = m.percentage;
             let folder_id = m.model.folder_id;
 
-            if folders.get(&folder_id).is_some() {
+            if existing_folders.get(&folder_id).is_some() {
                 // the model belongs to a folder that is in the whitelist
 
                 if let Some(ref metadata) = m.model.metadata {

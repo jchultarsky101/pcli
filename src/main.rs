@@ -419,6 +419,13 @@ fn main() {
                         .required(false)
                 )
                 .arg(
+                    Arg::new("cascate-assembly")
+                        .long("cascade-assembly")
+                        .num_args(0)
+                        .required(false)
+                        .help("Optional: When this flag is used and the reference model is an assembly, it will recursively perform this operation for each sub-assembly and part within the main assembly")
+                )
+                .arg(
                     Arg::new("apply")
                         .long("apply")
                         .num_args(0)
@@ -1340,12 +1347,13 @@ fn main() {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let keys = sub_matches.get_many::<String>("meta-key").map(|iter| iter.cloned().collect::<Vec<String>>());
             let apply = sub_matches.get_flag("apply");
+            let cascade = sub_matches.get_flag("cascade");
             let folders: Option<HashSet<String>> = match sub_matches.get_many::<String>("folder") {
                 Some(folders) => Some(folders.cloned().map(String::from).collect()),
                 None => None,
             };
 
-            match api.label_inference(uuid, *threshold, &keys, apply, folders) {
+            match api.label_inference(uuid, *threshold, &keys, cascade, apply, &folders) {
                 Ok(output) => {
                     let output = format::format_list_of_matched_properties(&output, &output_format, pretty, color);
                     match output {
