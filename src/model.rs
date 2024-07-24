@@ -1580,7 +1580,7 @@ impl MatchedMetadataItem {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct ListOfMatchedMetadataItems {
-    items: Vec<MatchedMetadataItem>,
+    pub items: Vec<MatchedMetadataItem>,
 }
 
 impl ListOfMatchedMetadataItems {
