@@ -243,9 +243,16 @@ impl Api {
         uuid: &Uuid,
         threshold: f64,
         with_meta: bool,
+        with_reference_meta: bool,
         classification: Option<&String>,
         tag: Option<&String>,
     ) -> Result<ListOfModelMatches, ApiError> {
+        let reference_metadata: Option<ModelMetadata> = if with_reference_meta {
+            self.client.get_model_metadata(uuid)?
+        } else {
+            None
+        };
+
         trace!("Matching model {}...", uuid);
         let mut list_of_matches: Vec<ModelMatch> = Vec::new();
 
@@ -269,7 +276,34 @@ impl Api {
                         let mut model_match = ModelMatch::from(m);
                         let model = model_match.model.clone();
                         let metadata: Option<ModelMetadata> = if with_meta {
-                            self.get_model_metadata(&model.uuid)?
+                            let matching_metadata = self.get_model_metadata(&model.uuid)?;
+
+                            if matching_metadata.is_some() || reference_metadata.is_some() {
+                                let mut combined_meta = ModelMetadata::default();
+
+                                matching_metadata
+                                    .unwrap()
+                                    .properties
+                                    .iter()
+                                    .for_each(|item| combined_meta.add(item));
+
+                                reference_metadata
+                                    .as_ref()
+                                    .unwrap()
+                                    .properties
+                                    .iter()
+                                    .for_each(|item| {
+                                        combined_meta.add(&ModelMetadataItem::new(
+                                            item.key_id,
+                                            format!("reference.{}", item.name),
+                                            item.value.to_owned(),
+                                        ))
+                                    });
+
+                                Some(combined_meta)
+                            } else {
+                                None
+                            }
                         } else {
                             None
                         };
@@ -567,13 +601,14 @@ impl Api {
                 }
             }
 
-            let matches = match self.match_model(&uuid, threshold.clone(), with_meta, None, None) {
-                Ok(matches) => matches,
-                Err(e) => {
-                    warn!("Failed to match model {}: {}", uuid, e);
-                    continue;
-                }
-            };
+            let matches =
+                match self.match_model(&uuid, threshold.clone(), with_meta, false, None, None) {
+                    Ok(matches) => matches,
+                    Err(e) => {
+                        warn!("Failed to match model {}: {}", uuid, e);
+                        continue;
+                    }
+                };
 
             let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
 
@@ -871,7 +906,7 @@ impl Api {
         apply: bool,
         folders: &Option<HashSet<String>>,
     ) -> Result<ListOfMatchedMetadataItems, ApiError> {
-        let matches = self.match_model(uuid, threshold, true, None, None)?;
+        let matches = self.match_model(uuid, threshold, true, false, None, None)?;
 
         let existing_folders = self.get_list_of_folders(folders.clone())?;
 

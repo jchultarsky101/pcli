@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.9.3
+
+* Enhanced the 'match-model' command by adding 'reference-meta' flag to include all metadata from the reference model in the output in addition to the candidate model metadata
+
 ## v1.9.2
 
 * Enhanced 'image-search' command to enable new multiple image method

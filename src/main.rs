@@ -206,6 +206,13 @@ fn main() {
                         .required(false)
                 )
                 .arg(
+                    Arg::new("reference-meta")
+                        .long("reference-meta")
+                        .num_args(0)
+                        .help("Enhance output with the reference model's metadata, prefixed with 'reference.'")
+                        .required(false)
+                )
+                .arg(
                     Arg::new("classification")
                         .long("classification")
                         .num_args(1)
@@ -1049,10 +1056,11 @@ fn main() {
             let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let with_meta = sub_matches.get_flag("meta");
+            let with_reference_meta = sub_matches.get_flag("reference-meta");
             let classification = sub_matches.get_one::<String>("classification");
             let tag = sub_matches.get_one::<String>("tag");
             
-            let model_matches = match api.match_model(&uuid, threshold.to_owned(), with_meta, classification, tag) {
+            let model_matches = match api.match_model(&uuid, threshold.to_owned(), with_meta, with_reference_meta, classification, tag) {
                 Ok(model_matches) => {
                     trace!("We found {} match(es)!", model_matches.inner.len());
                     model_matches

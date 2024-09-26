@@ -435,6 +435,10 @@ impl ModelMetadata {
         ModelMetadata { properties }
     }
 
+    pub fn add(&mut self, new_item: &ModelMetadataItem) {
+        self.properties.push(new_item.to_owned());
+    }
+
     pub fn to_enhanced_csv(&self, uuid: &Uuid, pretty: bool) -> Result<String, ParsingError> {
         let buf = BufWriter::new(Vec::new());
         let mut writer = WriterBuilder::new()
