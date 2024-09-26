@@ -1005,18 +1005,28 @@ Matches all models to the specified one
 Usage: pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <threshold>
 
 Options:
-  -u, --uuid <uuid>                      The model UUID
-  -t, --threshold <threshold>            Match threshold percentage (e.g. '96.5')
-  -m, --meta                             Enhance output with model's metadata
-      --classification <classification>  The name for the classification metadata property
-      --tag <tag>                        The value for the classification metadata property
-  -h, --help                             Print help
-  -V, --version                          Print version
+  -u, --uuid <uuid>
+          The model UUID
+  -t, --threshold <threshold>
+          Match threshold percentage (e.g. '96.5')
+  -m, --meta
+          Enhance output with model's metadata
+      --reference-meta
+          Enhance output with the reference model's metadata, prefixed with 'reference.'
+      --classification <classification>
+          The name for the classification metadata property
+      --tag <tag>
+          The value for the classification metadata property
+  -h, --help
+          Print help
+  -V, --version
+          Print versio
 ```
 
 * "uuid" is the UUID of the model we are trying to match.
 * "threshold" is the match level. This is a floating point value between [0..1]. For example, 80% match would be 0.8.
 * "meta" is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
+* "reference-meta" is an optional flag. If specified, it will include all metadata fields from the reference model to the output.
 * "classification" is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.
 * "tag" requirest that the classification argument is present. It is the value to be associated with the "classification" property.
 
