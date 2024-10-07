@@ -57,6 +57,11 @@ pub trait ToCsv {
     fn to_csv(&self, pretty: bool) -> Result<String, ParsingError>;
 }
 
+/// Marshals the state into HTML
+pub trait ToHtml {
+    fn to_html(&self) -> Result<String, ParsingError>;
+}
+
 #[derive(Clone, Debug, Eq, Default, Serialize, Deserialize)]
 pub struct Folder {
     #[serde(rename = "id")]
@@ -243,6 +248,8 @@ pub struct Model {
     pub name: String,
     #[serde(rename = "folderId")]
     pub folder_id: u32,
+    #[serde(rename = "folderName")]
+    pub folder_name: Option<String>,
     #[serde(rename = "ownerId")]
     #[serde(default)]
     pub owner_id: String,
@@ -912,10 +919,6 @@ pub struct ModelMatch {
     pub percentage: f64,
     #[serde(rename = "comparisonUrl", skip_serializing_if = "Option::is_none")]
     pub comparison_url: Option<String>,
-    #[serde(rename = "modelOneThumbnail", skip_serializing_if = "Option::is_none")]
-    pub model_one_thumbnail: Option<String>,
-    #[serde(rename = "modelTwoThumbnail", skip_serializing_if = "Option::is_none")]
-    pub model_two_thumbnail: Option<String>,
 }
 
 impl PartialEq for ModelMatch {
@@ -926,19 +929,11 @@ impl PartialEq for ModelMatch {
 impl Eq for ModelMatch {}
 
 impl ModelMatch {
-    pub fn new(
-        model: Model,
-        percentage: f64,
-        comparison_url: Option<String>,
-        model_one_thumbnail: Option<String>,
-        model_two_thumbnail: Option<String>,
-    ) -> ModelMatch {
+    pub fn new(model: Model, percentage: f64, comparison_url: Option<String>) -> ModelMatch {
         ModelMatch {
             model,
             percentage,
             comparison_url,
-            model_one_thumbnail,
-            model_two_thumbnail,
         }
     }
 }
@@ -1071,8 +1066,8 @@ pub struct ModelMatchReportItem {
     pub uuid: String,
     #[serde(rename = "name")]
     pub name: String,
-    #[serde(rename = "fodler_id")]
-    pub folder_id: u32,
+    #[serde(rename = "fodler_name")]
+    pub folder_name: String,
     #[serde(rename = "matches")]
     pub matches: Vec<ModelMatch>,
 }
@@ -1115,11 +1110,9 @@ impl ToCsv for SimpleDuplicatesMatchReport {
             "MATCH",
             "SOURCE_UUID",
             "MATCHING_UUID",
-            "SOURCE_FOLDER_ID",
-            "MATCHING_FOLDER_ID",
+            "SOURCE_FOLDER_NAME",
+            "MATCHING_FOLDER_NAME",
             "COMPARISON_URL",
-            "MODEL_ONE_THUMBNAIL_URL",
-            "MODEL_TWO_THUMBNAIL_URL",
         ];
 
         // populate the column names with the names of all properties found in the result
@@ -1151,7 +1144,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
         for (_uuid, item) in &self.inner {
             let model_name = item.name.to_owned();
             let source_uuid = item.uuid.to_string();
-            let source_folder_id = item.folder_id.to_string();
+            let source_folder_name = item.folder_name.to_owned();
 
             for m in &item.matches {
                 let mut values: Vec<String> = Vec::new();
@@ -1161,19 +1154,11 @@ impl ToCsv for SimpleDuplicatesMatchReport {
                 values.push(m.percentage.to_string());
                 values.push(source_uuid.to_owned());
                 values.push(m.model.uuid.to_string());
-                values.push(source_folder_id.to_owned());
-                values.push(m.model.folder_id.to_string());
+                values.push(source_folder_name.to_owned());
+                values.push(m.model.folder_name.to_owned().unwrap_or_default());
 
                 match &m.comparison_url {
                     Some(url) => values.push(url.to_owned()),
-                    None => values.push("".to_string()),
-                }
-                match &m.model_one_thumbnail {
-                    Some(thumb) => values.push(thumb.to_owned()),
-                    None => values.push("".to_string()),
-                }
-                match &m.model_two_thumbnail {
-                    Some(thumb) => values.push(thumb.to_owned()),
                     None => values.push("".to_string()),
                 }
 
@@ -1206,6 +1191,12 @@ impl ToCsv for SimpleDuplicatesMatchReport {
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
         Ok(result)
+    }
+}
+
+impl ToHtml for SimpleDuplicatesMatchReport {
+    fn to_html(&self) -> Result<String, ParsingError> {
+        Ok(String::default())
     }
 }
 
@@ -1324,6 +1315,7 @@ impl From<client::SingleModelResponse> for Model {
             is_assembly: response.model.is_assembly,
             name: response.model.name,
             folder_id: response.model.folder_id,
+            folder_name: None,
             file_type: response.model.file_type,
             thumbnail: response.model.thumbnail,
             owner_id: response.model.owner_id,
@@ -1341,15 +1333,7 @@ impl From<client::PartToPartMatch> for ModelMatch {
     fn from(m: client::PartToPartMatch) -> Self {
         let model = Model::from((m.matched_model).clone());
         let percentage = m.match_percentage;
-        let model_one_thumbnail = model.thumbnail.clone();
-        let model_two_thumbnail = m.matched_model.thumbnail.clone();
-        ModelMatch::new(
-            model,
-            percentage,
-            None,
-            model_one_thumbnail,
-            model_two_thumbnail,
-        )
+        ModelMatch::new(model, percentage, None)
     }
 }
 

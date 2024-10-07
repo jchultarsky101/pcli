@@ -556,7 +556,7 @@ impl Api {
         };
 
         for uuid in uuids {
-            let model = match self.get_model(&uuid, true, with_meta) {
+            let mut model = match self.get_model(&uuid, true, with_meta) {
                 Ok(model) => model,
                 Err(e) => {
                     warn!("Failed to query for model {}: {}", uuid, e);
@@ -601,6 +601,12 @@ impl Api {
                 }
             }
 
+            let folder = existing_folders.get_folder_by_id(&model.folder_id);
+            model.folder_name = match folder {
+                Some(folder) => Some(folder.name.to_owned()),
+                None => None,
+            };
+
             let matches =
                 match self.match_model(&uuid, threshold.clone(), with_meta, false, None, None) {
                     Ok(matches) => matches,
@@ -628,17 +634,27 @@ impl Api {
                         "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
                         self.client.tenant, uuid, m1.model.uuid
                     ));
-                    m1.model_one_thumbnail = m.model_one_thumbnail.clone();
-                    m1.model_two_thumbnail = m.model_two_thumbnail.clone();
+                    m1.model.folder_name =
+                        match existing_folders.get_folder_by_id(&m1.model.folder_id) {
+                            Some(folder) => Some(folder.name.to_owned()),
+                            None => None,
+                        };
+
                     simple_duplicate_matches.push(m1);
                 }
             }
+
+            let folder = folders.get_folder_by_id(&model.folder_id.clone());
+            let folder_name = match folder {
+                Some(folder) => folder.name.to_owned(),
+                None => String::default(),
+            };
 
             if !simple_duplicate_matches.is_empty() {
                 let item = ModelMatchReportItem {
                     uuid: uuid.to_string(),
                     name: model.name.clone(),
-                    folder_id: model.folder_id.clone(),
+                    folder_name,
                     matches: simple_duplicate_matches,
                 };
                 simple_match_report.inner.insert(uuid.to_string(), item);

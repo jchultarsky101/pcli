@@ -1,7 +1,7 @@
 use crate::model::{
     EnvironmentStatusReport, Folder, ListOfFolders, ListOfGeoClassifierPredictions,
     ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, Model, ModelAssemblyTree,
-    ModelMetadata, PropertyCollection, SimpleDuplicatesMatchReport, ToCsv, ToJson,
+    ModelMetadata, PropertyCollection, SimpleDuplicatesMatchReport, ToCsv, ToHtml, ToJson,
 };
 use colored::*;
 use ptree::print_tree;
@@ -28,6 +28,7 @@ pub enum Format {
     Json,
     Csv,
     Tree,
+    Html,
 }
 
 impl FromStr for Format {
@@ -37,6 +38,7 @@ impl FromStr for Format {
             "JSON" => return Ok(Format::Json),
             "CSV" => return Ok(Format::Csv),
             "TREE" => return Ok(Format::Tree),
+            "HTML" => return Ok(Format::Html),
             _ => Err(FormatError::UnsupportedFormat(input.to_string())),
         }
     }
@@ -48,6 +50,7 @@ impl ToString for Format {
             Format::Json => "JSON".to_string(),
             Format::Csv => "CSV".to_string(),
             Format::Tree => "TREE".to_string(),
+            Format::Html => "HTML".to_string(),
         }
     }
 }
@@ -209,6 +212,7 @@ pub fn format_simple_duplicates_match_report(
     match format {
         Format::Json => Ok(color_string(bom.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(bom.to_csv(pretty)?.as_str(), color)),
+        Format::Html => Ok(color_string(bom.to_html()?.as_str(), color)),
         _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }
