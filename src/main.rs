@@ -229,6 +229,27 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("match-visual")
+                .about("Matches all models to the specified one. Uses visual match algorithm")
+                .arg(
+                    Arg::new("uuid")
+                        .short('u')
+                        .long("uuid")
+                        .num_args(1)
+                        .help("The model UUID")
+                        .required(true)
+                        .value_parser(clap::value_parser!(Uuid))
+                )
+                .arg(
+                    Arg::new("meta")
+                        .short('m')
+                        .long("meta")
+                        .num_args(0)
+                        .help("Enhance output with model's metadata")
+                        .required(false)
+                ),
+        )
+        .subcommand(
             Command::new("match-scan")
                 .about("Scan-match all models to the specified one")
                 .arg(
@@ -725,8 +746,12 @@ fn main() {
                         .num_args(1)
                         .help("Physna filter expression. See: https://api.physna.com/v2/docs#model-FilterExpression")
                         .required(false)
-                )
-,        )
+                ),
+        )
+        .subcommand(
+            Command::new("compare-matches")
+                .about("Compares match results in each folder for each model. Uses both key4 and visual matches and identifies models with inconsistencies")
+        )        
         .arg(
             Arg::new("tenant")
                 .short('t')
@@ -1073,6 +1098,33 @@ fn main() {
             };
 
             let output = format::format_list_of_model_matches(&model_matches, &output_format, pretty, color);
+            match output {
+                Ok(output) => {
+                    println!("{}", output);
+                    ::std::process::exit(exitcode::OK);
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            }
+        },
+        Some(("match-visual", sub_matches)) => {
+            let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            
+            let model_matches = match api.match_model_visual(&uuid) {
+                Ok(model_matches) => {
+                    trace!("We found {} match(es)!", model_matches.models.len());
+                    model_matches
+                },
+                Err(e) => {
+                    warn!("No matches found.");
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                },
+            };
+
+            let output = format::format_list_of_visual_model_matches(&model_matches, &output_format, pretty, color);
             match output {
                 Ok(output) => {
                     println!("{}", output);
@@ -1674,6 +1726,104 @@ fn main() {
                     eprintln!("Error occurred while searching by image: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
+            }
+        },
+        Some(("compare-matches", _)) => {
+            const THRESHOLD: f64 = 0.05;
+
+            trace!("Reading list of folders...");
+            let folders = api.get_list_of_folders(None);
+            
+            let mut uuids: HashMap<Uuid, String> = HashMap::new();
+
+            // obtain a list of all unique UUIDs of models in the system
+            match folders {
+                Ok(folders) => {
+                    for folder in folders {
+                        trace!("Reading list of models for folder '{}'...", folder.name);
+
+                        let mut folder_parameter: HashSet<String> = HashSet::new();
+                        folder_parameter.insert(folder.name.to_owned());
+                        let models = api.list_all_models(Some(folder_parameter), None);
+
+                        match models {
+                            Ok(models) => {
+                                for model in models.models {
+                                    uuids.insert(model.uuid, model.name);
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Error occurred while reading list of models: {}", e);
+                                ::std::process::exit(exitcode::DATAERR);
+                            }
+                        }
+
+                        
+                    }      
+                }
+                Err(e) => {
+                    eprintln!("Error occurred while reading list of folders: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+
+            struct MatchCompareItem {
+                uuid: Uuid,
+                name: String,
+                percentage: f64,
+            }
+            
+            let mut comparison: HashMap<Uuid, MatchCompareItem> = HashMap::new();
+
+            // for each UUID, perform two types of matches: key4 and visual
+            for (uuid, _name) in uuids.clone() {
+                
+                let visual_matches = api.match_model_visual(&uuid);
+                match visual_matches {
+                    Ok(visual_matches) => {
+                        let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().map(|m| (m.uuid, m.name)).collect();      
+
+                        // we are interested only in the top 10 visual matches
+                        let key4_matches = api.match_model(&uuid, THRESHOLD, false, false, None, None);
+                        match key4_matches {
+                            Ok(key4_matches) => {
+                                let key4_matches = key4_matches.inner;
+                                let key4_percentages: HashMap<Uuid, f64> = key4_matches.into_iter().map(|m| (m.model.uuid, m.percentage)).collect();
+
+                                for m in visual_matches {
+                                    let (visual_match_uuid, visual_match_name) = m;
+                                    let percentage = key4_percentages.get(&visual_match_uuid);
+                                    let percentage: f64 = match percentage {
+                                        Some(percentage) => {
+                                            percentage.to_owned()    
+                                        }
+                                        None => 0.0
+                                    };
+
+                                    comparison.insert(visual_match_uuid, MatchCompareItem{ uuid: visual_match_uuid, name: visual_match_name, percentage });                    
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Error occurred while performing key4 match: {}", e);
+                                ::std::process::exit(exitcode::DATAERR);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Error occurred while performing visual match: {}", e);
+                        ::std::process::exit(exitcode::DATAERR);
+                    }
+                }
+            }
+
+            println!("REFERENCE_UUID,CANDIDATE_UUID,REFERENCE_NAME,CANDIDATE_NAME,MATCH_PERCENTAGE,COMPARISON_URL");
+            for (uuid, item) in comparison {
+                let comparison_url = format!(
+                        "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
+                        api.tenant(), uuid, item.uuid
+                    );
+                let name = uuids.get(&uuid).unwrap();
+                println!("{},{},{},{},{:.2},{}", uuid, item.uuid, name, item.name, item.percentage, comparison_url);
             }
         },
         _ => unreachable!("Error: Invalid command. See help for details"),
