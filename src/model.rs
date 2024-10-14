@@ -146,7 +146,7 @@ impl ToCsv for Folder {
 #[derive(Clone, Debug, PartialEq, Default, Deserialize)]
 pub struct ListOfFolders {
     #[serde(rename = "folders")]
-    folders: Vec<Folder>,
+    pub folders: Vec<Folder>,
 }
 
 // Implementing IntoIterator for ListOfFolders to iterate over Folder references
@@ -1048,6 +1048,98 @@ impl ToCsv for ListOfModelMatches {
         let result = String::from_utf8(bytes)?;
         Ok(result)
     }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct VisuallyMatchedModel {
+    #[serde(rename = "fileName")]
+    pub file_name: String,
+    #[serde(rename = "fileType")]
+    pub file_type: String,
+    #[serde(rename = "folderId")]
+    pub folder_id: u32,
+    #[serde(rename = "id")]
+    pub uuid: Uuid,
+    #[serde(rename = "isAssembly")]
+    pub is_assembly: bool,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "units")]
+    pub units: String,
+    #[serde(rename = "state")]
+    pub state: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ListOfVisualModelMatches {
+    pub models: Box<Vec<VisuallyMatchedModel>>,
+}
+
+impl ListOfVisualModelMatches {
+    pub fn new(models: Box<Vec<VisuallyMatchedModel>>) -> Self {
+        Self { models }
+    }
+}
+
+impl ToJson for ListOfVisualModelMatches {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(&self.models)
+        } else {
+            serde_json::to_string(&self.models)
+        }
+    }
+}
+
+impl ToCsv for ListOfVisualModelMatches {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
+        let matches = *self.models.clone();
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        let standard_columns = vec![
+            "ID",
+            "NAME",
+            "FOLDER_ID",
+            "IS_ASSEMBLY",
+            "FILE_TYPE",
+            "UNITS",
+            "STATE",
+        ];
+
+        if pretty {
+            writer.write_record(&standard_columns)?;
+        }
+
+        for m in matches {
+            let model = m.clone();
+            let mut values: Vec<String> = Vec::new();
+
+            values.push(model.uuid.to_string());
+            values.push(model.name);
+            values.push(model.folder_id.to_string());
+            values.push(model.is_assembly.to_string());
+            values.push(model.file_type.to_string());
+            values.push(model.units);
+            values.push(model.state);
+
+            writer.write_record(&values)?;
+        }
+
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct VisualMatchItem {
+    #[serde(rename = "matchedModel")]
+    pub model: VisuallyMatchedModel,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]

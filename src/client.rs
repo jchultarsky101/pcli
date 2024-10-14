@@ -1,6 +1,6 @@
 use crate::model::{
     FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, Model, ModelCreateMetadataResponse,
-    ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
+    ModelMetadata, ModelMetadataItem, Property, PropertyCollection, VisualMatchItem,
 };
 use core::str::FromStr;
 use log;
@@ -446,6 +446,14 @@ struct SourceFileResponse {
     source_file_url: Url,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModelVisualMatchResponse {
+    #[serde(rename = "matches")]
+    pub matches: Vec<VisualMatchItem>,
+    #[serde(rename = "pageData")]
+    pub page_data: PageData,
+}
+
 #[derive(Clone, Debug)]
 pub struct ApiClient {
     pub client: Client,
@@ -647,6 +655,36 @@ impl ApiClient {
         let response = self.client.execute(request);
 
         Ok(self.handle_response::<PartToPartMatchResponse>(response)?)
+    }
+
+    pub fn get_model_visual_match_page(
+        &self,
+        uuid: &Uuid,
+        per_page: u32,
+        page: u32,
+    ) -> Result<ModelVisualMatchResponse, ClientError> {
+        let url = format!(
+            "{}/v2/models/{id}/visual-matches",
+            self.base_url,
+            id = urlencode(uuid.to_string())
+        );
+
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .query(&[
+                ("perPage", per_page.to_string().as_str()),
+                ("page", page.to_string().as_str()),
+            ])
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        Ok(self.handle_response::<ModelVisualMatchResponse>(response)?)
     }
 
     fn get_list_of_folders_page(
