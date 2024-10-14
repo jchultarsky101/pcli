@@ -2,10 +2,10 @@ use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfMatchedMetadataItems,
-    ListOfModelMatches, ListOfModels, MatchedMetadataItem, Model, ModelAssemblyTree, ModelMatch,
-    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
-    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
-    PropertyCollection, SimpleDuplicatesMatchReport,
+    ListOfModelMatches, ListOfModels, ListOfVisualModelMatches, MatchedMetadataItem, Model,
+    ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
+    ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    PropertyCollection, SimpleDuplicatesMatchReport, VisuallyMatchedModel,
 };
 use log::debug;
 use log::{error, trace, warn};
@@ -56,6 +56,10 @@ impl Api {
                 &access_token.to_owned(),
             )),
         }
+    }
+
+    pub fn tenant(&self) -> String {
+        self.client.tenant.to_owned()
     }
 
     pub fn get_list_of_folders(
@@ -308,7 +312,7 @@ impl Api {
                             None
                         };
 
-                        log::trace!("Model metadata: {:?}", &metadata);
+                        //log::trace!("Model metadata: {:?}", &metadata);
 
                         match classification {
                             Some(classification) => {
@@ -355,6 +359,44 @@ impl Api {
         }
 
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
+    }
+
+    pub fn match_model_visual(&self, uuid: &Uuid) -> Result<ListOfVisualModelMatches, ApiError> {
+        trace!("Matching model visual {}...", uuid);
+        let mut list_of_matches: Vec<VisuallyMatchedModel> = Vec::new();
+
+        let mut has_more = true;
+        let mut page: u32 = 1;
+        let per_page: u32 = 100;
+        while has_more {
+            let result = self
+                .client
+                .get_model_visual_match_page(uuid, per_page, page)?;
+            if result.page_data.total > 0 {
+                let matches = result.matches;
+                if !matches.is_empty() {
+                    for m in matches {
+                        list_of_matches.push(m.model.clone());
+                    }
+                }
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
+        }
+
+        // remove the reference UUID from the list of results if present
+        if let Some(pos) = list_of_matches
+            .iter()
+            .cloned()
+            .position(|x| x.uuid == uuid.to_owned())
+        {
+            list_of_matches.remove(pos);
+        }
+        list_of_matches.truncate(10);
+
+        trace!("Result: {:?}", &list_of_matches);
+
+        Ok(ListOfVisualModelMatches::new(Box::new(list_of_matches)))
     }
 
     pub fn match_scan_model(

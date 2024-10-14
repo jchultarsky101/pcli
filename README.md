@@ -248,10 +248,14 @@ Commands:
           Reads the model's assembly tree
   match-model
           Matches all models to the specified one
+  match-visual
+          Matches all models to the specified one. Uses visual match algorithm
   match-scan
           Scan-match all models to the specified one
   match-folder
           Matches all models in a folder to other models
+  match-all-models
+          Matches all models in all folders
   label-folder
           Labels models in a folder based on KNN algorithm and geometric match score as distance
   label-inference
@@ -287,7 +291,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=delta]
+          [env: PCLI_TENANT=magna-sen]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -1128,6 +1132,7 @@ Options:
 
 Otherwise the use is very similar to the **model-match** command.
 
+
 ## <a id="match-report"></a>Generating a match report
 
 The **match-report** command combines multiple operations. It is used to generate comprehensive match report that
@@ -1190,14 +1195,14 @@ pcli help status
 ```
 Generates a tenant's environment status summary
 
-Usage: pcli --tenant <tenant> status [OPTIONS] --folder <folder>
+Usage: pcli --tenant <tenant> status [OPTIONS]
 
 Options:
-  -d, --folder <folder>  Folder name
-  -r, --repair           Forces repair operation on any model that is not in status FINISHED
-      --noasm            When using --repair, this flag causes assmeblies to be ignored
-  -h, --help             Print help
-  -V, --version          Print version
+  -d, --folder [<folder>...]  Folder name [optional, if none specified all folders will be included]
+  -r, --repair                Forces repair operation on any model that is not in status FINISHED
+      --noasm                 When using --repair, this flag causes assmeblies to be ignored
+  -h, --help                  Print help
+  -V, --version               Print version
 ```
 
 We provide a convenience command to check on the status of folders in your environment.
@@ -1221,6 +1226,12 @@ Therefore, the model will not immediately appear in "FIXED" state. You may need 
 background processing completed.
 
 The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
+
+The --folder argument is optional. You can provide multiple --folder arguments as well. If none is provided, it will generate the status for all folders available in the tenant. If one or more are specified, it will limit the output to those.
+
+## <a id="match-all-models"></a>Matching all available models in the tenant
+
+The match-all-models command is primarily for convenience, as it internally runs the match-report command for all available folders within the tenant. As a result, the only required input is the threshold argument. Please use this command sparingly, as it is resource-intensive.
 
 ## <a id="2D-to-3D"></a>Searching for 3D models by 2D image
 

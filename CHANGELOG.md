@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.9.6
+
+* Enhanced the "status" command. The argument (folder) is not optional. When none provided, it will generate status for all folders in the tenant
+* Added "match-all-models" command. It will match all models in all folders at a specified threshold
+
+## v1.9.5
+
+* Added visual-match command
+
 ## v1.9.4
 
 * Enhanced the match-report output to show the folder names instead of folder IDs
