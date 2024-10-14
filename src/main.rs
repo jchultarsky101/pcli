@@ -351,6 +351,19 @@ fn main() {
                 ),    
         )        
         .subcommand(
+            Command::new("match-all-models")
+                .about("Matches all models in all folders")
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. '96.5'")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+        )
+        .subcommand(
             Command::new("label-folder")
                 .about("Labels models in a folder based on KNN algorithm and geometric match score as distance")
                 .arg(
@@ -501,9 +514,9 @@ fn main() {
                     Arg::new("folder")
                         .short('d')
                         .long("folder")
-                        .num_args(1)
-                        .help("Folder name")
-                        .required(true)
+                        .num_args(0..)
+                        .help("Folder name [optional, if none specified all folders will be included]")
+                        .required(false)
                         .value_parser(clap::value_parser!(String))
                 )
                 .arg(
@@ -748,10 +761,12 @@ fn main() {
                         .required(false)
                 ),
         )
+        /*
         .subcommand(
             Command::new("compare-matches")
                 .about("Compares match results in each folder for each model. Uses both key4 and visual matches and identifies models with inconsistencies")
-        )        
+        )
+        */       
         .arg(
             Arg::new("tenant")
                 .short('t')
@@ -1167,6 +1182,53 @@ fn main() {
                 },
             }
         },
+        Some(("match-all-models", sub_matches)) => {
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let folders = api.get_list_of_folders(None);
+
+            match folders {
+                Ok(folders) => {
+                    let folders: HashSet<String> = folders.into_iter().map(|f| f.name).collect();
+                    let folders = Some(folders);
+                    
+
+                    match api.list_all_models(folders.clone(), None) {
+                        Ok(physna_models) => {
+                            let models = model::ListOfModels::from(physna_models);
+                            let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
+                            match api.generate_simple_model_match_report(uuids, threshold, folders, false, false, None) {
+                                Ok(report) => {
+                                    let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
+                                    match output {
+                                        Ok(output) => {
+                                            println!("{}", output);
+                                            ::std::process::exit(exitcode::OK);
+                                        },
+                                        Err(e) => {
+                                            eprintln!("Error: {}", e);
+                                            ::std::process::exit(exitcode::DATAERR);
+                                        }
+                                    }
+                                },
+                                Err(e) => {
+                                    eprintln!("Error: {}", e);
+                                    ::std::process::exit(exitcode::DATAERR);
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
+                    
+                }
+                Err(e) => {
+                    eprint!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        }
         Some(("match-folder", sub_matches)) => {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let exclusive = sub_matches.get_flag("exclusive");
@@ -1466,7 +1528,23 @@ fn main() {
             }
         },
         Some(("status", sub_matches)) => {
-            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
+            let folders: HashSet<String> = match sub_matches.get_many::<String>("folder") {
+                Some(folders) => {
+                    folders.cloned().collect()
+                }
+                None => {
+                    match api.get_list_of_folders(None) {
+                        Ok(all_folders) => {
+                            all_folders.folders.into_iter().map(|f| f.name).collect()
+                        }
+                        Err(e) => {
+                            eprintln!("Error occurred while reading environment status: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        } 
+                    }
+                }
+            };
+            
             let repair = sub_matches.get_flag("repair");
             let noasm = sub_matches.get_flag("noasm");
             let result = api.tenant_stats(folders, repair, noasm);
@@ -1749,7 +1827,10 @@ fn main() {
                         match models {
                             Ok(models) => {
                                 for model in models.models {
-                                    uuids.insert(model.uuid, model.name);
+                                    if model.state.eq("finished") {
+                                        // only include properly ingested models
+                                        uuids.insert(model.uuid, model.name);
+                                    }
                                 }
                             }
                             Err(e) => {
@@ -1769,19 +1850,26 @@ fn main() {
 
             struct MatchCompareItem {
                 uuid: Uuid,
+                visual_match_uuid: Uuid,
                 name: String,
+                visual_match_name: String,
                 percentage: f64,
             }
             
             let mut comparison: HashMap<Uuid, MatchCompareItem> = HashMap::new();
 
             // for each UUID, perform two types of matches: key4 and visual
-            for (uuid, _name) in uuids.clone() {
+            let size = uuids.len();
+            let mut index = 0;
+            for (uuid, name) in uuids.clone() {
+
+                index += 1;
+                debug!("Comparing item [{}]: {} of {}", uuid.to_string(), index, size);
                 
                 let visual_matches = api.match_model_visual(&uuid);
                 match visual_matches {
                     Ok(visual_matches) => {
-                        let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().map(|m| (m.uuid, m.name)).collect();      
+                        let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().filter(|m| m.uuid != uuid).map(|m| (m.uuid, m.name)).collect();      
 
                         // we are interested only in the top 10 visual matches
                         let key4_matches = api.match_model(&uuid, THRESHOLD, false, false, None, None);
@@ -1800,7 +1888,9 @@ fn main() {
                                         None => 0.0
                                     };
 
-                                    comparison.insert(visual_match_uuid, MatchCompareItem{ uuid: visual_match_uuid, name: visual_match_name, percentage });                    
+                                    if percentage < 0.1 {
+                                        comparison.insert(visual_match_uuid, MatchCompareItem{ uuid, visual_match_uuid, name: name.to_owned(), visual_match_name, percentage });
+                                    }                   
                                 }
                             }
                             Err(e) => {
@@ -1822,8 +1912,7 @@ fn main() {
                         "https://{}.physna.com/app/compare?modelAId={}&modelBId={}",
                         api.tenant(), uuid, item.uuid
                     );
-                let name = uuids.get(&uuid).unwrap();
-                println!("{},{},{},{},{:.2},{}", uuid, item.uuid, name, item.name, item.percentage, comparison_url);
+                println!("{},{},\"{}\",\"{}\",{:.2},{}", item.uuid, item.visual_match_uuid, item.name, item.visual_match_name, item.percentage, comparison_url);
             }
         },
         _ => unreachable!("Error: Invalid command. See help for details"),

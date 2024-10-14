@@ -312,7 +312,7 @@ impl Api {
                             None
                         };
 
-                        log::trace!("Model metadata: {:?}", &metadata);
+                        //log::trace!("Model metadata: {:?}", &metadata);
 
                         match classification {
                             Some(classification) => {
@@ -383,6 +383,16 @@ impl Api {
             has_more = result.page_data.current_page < result.page_data.last_page;
             page = result.page_data.current_page + 1;
         }
+
+        // remove the reference UUID from the list of results if present
+        if let Some(pos) = list_of_matches
+            .iter()
+            .cloned()
+            .position(|x| x.uuid == uuid.to_owned())
+        {
+            list_of_matches.remove(pos);
+        }
+        list_of_matches.truncate(10);
 
         trace!("Result: {:?}", &list_of_matches);
 

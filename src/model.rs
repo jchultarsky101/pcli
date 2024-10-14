@@ -146,7 +146,7 @@ impl ToCsv for Folder {
 #[derive(Clone, Debug, PartialEq, Default, Deserialize)]
 pub struct ListOfFolders {
     #[serde(rename = "folders")]
-    folders: Vec<Folder>,
+    pub folders: Vec<Folder>,
 }
 
 // Implementing IntoIterator for ListOfFolders to iterate over Folder references
