@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 * Added "users" command
 * Fixed bug where the owner ID was not shown in CSV format
-* Fixed but where the folder name was showing as NULL in the output of "models" command
+* Fixed bug where the folder name was showing as NULL in the output of "models" command
 
 ## v1.9.6
 
