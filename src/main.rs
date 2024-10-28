@@ -706,6 +706,10 @@ fn main() {
                 )
         )
         .subcommand(
+            Command::new("users")
+                .about("Lists all users")
+        )
+        .subcommand(
             Command::new("create-folder")
                 .about("Creates a new folder")
                 .arg(
@@ -925,6 +929,28 @@ fn main() {
                 },
                 Err(e) => {
                     eprintln!("Error occurred while reading folders: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        },
+        Some(("users", _sub_matches)) => {
+            let users = api.get_list_of_users();
+            match users {
+                Ok(users) => {
+                    let output = format::format_list_of_users(users, &output_format, pretty, color);
+                    match output {
+                        Ok(output) => {
+                            println!("{}", output);
+                            ::std::process::exit(exitcode::OK);
+                        },
+                        Err(e) => {
+                            eprintln!("Error while invalidating current token: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Error occurred while reading users: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 }
             }

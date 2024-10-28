@@ -535,6 +535,7 @@ impl ToCsv for Model {
             "FILE_TYPE",
             "UNITS",
             "STATE",
+            "OWNER_ID",
         ];
         let mut columns: HashSet<String> = HashSet::new();
 
@@ -572,6 +573,7 @@ impl ToCsv for Model {
         values.push(self.file_type.to_string());
         values.push(self.units.to_owned());
         values.push(self.state.to_owned());
+        values.push(self.owner_id.to_owned());
 
         let mut properties: HashMap<String, String> = HashMap::new();
         let meta = self.metadata.clone();
@@ -592,7 +594,7 @@ impl ToCsv for Model {
         }
 
         let number_of_columns = all_columns.len();
-        for i in 7..number_of_columns {
+        for i in 8..number_of_columns {
             let column_name = all_columns[i];
             let value = match properties.get(column_name) {
                 Some(value) => value.to_owned(),
@@ -1710,5 +1712,148 @@ impl ToCsv for ListOfMatchedMetadataItems {
         let bytes = writer.into_inner()?.into_inner()?;
         let result = String::from_utf8(bytes)?;
         Ok(result)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct User {
+    #[serde(rename = "id")]
+    pub uuid: Uuid,
+    #[serde(rename = "externalId")]
+    pub external_id: String,
+    #[serde(rename = "email")]
+    pub email: String,
+    #[serde(rename = "status")]
+    pub status: String,
+    #[serde(rename = "department")]
+    pub department: String,
+    #[serde(rename = "roles")]
+    pub roles: Vec<String>,
+}
+
+impl User {
+    pub fn new(
+        uuid: Uuid,
+        external_id: String,
+        email: String,
+        status: String,
+        department: String,
+        roles: Vec<String>,
+    ) -> Self {
+        Self {
+            uuid,
+            external_id,
+            email,
+            status,
+            department,
+            roles,
+        }
+    }
+}
+
+impl ToJson for User {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
+    }
+}
+
+impl ToCsv for User {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec![
+                "UUID",
+                "EXTERNAL_ID",
+                "EMAIL",
+                "STATUS",
+                "DEPARTMENT",
+                "ROLES",
+            ];
+            writer.write_record(&columns)?;
+        }
+
+        let mut values: Vec<String> = Vec::new();
+        values.push(self.uuid.to_string());
+        values.push(self.external_id.to_owned());
+        values.push(self.email.to_owned());
+        values.push(self.status.to_owned());
+        values.push(self.department.to_owned());
+        let roles: String = self.roles.join(",");
+        values.push(roles);
+
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ListOfUsers {
+    pub users: Vec<User>,
+}
+
+impl ToJson for ListOfUsers {
+    fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(&self.users)
+        } else {
+            serde_json::to_string(&self.users)
+        }
+    }
+}
+
+impl ToCsv for ListOfUsers {
+    fn to_csv(&self, pretty: bool) -> Result<String, ParsingError> {
+        let buf = BufWriter::new(Vec::new());
+        let mut writer = WriterBuilder::new()
+            .terminator(Terminator::CRLF)
+            .from_writer(buf);
+
+        if pretty {
+            let columns = vec![
+                "UUID",
+                "EXTERNAL_ID",
+                "EMAIL",
+                "STATUS",
+                "DEPARTMENT",
+                "ROLES",
+            ];
+            writer.write_record(&columns)?;
+        }
+
+        for user in self.users.clone() {
+            let mut values: Vec<String> = Vec::new();
+            values.push(user.uuid.to_string());
+            values.push(user.external_id.to_owned());
+            values.push(user.email.to_owned());
+            values.push(user.status.to_owned());
+            values.push(user.department.to_owned());
+            let roles: String = user.roles.join(",");
+            values.push(roles);
+
+            writer.write_record(&values)?;
+        }
+
+        writer.flush()?;
+
+        let bytes = writer.into_inner()?.into_inner()?;
+        let result = String::from_utf8(bytes)?;
+        Ok(result)
+    }
+}
+
+impl From<Vec<User>> for ListOfUsers {
+    fn from(users: Vec<User>) -> Self {
+        Self { users }
     }
 }

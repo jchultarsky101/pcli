@@ -1,6 +1,7 @@
 use crate::model::{
-    FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, Model, ModelCreateMetadataResponse,
-    ModelMetadata, ModelMetadataItem, Property, PropertyCollection, VisualMatchItem,
+    FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, ListOfUsers, Model,
+    ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
+    VisualMatchItem,
 };
 use core::str::FromStr;
 use log;
@@ -1424,6 +1425,24 @@ impl ApiClient {
         }
 
         Ok(ListOfModels::from(models))
+    }
+
+    pub fn get_list_of_users(&self) -> Result<ListOfUsers, ClientError> {
+        let url = format!("{}/v2/users", self.base_url,);
+
+        let builder = self
+            .client
+            .get(url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
+
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("GET {}", request.url());
+        let response = self.client.execute(request);
+
+        let users = self.handle_response::<ListOfUsers>(response)?;
+        Ok(ListOfUsers::from(users))
     }
 }
 

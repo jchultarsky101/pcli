@@ -1,8 +1,8 @@
 use crate::model::{
     EnvironmentStatusReport, Folder, ListOfFolders, ListOfGeoClassifierPredictions,
-    ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, ListOfVisualModelMatches, Model,
-    ModelAssemblyTree, ModelMetadata, PropertyCollection, SimpleDuplicatesMatchReport, ToCsv,
-    ToHtml, ToJson,
+    ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, ListOfUsers,
+    ListOfVisualModelMatches, Model, ModelAssemblyTree, ModelMetadata, PropertyCollection,
+    SimpleDuplicatesMatchReport, ToCsv, ToHtml, ToJson,
 };
 use colored::*;
 use ptree::print_tree;
@@ -73,6 +73,20 @@ pub fn format_list_of_folders(
     match format {
         Format::Json => Ok(color_string(folders.to_json(pretty)?.as_str(), color)),
         Format::Csv => Ok(color_string(folders.to_csv(pretty)?.as_str(), color)),
+        _ => Err(FormatError::UnsupportedFormat(format.to_string())),
+    }
+}
+
+pub fn format_list_of_users(
+    users: ListOfUsers,
+    format: &Format,
+    pretty: bool,
+    color: Option<Color>,
+) -> Result<colored::ColoredString, FormatError> {
+    log::trace!("Formatting list of users...");
+    match format {
+        Format::Json => Ok(color_string(users.to_json(pretty)?.as_str(), color)),
+        Format::Csv => Ok(color_string(users.to_csv(pretty)?.as_str(), color)),
         _ => Err(FormatError::UnsupportedFormat(format.to_string())),
     }
 }

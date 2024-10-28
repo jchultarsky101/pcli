@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.9.7
+
+* Added "users" command
+* Fixed bug where the owner ID was not shown in CSV format
+* Fixed but where the folder name was showing as NULL in the output of "models" command
+
 ## v1.9.6
 
 * Enhanced the "status" command. The argument (folder) is not optional. When none provided, it will generate status for all folders in the tenant
