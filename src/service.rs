@@ -2,8 +2,8 @@ use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
     EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfMatchedMetadataItems,
-    ListOfModelMatches, ListOfModels, ListOfVisualModelMatches, MatchedMetadataItem, Model,
-    ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
+    ListOfModelMatches, ListOfModels, ListOfUsers, ListOfVisualModelMatches, MatchedMetadataItem,
+    Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
     ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport, VisuallyMatchedModel,
 };
@@ -69,6 +69,12 @@ impl Api {
         log::trace!("Listing folders...");
         let list = self.client.get_list_of_folders(desired_folders)?;
         Ok(ListOfFolders::from(list))
+    }
+
+    pub fn get_list_of_users(&self) -> Result<ListOfUsers, ApiError> {
+        log::trace!("Listing users...");
+        let list = self.client.get_list_of_users()?;
+        Ok(list)
     }
 
     pub fn create_folder(&self, name: &String) -> Result<Folder, ApiError> {
@@ -212,6 +218,8 @@ impl Api {
             None => None,
         };
 
+        let all_folders = self.get_list_of_folders(None)?;
+
         let mut list_of_models: Vec<Model> = Vec::new();
 
         let mut has_more = true;
@@ -228,7 +236,15 @@ impl Api {
                 let models = result.models;
                 if !models.is_empty() {
                     for m in models {
-                        list_of_models.push(Model::from(m.clone()));
+                        let mut model = Model::from(m.clone());
+                        let folder = all_folders.get_folder_by_id(&model.folder_id);
+                        let folder_name = match folder {
+                            Some(folder) => Some(folder.name.to_owned()),
+                            None => None,
+                        };
+                        model.folder_name = folder_name;
+
+                        list_of_models.push(model);
                     }
                 }
             }

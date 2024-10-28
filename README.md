@@ -103,6 +103,7 @@
         <li><a href="#2D-to-3D">Searching for 3D models by 2D image</a></li>
         <li><a href="#label-folder">Model labeling</a></li>
         <li><a href="#label-inference">Labeling of models by inference</a></li>
+        <li><a href="#list-users">Listing all users</a></li>
       </ol>
     </li>
     <li><a href="#errors">Handling errors</a></li>
@@ -278,6 +279,8 @@ Commands:
           Generates a match report for the specified models
   folders
           Lists all available folders
+  users
+          Lists all users
   create-folder
           Creates a new folder
   properties
@@ -1439,6 +1442,25 @@ If multiple matches occur with the same property name but varying values, the va
 Users can save the output to a CSV file and manually edit it if necessary. Afterwards, they can use the `upload-model-meta` command to upload the same file and persist the changes.
 
 If you trust the output, adding the `--apply` flag will automatically apply the changes to the model.
+
+## <a id="list-users"></a>Listing all users
+
+This is a support function to list all available users in the tenant.
+
+```bash
+pcli help users
+```
+```
+Lists all users
+
+Usage: pcli --tenant <tenant> users
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+It does not require any arguments. It simply outputs the full list of users. As other commands, it supports csv and json formats.
 
 # <a id="errors"></a>Handling erors
 
