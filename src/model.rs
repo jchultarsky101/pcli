@@ -531,6 +531,7 @@ impl ToCsv for Model {
             "ID",
             "NAME",
             "FOLDER_ID",
+            "FOLDER_NAME",
             "IS_ASSEMBLY",
             "FILE_TYPE",
             "UNITS",
@@ -569,6 +570,7 @@ impl ToCsv for Model {
         values.push(self.uuid.to_string());
         values.push(self.name.to_owned());
         values.push(self.folder_id.to_string());
+        values.push(self.folder_name.to_owned().unwrap_or_default());
         values.push(self.is_assembly.to_string());
         values.push(self.file_type.to_string());
         values.push(self.units.to_owned());
@@ -594,7 +596,7 @@ impl ToCsv for Model {
         }
 
         let number_of_columns = all_columns.len();
-        for i in 8..number_of_columns {
+        for i in 9..number_of_columns {
             let column_name = all_columns[i];
             let value = match properties.get(column_name) {
                 Some(value) => value.to_owned(),
@@ -632,10 +634,12 @@ impl ToCsv for ListOfModels {
             "ID",
             "NAME",
             "FOLDER_ID",
+            "FOLDER_NAME",
             "IS_ASSEMBLY",
             "FILE_TYPE",
             "UNITS",
             "STATE",
+            "OWNER_ID",
         ];
 
         // populate the column names with the names of all properties found in models
@@ -668,10 +672,12 @@ impl ToCsv for ListOfModels {
             values.push(model.uuid.to_string());
             values.push(model.name);
             values.push(model.folder_id.to_string());
+            values.push(model.folder_name.to_owned().unwrap_or_default());
             values.push(model.is_assembly.to_string());
             values.push(model.file_type.to_string());
             values.push(model.units);
             values.push(model.state);
+            values.push(model.owner_id.to_string());
 
             let meta = model.metadata.clone();
             let mut properties: HashMap<String, String> = HashMap::new();
@@ -687,7 +693,7 @@ impl ToCsv for ListOfModels {
             }
 
             let number_of_columns = all_columns.len();
-            for i in 7..number_of_columns {
+            for i in 9..number_of_columns {
                 let column_name = all_columns[i];
                 let value = match properties.get(column_name) {
                     Some(value) => value.to_owned(),
