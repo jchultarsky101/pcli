@@ -453,7 +453,7 @@ impl ModelMetadata {
             .from_writer(buf);
 
         if pretty {
-            let columns = vec!["MODEL_UUID", "NAME", "VALUE"];
+            let columns = vec!["UUID", "NAME", "VALUE"];
             writer.write_record(&columns)?;
         }
 
@@ -1645,7 +1645,7 @@ impl ToCsv for ListOfGeoClassifierPredictions {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct MatchedMetadataItem {
-    #[serde(rename = "MODEL_UUID")]
+    #[serde(rename = "UUID")]
     pub uuid: Uuid,
     #[serde(rename = "NAME")]
     pub name: String,
@@ -1695,7 +1695,7 @@ impl ToCsv for ListOfMatchedMetadataItems {
             .from_writer(buf);
 
         if pretty {
-            let columns = vec!["MODEL_UUID", "NAME", "VALUE", "MATCH_SCORE"];
+            let columns = vec!["UUID", "NAME", "VALUE", "MATCH_SCORE"];
             writer.write_record(&columns)?;
         }
 
