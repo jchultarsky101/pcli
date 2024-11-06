@@ -935,7 +935,7 @@ Options:
 It takes one mandatory argument - the model's UUID.
 The output by default is JSON, but when we specify CSV, the output contains the following columns:
 
-* MODEL_UUID - the UUID of the model
+* UUID - the UUID of the model
 * NAME - the property name
 * VALUE - the property value
 
@@ -947,7 +947,7 @@ Example:
 pcli --tenant="mytenant" --format="csv" --pretty model-meta --uuid="97377547-9062-4149-90f7-16daf400148x"
 ```
 ```
-MODEL_UUID,NAME,VALUE
+UUID,NAME,VALUE
 97377547-9063-4149-90f7-16daf400148x,DESCRIPTION,Test description
 97377547-9063-4149-90f7-16daf400148x,SKU,Test
 ```
@@ -978,7 +978,7 @@ The file format is the same as the CSV-formatted output produced by the command 
 
 **NOTE:** This command only works with the CSV format. It does not work with JSON. We may implement that option in a future release.
 
-The columns are: MODEL_UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
+The columns are: UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.
 
 The required argument is "input" - the name of the CSV formatted input file. There is no need for --uuid here because the UUID is included
 in the input file as the first column.
@@ -1428,7 +1428,7 @@ pcli --format=csv --pretty label-inference --uuid=d915cc6d-5daa-4597-8f75-3d786b
 Output:
 
 ```plaintext
-MODEL_UUID,NAME,VALUE,MATCH_SCORE
+UUID,NAME,VALUE,MATCH_SCORE
 d915cc6d-5daa-4597-8f75-3d786b671790,Material,PLA,0.9430817258938444
 d915cc6d-5daa-4597-8f75-3d786b671790,3D Printable,Yes,0.8887639114858723
 ```
