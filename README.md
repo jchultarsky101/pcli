@@ -97,6 +97,7 @@
         <li><a href="#read-asm">Reading the assembly structure</a></li>
         <li><a href="#match-model">Matching models to other models</a></li>
         <li><a href="#match-folder">Matching entire folders of models</a></li>
+        <li><a hred="#match-visual">Matching models by visual appearance</a></li>
         <li><a href="#match-scan">Matching scanned model</a></li>
         <li><a href="#match-report">Generating a match report</a></li>
         <li><a href="#environment-status">Tenant environment status</a></li>
