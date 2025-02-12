@@ -5,7 +5,7 @@ use crate::model::{
     ListOfModelMatches, ListOfModels, ListOfUsers, ListOfVisualModelMatches, MatchedMetadataItem,
     Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
     ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
-    PropertyCollection, SimpleDuplicatesMatchReport, VisuallyMatchedModel,
+    PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use log::debug;
 use log::{error, trace, warn};
@@ -377,42 +377,15 @@ impl Api {
         Ok(ListOfModelMatches::new(Box::new(list_of_matches)))
     }
 
-    pub fn match_model_visual(&self, uuid: &Uuid) -> Result<ListOfVisualModelMatches, ApiError> {
+    pub fn match_model_visual(
+        &self,
+        uuid: &Uuid,
+        threshold: f64,
+    ) -> Result<ListOfVisualModelMatches, ApiError> {
         trace!("Matching model visual {}...", uuid);
-        let mut list_of_matches: Vec<VisuallyMatchedModel> = Vec::new();
-
-        let mut has_more = true;
-        let mut page: u32 = 1;
-        let per_page: u32 = 100;
-        while has_more {
-            let result = self
-                .client
-                .get_model_visual_match_page(uuid, per_page, page)?;
-            if result.page_data.total > 0 {
-                let matches = result.matches;
-                if !matches.is_empty() {
-                    for m in matches {
-                        list_of_matches.push(m.model.clone());
-                    }
-                }
-            }
-            has_more = result.page_data.current_page < result.page_data.last_page;
-            page = result.page_data.current_page + 1;
-        }
-
-        // remove the reference UUID from the list of results if present
-        if let Some(pos) = list_of_matches
-            .iter()
-            .cloned()
-            .position(|x| x.uuid == uuid.to_owned())
-        {
-            list_of_matches.remove(pos);
-        }
-        list_of_matches.truncate(10);
-
+        let list_of_matches = self.client.get_model_visual_match(uuid, threshold)?;
         trace!("Result: {:?}", &list_of_matches);
-
-        Ok(ListOfVisualModelMatches::new(Box::new(list_of_matches)))
+        Ok(list_of_matches)
     }
 
     pub fn match_scan_model(

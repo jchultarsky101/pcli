@@ -193,7 +193,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -241,13 +241,22 @@ fn main() {
                         .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+                .arg(
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
                         .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
-                ),
+                )
         )
         .subcommand(
             Command::new("match-scan")
@@ -266,7 +275,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -302,7 +311,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5'")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -358,7 +367,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5'")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -380,7 +389,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -434,7 +443,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -645,7 +654,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -1152,8 +1161,8 @@ fn main() {
         },
         Some(("match-visual", sub_matches)) => {
             let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
-            
-            let model_matches = match api.match_model_visual(&uuid) {
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let model_matches = match api.match_model_visual(&uuid, threshold.to_owned()) {
                 Ok(model_matches) => {
                     trace!("We found {} match(es)!", model_matches.models.len());
                     model_matches
@@ -1892,7 +1901,7 @@ fn main() {
                 index += 1;
                 debug!("Comparing item [{}]: {} of {}", uuid.to_string(), index, size);
                 
-                let visual_matches = api.match_model_visual(&uuid);
+                let visual_matches = api.match_model_visual(&uuid, 0.0);
                 match visual_matches {
                     Ok(visual_matches) => {
                         let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().filter(|m| m.uuid != uuid).map(|m| (m.uuid, m.name)).collect();      

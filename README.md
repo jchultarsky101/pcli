@@ -1016,7 +1016,7 @@ Options:
   -u, --uuid <uuid>
           The model UUID
   -t, --threshold <threshold>
-          Match threshold percentage (e.g. '96.5')
+          Match threshold percentage (e.g. 0.8 for 80%)
   -m, --meta
           Enhance output with model's metadata
       --reference-meta
@@ -1028,7 +1028,7 @@ Options:
   -h, --help
           Print help
   -V, --version
-          Print versio
+          Print version
 ```
 
 * "uuid" is the UUID of the model we are trying to match.
@@ -1041,7 +1041,7 @@ Options:
 Example:
 
 ```bash
-pcli --tenant="mytenant" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="97.5"
+pcli --tenant="mytenant" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="0.975"
 ```
 
 The output contains the list of models that matched the criteria and a value between zero and one indicating the fit.
@@ -1075,7 +1075,7 @@ Matches all models in a folder to other models
 Usage: pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold>
 
 Options:
-  -t, --threshold <threshold>         Match threshold percentage (e.g. '96.5'
+  -t, --threshold <threshold>         Match threshold percentage (e.g. 0.8 for 80%)
   -d, --folder [<folder>...]          Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
   -s, --search <search>               Search clause to further filter output (optional: e.g. a model name)
   -e, --exclusive                     If specified, the output will include only models that belong to the input folder
@@ -1148,7 +1148,7 @@ Usage: pcli --tenant <tenant> match-scan [OPTIONS] --uuid <uuid> --threshold <th
 
 Options:
   -u, --uuid <uuid>                      The model UUID
-  -t, --threshold <threshold>            Match threshold percentage (e.g. '96.5')
+  -t, --threshold <threshold>            Match threshold percentage (e.g. 0.8 for 80%)
   -m, --meta                             Enhance output with model's metadata
       --classification <classification>  The name for the classification metadata property
       --tag <tag>                        The value for the classification metadata property
@@ -1174,14 +1174,15 @@ Generates a match report for the specified models
 Usage: pcli --tenant <tenant> match-report [OPTIONS] --uuid <uuid> --threshold <threshold> --duplicates <duplicates> --graph <graph> --dictionary <dictionary>
 
 Options:
-  -u, --uuid <uuid>              Top-level assembly UUID (you can provide multiple)
-  -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5')
-  -d, --duplicates <duplicates>  Output file name to store the duplicate report in CSV format
-  -g, --graph <graph>            Output file name to store the assembly graph in DOT Graphviz format
-  -r, --dictionary <dictionary>  Output file name to store the index-name-uuid dictionary in JSON format
-  -m, --meta                     Enhance output with model's metadata
-  -h, --help                     Print help
-  -V, --version                  Print version
+  -u, --uuid <uuid>                   Top-level assembly UUID (you can provide multiple)
+  -t, --threshold <threshold>         Match threshold percentage (e.g. 0.8 for 80%)
+  -d, --duplicates <duplicates>       Output file name to store the duplicate report in CSV format
+  -g, --graph <graph>                 Output file name to store the assembly graph in DOT Graphviz format
+  -r, --dictionary <dictionary>       Output file name to store the index-name-uuid dictionary in JSON format
+  -m, --meta                          Enhance output with model's metadata
+      --meta-filter [<KEY=VALUE>...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+  -h, --help                          Print help
+  -V, --version                       Print version
 ```
 
 Example:
@@ -1356,7 +1357,7 @@ Options:
   -d, --folder <folder>
           Folder name
   -t, --threshold <threshold>
-          Match threshold percentage (e.g. '96.5')
+          Match threshold percentage (e.g. 0.8 for 80%)
   -c, --classification <classification>
           The name for the classification metadata property
   -s, --search <search>
@@ -1424,9 +1425,10 @@ Usage: pcli --tenant <tenant> label-inference [OPTIONS] --uuid <uuid> --threshol
 
 Options:
   -u, --uuid <uuid>            The model UUID
-  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5')
-  -k, --key [<meta-key>...]    Optional: Metadata property key subject to inference (you can provide multiple keys)
+  -t, --threshold <threshold>  Match threshold percentage (e.g. 0.8 for 80%)
+  -k, --key [<meta-key>...]    Optional: Metadata property key subject to inference (you can provide up to 10 keys)
   -d, --folder [<folder>...]   Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+      --cascade-assembly       Optional: When this flag is used and the reference model is an assembly, it will recursively perform this operation for each sub-assembly and part within the main assembly
       --apply                  Optional: When this flag is specified, the infered values will be automatically applied to the model
   -h, --help                   Print help
   -V, --version                Print version
@@ -1435,7 +1437,7 @@ Options:
 ### Input Arguments
 
 - **"uuid"**: The reference model UUID.
-- **"threshold"**: The confidence threshold value.
+- **"threshold"**: The confidence threshold value in percentage. Example: use the value of '0.8' for 80%
 - **"key"**: This optional argument allows you to specify explicitly which property names are to be considered for inference. Properties not specified are ignored.
 - **"apply"**: This optional flag, when specified, automatically sets the inferred properties in the reference model. Existing property values are not overridden to maintain data integrity.
 - **"folder"**: This is optional argument. You can specify it multiple times. If provided, it will filter the list of matching models only to those that belong in a folder that is listed. If none are specified, it will include matches from all existing folders, which is the default.
