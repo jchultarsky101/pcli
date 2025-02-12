@@ -51,6 +51,7 @@ on:
 jobs:
   web:
     name: Build and deploy site and docs
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       # Setup
