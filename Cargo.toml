@@ -63,4 +63,5 @@ tempfile = "3.10.1"
 [profile.dist]
 inherits = "release"
 lto = "thin"
+allow-dirty = ["ci", "msi"]
 
