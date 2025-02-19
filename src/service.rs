@@ -572,6 +572,7 @@ impl Api {
         exclusive: bool,
         with_meta: bool,
         metadata_filter: Option<HashMap<String, String>>,
+        ignore_errors: bool,
     ) -> Result<SimpleDuplicatesMatchReport, ApiError> {
         trace!("Generating simple match report...");
 
@@ -590,8 +591,12 @@ impl Api {
             let mut model = match self.get_model(&uuid, true, with_meta) {
                 Ok(model) => model,
                 Err(e) => {
-                    warn!("Failed to query for model {}: {}", uuid, e);
-                    continue;
+                    if ignore_errors {
+                        warn!("Failed to query for model {}: {}", uuid, e);
+                        continue;
+                    } else {
+                        return Err(e);
+                    }
                 }
             };
 
@@ -701,6 +706,7 @@ impl Api {
         threshold: f64,
         with_meta: bool,
         meta_filter: Option<HashMap<String, String>>,
+        ignore_errors: bool,
     ) -> Result<ModelMatchReport, ApiError> {
         let mut flat_bom = FlatBom::empty();
         let mut roots: HashMap<Uuid, ModelAssemblyTree> = HashMap::new();
@@ -732,6 +738,7 @@ impl Api {
             false,
             with_meta,
             meta_filter,
+            ignore_errors,
         )?;
 
         // Create the DAG

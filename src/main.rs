@@ -357,7 +357,15 @@ fn main() {
                         .num_args(0..)
                         .requires("meta")
                         .required(false)
-                ),    
+                )    
+                .arg(
+                    Arg::new("ignore-errors")
+                        .long("ignore-errors")
+                        .num_args(0)
+                        .help("Continue operation when errors are encountered")
+                        .default_value("true")
+                        .required(false)
+                ),
         )        
         .subcommand(
             Command::new("match-all-models")
@@ -698,7 +706,15 @@ fn main() {
                         .num_args(0..)
                         .requires("meta")
                         .required(false)
-                ),    
+                )
+                .arg(
+                    Arg::new("ignore-errors")
+                        .long("ignore-errors")
+                        .num_args(0)
+                        .help("Continue operation when errors are encountered")
+                        .default_value("true")
+                        .required(false)
+                ),
         )
         .subcommand(
             Command::new("folders")
@@ -1231,7 +1247,7 @@ fn main() {
                         Ok(physna_models) => {
                             let models = model::ListOfModels::from(physna_models);
                             let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                            match api.generate_simple_model_match_report(uuids, threshold, folders, false, false, None) {
+                            match api.generate_simple_model_match_report(uuids, threshold, folders, false, false, None, true) {
                                 Ok(report) => {
                                     let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
                                     match output {
@@ -1268,6 +1284,7 @@ fn main() {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let exclusive = sub_matches.get_flag("exclusive");
             let with_meta = sub_matches.get_flag("meta");
+            let ignore_errors = sub_matches.get_flag("ignore-errors");
             let search = sub_matches.get_one::<String>("search");
 
             let folders = sub_matches.get_many::<String>("folder");            
@@ -1303,7 +1320,7 @@ fn main() {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta, meta_filter) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta, meta_filter, ignore_errors) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
                             match output {
@@ -1380,7 +1397,7 @@ fn main() {
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, Some(folders.clone()), false, true, None) {
+                    match api.generate_simple_model_match_report(uuids, threshold, Some(folders.clone()), false, true, None, true) {
                         Ok(report) => {
 
                             let existing_folders = match api.get_list_of_folders(None) {
@@ -1763,6 +1780,7 @@ fn main() {
 
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
             let with_meta = sub_matches.get_flag("meta");
+            let ignore_errors = sub_matches.get_flag("ignore-errors");
             let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
                 Some(meta_filter) => {
                     let mut map = HashMap::new();
@@ -1781,7 +1799,7 @@ fn main() {
                 None => None,
             };
 
-            match api.generate_model_match_report(uuids, threshold, with_meta, meta_filter) {
+            match api.generate_model_match_report(uuids, threshold, with_meta, meta_filter, ignore_errors) {
                 Ok(report) => {
 
                     let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
