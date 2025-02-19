@@ -1201,7 +1201,7 @@ pcli --tenant="mytenant" match-report \
 * "dictionary" is an output file in JSON format. It will map the UUIDs for each model in Physna to the graph node IDs
 * "threshold" is the minimum match level
 * "uuid" is the UUID for the master assembly in Physna
-* "ignore-errors" is optional flag. When present PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process
+* "ignore-errors" is optional flag. The default value is 'true'. When set to 'true' PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process
 
 Hint: You can find the UUID for any model by name by using the "models" command and a search clause.
 

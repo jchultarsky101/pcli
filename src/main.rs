@@ -361,7 +361,7 @@ fn main() {
                 .arg(
                     Arg::new("ignore-errors")
                         .long("ignore-errors")
-                        .num_args(0)
+                        .num_args(1)
                         .help("Continue operation when errors are encountered")
                         .default_value("true")
                         .required(false)
@@ -710,7 +710,7 @@ fn main() {
                 .arg(
                     Arg::new("ignore-errors")
                         .long("ignore-errors")
-                        .num_args(0)
+                        .num_args(1)
                         .help("Continue operation when errors are encountered")
                         .default_value("true")
                         .required(false)
