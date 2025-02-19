@@ -359,9 +359,9 @@ fn main() {
                         .required(false)
                 )    
                 .arg(
-                    Arg::new("ignore-errors")
-                        .long("ignore-errors")
-                        .num_args(1)
+                    Arg::new("continue-on-error")
+                        .long("continue-on-error")
+                        .num_args(0)
                         .help("Continue operation when errors are encountered")
                         .default_value("true")
                         .required(false)
@@ -708,9 +708,9 @@ fn main() {
                         .required(false)
                 )
                 .arg(
-                    Arg::new("ignore-errors")
-                        .long("ignore-errors")
-                        .num_args(1)
+                    Arg::new("continue-on-error")
+                        .long("continue-on-error")
+                        .num_args(0)
                         .help("Continue operation when errors are encountered")
                         .default_value("true")
                         .required(false)
@@ -1284,7 +1284,7 @@ fn main() {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let exclusive = sub_matches.get_flag("exclusive");
             let with_meta = sub_matches.get_flag("meta");
-            let ignore_errors = sub_matches.get_flag("ignore-errors");
+            let ignore_errors = !sub_matches.get_flag("continue-on-error");
             let search = sub_matches.get_one::<String>("search");
 
             let folders = sub_matches.get_many::<String>("folder");            
@@ -1780,7 +1780,7 @@ fn main() {
 
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
             let with_meta = sub_matches.get_flag("meta");
-            let ignore_errors = sub_matches.get_flag("ignore-errors");
+            let ignore_errors = !sub_matches.get_flag("continue-on-error");
             let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
                 Some(meta_filter) => {
                     let mut map = HashMap::new();

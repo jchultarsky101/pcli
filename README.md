@@ -1168,7 +1168,7 @@ outputs and therefore it requires the user to specify file names for each output
 ```bash
 pcli help match-report
 ```
-```plaintext
+```plaintex
 Generates a match report for the specified models
 
 Usage: pcli --tenant <tenant> match-report [OPTIONS] --uuid <uuid> --threshold <threshold> --duplicates <duplicates> --graph <graph> --dictionary <dictionary>
@@ -1181,8 +1181,9 @@ Options:
   -r, --dictionary <dictionary>       Output file name to store the index-name-uuid dictionary in JSON format
   -m, --meta                          Enhance output with model's metadata
       --meta-filter [<KEY=VALUE>...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+      --continue-on-error             Continue operation when errors are encountered
   -h, --help                          Print help
-  -V, --version                       Print version
+  -V, --version                       Print versiot
 ```
 
 Example:
@@ -1201,7 +1202,7 @@ pcli --tenant="mytenant" match-report \
 * "dictionary" is an output file in JSON format. It will map the UUIDs for each model in Physna to the graph node IDs
 * "threshold" is the minimum match level
 * "uuid" is the UUID for the master assembly in Physna
-* "ignore-errors" is optional flag. The default value is 'true'. When set to 'true' PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process
+* "continue-on-error" is optional flag. The default value is 'false'. When set to 'true' PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process
 
 Hint: You can find the UUID for any model by name by using the "models" command and a search clause.
 
