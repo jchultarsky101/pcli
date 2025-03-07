@@ -145,7 +145,7 @@ This project is built with the wonderful programming language [Rust](https://www
 
 ## <a id="prerequisites"></a>Prerequisites
 
-This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity of how to execute commands. 
+This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity with how to execute commands. 
 
 It is a client to the Physna services. To be able to use it, you will need to first request a Physna Enterprise account. Please, contact your Physna representative for details.
 
@@ -157,7 +157,7 @@ You can use the installation script for your platform as shown on the [documenta
 
 ### <a id="downloading-binary"></a>Downloading a pre-compiled binary
 
-You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have decompress it and copy the file to location of your choice.
+You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have to decompress it and copy the file to a location of your choice.
 
 ### <a id="compilation"></a>Compilation from source
 
@@ -180,7 +180,7 @@ your tenant ID.
 The tenant ID is a critical bit of information, which will be required from you almost every time you execute
 the CLI. If you are unsure what your tenant ID is, please contact your Physna representative.
 
-NOTE: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
+Note: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
 
 # <a id="configuration"></a>Configuration
 
