@@ -72,7 +72,7 @@
           <ol>
             <li><a href="#order-of-arguments">Order of arguments</a></li>
             <li><a href="#general-vs-specific-args">How do I know which arguments are general and which are specific</a></li>
-            <li><a href="#signs-n-quotes">Equal sign, quotes, oh mine</a></li>
+            <li><a href="#signs-n-quotes">Equal sign, quotes, oh my</a></li>
             <li><a href="#milti-value-args">Arguments with multiple values</a></li>
           </ol>
         </li>
@@ -129,7 +129,7 @@
 
 # <a id="about-the-project"></a>About the project
 
-This utility is a CLI client for the Physna's public API V2. It could be used to interact with the system
+This utility is a CLI client for Physna's public API V2. It could be used to interact with the system
 in automated ways.
 
 :warning: **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
@@ -157,7 +157,7 @@ You can use the installation script for your platform as shown on the [documenta
 
 ### <a id="downloading-binary"></a>Downloading a pre-compiled binary
 
-You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have uncompress it and copy the file to location of your choice.
+You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have decompress it and copy the file to location of your choice.
 
 ### <a id="compilation"></a>Compilation from source
 
@@ -187,7 +187,7 @@ NOTE: If you specify a tenant that is unknown (not in the configuration file), t
 The tool uses a single configuration file. The location for this file is your home directory
 and the file name is ~/.pcli.conf.
 
-Here is an example contents of .pcli.conf:
+Here is an example of the contents of .pcli.conf:
 
 ~~~
 base_path: https://api.physna.com
@@ -405,7 +405,7 @@ a command name in the help request, you will see the command-specific arguments 
 
 Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.
 
-### <a id="signs-n-quites"></a>Equal sign, quotes, oh mine!
+### <a id="signs-n-quites"></a>Equal sign, quotes, oh my!
 
 There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.
