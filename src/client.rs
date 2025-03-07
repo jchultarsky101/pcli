@@ -1,7 +1,7 @@
 use crate::model::{
-    FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, ListOfUsers, Model,
-    ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem, Property, PropertyCollection,
-    VisualMatchItem,
+    FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, ListOfUsers,
+    ListOfVisualModelMatches, Model, ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem,
+    Property, PropertyCollection, VisualMatchItem, VisuallyMatchedModel,
 };
 use core::str::FromStr;
 use log;
@@ -658,9 +658,10 @@ impl ApiClient {
         Ok(self.handle_response::<PartToPartMatchResponse>(response)?)
     }
 
-    pub fn get_model_visual_match_page(
+    fn get_model_visual_match_page(
         &self,
         uuid: &Uuid,
+        threshold: f64,
         per_page: u32,
         page: u32,
     ) -> Result<ModelVisualMatchResponse, ClientError> {
@@ -670,14 +671,16 @@ impl ApiClient {
             id = urlencode(uuid.to_string())
         );
 
+        let mut query: Vec<(&str, String)> = Vec::new();
+        query.push(("threshold", threshold.to_string()));
+        query.push(("page", page.to_string()));
+        query.push(("perPage", per_page.to_string()));
+
         let builder = self
             .client
             .get(url)
             .timeout(Duration::from_secs(180))
-            .query(&[
-                ("perPage", per_page.to_string().as_str()),
-                ("page", page.to_string().as_str()),
-            ])
+            .query(&query)
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
             .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
@@ -686,6 +689,43 @@ impl ApiClient {
         let response = self.client.execute(request);
 
         Ok(self.handle_response::<ModelVisualMatchResponse>(response)?)
+    }
+
+    pub fn get_model_visual_match(
+        &self,
+        uuid: &Uuid,
+        threshold: f64,
+    ) -> Result<ListOfVisualModelMatches, ClientError> {
+        let mut list_of_matches: Vec<VisuallyMatchedModel> = Vec::new();
+
+        let mut has_more = true;
+        let mut page: u32 = 1;
+        let per_page: u32 = 100;
+        while has_more {
+            let result = self.get_model_visual_match_page(uuid, threshold, per_page, page)?;
+            if result.page_data.total > 0 {
+                let matches = result.matches;
+                if !matches.is_empty() {
+                    for m in matches {
+                        list_of_matches.push(m.model.clone());
+                    }
+                }
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
+        }
+
+        // remove the reference UUID from the list of results if present
+        if let Some(pos) = list_of_matches
+            .iter()
+            .cloned()
+            .position(|x| x.uuid == uuid.to_owned())
+        {
+            list_of_matches.remove(pos);
+        }
+        list_of_matches.truncate(10);
+
+        Ok(ListOfVisualModelMatches::new(Box::new(list_of_matches)))
     }
 
     fn get_list_of_folders_page(

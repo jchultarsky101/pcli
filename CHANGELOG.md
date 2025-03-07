@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.9.11
+
+* Added --ignore-errors to match-report
+
+## v1.9.10
+
+* Added --threshold argument to the **visual-match** command
+* Updated the README.md file
+
 ## v1.9.9
 
 * Standardized column names to resolve inconsistencies in CSV format

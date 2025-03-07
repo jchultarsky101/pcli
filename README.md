@@ -72,7 +72,7 @@
           <ol>
             <li><a href="#order-of-arguments">Order of arguments</a></li>
             <li><a href="#general-vs-specific-args">How do I know which arguments are general and which are specific</a></li>
-            <li><a href="#signs-n-quotes">Equal sign, quotes, oh mine</a></li>
+            <li><a href="#signs-n-quotes">Equal sign, quotes, oh my</a></li>
             <li><a href="#milti-value-args">Arguments with multiple values</a></li>
           </ol>
         </li>
@@ -97,6 +97,7 @@
         <li><a href="#read-asm">Reading the assembly structure</a></li>
         <li><a href="#match-model">Matching models to other models</a></li>
         <li><a href="#match-folder">Matching entire folders of models</a></li>
+        <li><a href="#match-visual">Matching models by visual appearance</a></li>
         <li><a href="#match-scan">Matching scanned model</a></li>
         <li><a href="#match-report">Generating a match report</a></li>
         <li><a href="#environment-status">Tenant environment status</a></li>
@@ -128,10 +129,10 @@
 
 # <a id="about-the-project"></a>About the project
 
-This utility is a CLI client for the Physna's public API V2. It could be used to interact with the system
+This utility is a CLI client for Physna's public API V2. It could be used to interact with the system
 in automated ways.
 
-:warning: **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
+**Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
 
 # <a id="built-with"></a>Built with
 
@@ -144,7 +145,7 @@ This project is built with the wonderful programming language [Rust](https://www
 
 ## <a id="prerequisites"></a>Prerequisites
 
-This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity of how to execute commands. 
+This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity with how to execute commands. 
 
 It is a client to the Physna services. To be able to use it, you will need to first request a Physna Enterprise account. Please, contact your Physna representative for details.
 
@@ -156,7 +157,7 @@ You can use the installation script for your platform as shown on the [documenta
 
 ### <a id="downloading-binary"></a>Downloading a pre-compiled binary
 
-You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have uncompress it and copy the file to location of your choice.
+You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have to decompress it and copy the file to a location of your choice.
 
 ### <a id="compilation"></a>Compilation from source
 
@@ -179,14 +180,14 @@ your tenant ID.
 The tenant ID is a critical bit of information, which will be required from you almost every time you execute
 the CLI. If you are unsure what your tenant ID is, please contact your Physna representative.
 
-NOTE: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
+Note: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
 
 # <a id="configuration"></a>Configuration
 
 The tool uses a single configuration file. The location for this file is your home directory
 and the file name is ~/.pcli.conf.
 
-Here is an example contents of .pcli.conf:
+Here is an example of the contents of .pcli.conf:
 
 ~~~
 base_path: https://api.physna.com
@@ -404,7 +405,7 @@ a command name in the help request, you will see the command-specific arguments 
 
 Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.
 
-### <a id="signs-n-quites"></a>Equal sign, quotes, oh mine!
+### <a id="signs-n-quites"></a>Equal sign, quotes, oh my!
 
 There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.
@@ -1015,7 +1016,7 @@ Options:
   -u, --uuid <uuid>
           The model UUID
   -t, --threshold <threshold>
-          Match threshold percentage (e.g. '96.5')
+          Match threshold percentage (e.g. 0.8 for 80%)
   -m, --meta
           Enhance output with model's metadata
       --reference-meta
@@ -1027,7 +1028,7 @@ Options:
   -h, --help
           Print help
   -V, --version
-          Print versio
+          Print version
 ```
 
 * "uuid" is the UUID of the model we are trying to match.
@@ -1040,7 +1041,7 @@ Options:
 Example:
 
 ```bash
-pcli --tenant="mytenant" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="97.5"
+pcli --tenant="mytenant" match-model --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --threshold="0.975"
 ```
 
 The output contains the list of models that matched the criteria and a value between zero and one indicating the fit.
@@ -1074,7 +1075,7 @@ Matches all models in a folder to other models
 Usage: pcli --tenant <tenant> match-folder [OPTIONS] --threshold <threshold>
 
 Options:
-  -t, --threshold <threshold>         Match threshold percentage (e.g. '96.5'
+  -t, --threshold <threshold>         Match threshold percentage (e.g. 0.8 for 80%)
   -d, --folder [<folder>...]          Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
   -s, --search <search>               Search clause to further filter output (optional: e.g. a model name)
   -e, --exclusive                     If specified, the output will include only models that belong to the input folder
@@ -1109,6 +1110,28 @@ The effect of the above is that PCLI will read the metadata for all models and o
 
 This filter may be very helpful when you have large library of models across many folders and the only way to reduce the list is by specific metadata property(ies).
 
+## <a id="match-visual"></a>Matching a model by its visual appearance
+
+If you would like to find models that appear similar to a human eye, but may have different scale or details you can use the **match-visual** command. It only accounts for surface features.
+
+```bash
+pcli match-visual --help
+```
+```
+Matches all models to the specified one. Uses visual match algorithm
+
+Usage: pcli --tenant <tenant> match-visual [OPTIONS] --uuid <uuid>
+
+Options:
+  -u, --uuid <uuid>  The model UUID
+  -m, --meta         Enhance output with model's metadata
+  -h, --help         Print help
+  -V, --version      Print versio
+```
+
+The output is a list of matched models. It is sorted by match confidence with the best result as the first element.
+
+
 ## <a id="match-scan"></a>Matching scanned model
 
 If you have uploaded a 3D model that has been generated by a 3D scanner techolgy (e.g. photogrammetry), the tessellation may be widely different than a model produced by a CAD system.
@@ -1125,7 +1148,7 @@ Usage: pcli --tenant <tenant> match-scan [OPTIONS] --uuid <uuid> --threshold <th
 
 Options:
   -u, --uuid <uuid>                      The model UUID
-  -t, --threshold <threshold>            Match threshold percentage (e.g. '96.5')
+  -t, --threshold <threshold>            Match threshold percentage (e.g. 0.8 for 80%)
   -m, --meta                             Enhance output with model's metadata
       --classification <classification>  The name for the classification metadata property
       --tag <tag>                        The value for the classification metadata property
@@ -1145,20 +1168,22 @@ outputs and therefore it requires the user to specify file names for each output
 ```bash
 pcli help match-report
 ```
-```
+```plaintex
 Generates a match report for the specified models
 
 Usage: pcli --tenant <tenant> match-report [OPTIONS] --uuid <uuid> --threshold <threshold> --duplicates <duplicates> --graph <graph> --dictionary <dictionary>
 
 Options:
-  -u, --uuid <uuid>              Top-level assembly UUID (you can provide multiple)
-  -t, --threshold <threshold>    Match threshold percentage (e.g. '96.5')
-  -d, --duplicates <duplicates>  Output file name to store the duplicate report in CSV format
-  -g, --graph <graph>            Output file name to store the assembly graph in DOT Graphviz format
-  -r, --dictionary <dictionary>  Output file name to store the index-name-uuid dictionary in JSON format
-  -m, --meta                     Enhance output with model's metadata
-  -h, --help                     Print help
-  -V, --version                  Print version
+  -u, --uuid <uuid>                   Top-level assembly UUID (you can provide multiple)
+  -t, --threshold <threshold>         Match threshold percentage (e.g. 0.8 for 80%)
+  -d, --duplicates <duplicates>       Output file name to store the duplicate report in CSV format
+  -g, --graph <graph>                 Output file name to store the assembly graph in DOT Graphviz format
+  -r, --dictionary <dictionary>       Output file name to store the index-name-uuid dictionary in JSON format
+  -m, --meta                          Enhance output with model's metadata
+      --meta-filter [<KEY=VALUE>...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+      --continue-on-error             Continue operation when errors are encountered
+  -h, --help                          Print help
+  -V, --version                       Print versiot
 ```
 
 Example:
@@ -1177,6 +1202,7 @@ pcli --tenant="mytenant" match-report \
 * "dictionary" is an output file in JSON format. It will map the UUIDs for each model in Physna to the graph node IDs
 * "threshold" is the minimum match level
 * "uuid" is the UUID for the master assembly in Physna
+* "continue-on-error" is optional flag. The default value is 'false'. When set to 'true' PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process
 
 Hint: You can find the UUID for any model by name by using the "models" command and a search clause.
 
@@ -1333,7 +1359,7 @@ Options:
   -d, --folder <folder>
           Folder name
   -t, --threshold <threshold>
-          Match threshold percentage (e.g. '96.5')
+          Match threshold percentage (e.g. 0.8 for 80%)
   -c, --classification <classification>
           The name for the classification metadata property
   -s, --search <search>
@@ -1401,9 +1427,10 @@ Usage: pcli --tenant <tenant> label-inference [OPTIONS] --uuid <uuid> --threshol
 
 Options:
   -u, --uuid <uuid>            The model UUID
-  -t, --threshold <threshold>  Match threshold percentage (e.g. '96.5')
-  -k, --key [<meta-key>...]    Optional: Metadata property key subject to inference (you can provide multiple keys)
+  -t, --threshold <threshold>  Match threshold percentage (e.g. 0.8 for 80%)
+  -k, --key [<meta-key>...]    Optional: Metadata property key subject to inference (you can provide up to 10 keys)
   -d, --folder [<folder>...]   Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+      --cascade-assembly       Optional: When this flag is used and the reference model is an assembly, it will recursively perform this operation for each sub-assembly and part within the main assembly
       --apply                  Optional: When this flag is specified, the infered values will be automatically applied to the model
   -h, --help                   Print help
   -V, --version                Print version
@@ -1412,7 +1439,7 @@ Options:
 ### Input Arguments
 
 - **"uuid"**: The reference model UUID.
-- **"threshold"**: The confidence threshold value.
+- **"threshold"**: The confidence threshold value in percentage. Example: use the value of '0.8' for 80%
 - **"key"**: This optional argument allows you to specify explicitly which property names are to be considered for inference. Properties not specified are ignored.
 - **"apply"**: This optional flag, when specified, automatically sets the inferred properties in the reference model. Existing property values are not overridden to maintain data integrity.
 - **"folder"**: This is optional argument. You can specify it multiple times. If provided, it will filter the list of matching models only to those that belong in a folder that is listed. If none are specified, it will include matches from all existing folders, which is the default.

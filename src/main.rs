@@ -193,7 +193,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -241,13 +241,22 @@ fn main() {
                         .value_parser(clap::value_parser!(Uuid))
                 )
                 .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+                .arg(
                     Arg::new("meta")
                         .short('m')
                         .long("meta")
                         .num_args(0)
                         .help("Enhance output with model's metadata")
                         .required(false)
-                ),
+                )
         )
         .subcommand(
             Command::new("match-scan")
@@ -266,7 +275,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -302,7 +311,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5'")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -348,7 +357,15 @@ fn main() {
                         .num_args(0..)
                         .requires("meta")
                         .required(false)
-                ),    
+                )    
+                .arg(
+                    Arg::new("continue-on-error")
+                        .long("continue-on-error")
+                        .num_args(0)
+                        .help("Continue operation when errors are encountered")
+                        .default_value("true")
+                        .required(false)
+                ),
         )        
         .subcommand(
             Command::new("match-all-models")
@@ -358,7 +375,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5'")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -380,7 +397,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -434,7 +451,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -645,7 +662,7 @@ fn main() {
                         .short('t')
                         .long("threshold")
                         .num_args(1)
-                        .help("Match threshold percentage (e.g. '96.5')")
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
@@ -689,7 +706,15 @@ fn main() {
                         .num_args(0..)
                         .requires("meta")
                         .required(false)
-                ),    
+                )
+                .arg(
+                    Arg::new("continue-on-error")
+                        .long("continue-on-error")
+                        .num_args(0)
+                        .help("Continue operation when errors are encountered")
+                        .default_value("true")
+                        .required(false)
+                ),
         )
         .subcommand(
             Command::new("folders")
@@ -1152,8 +1177,8 @@ fn main() {
         },
         Some(("match-visual", sub_matches)) => {
             let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
-            
-            let model_matches = match api.match_model_visual(&uuid) {
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let model_matches = match api.match_model_visual(&uuid, threshold.to_owned()) {
                 Ok(model_matches) => {
                     trace!("We found {} match(es)!", model_matches.models.len());
                     model_matches
@@ -1222,7 +1247,7 @@ fn main() {
                         Ok(physna_models) => {
                             let models = model::ListOfModels::from(physna_models);
                             let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                            match api.generate_simple_model_match_report(uuids, threshold, folders, false, false, None) {
+                            match api.generate_simple_model_match_report(uuids, threshold, folders, false, false, None, true) {
                                 Ok(report) => {
                                     let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
                                     match output {
@@ -1259,6 +1284,7 @@ fn main() {
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let exclusive = sub_matches.get_flag("exclusive");
             let with_meta = sub_matches.get_flag("meta");
+            let ignore_errors = !sub_matches.get_flag("continue-on-error");
             let search = sub_matches.get_one::<String>("search");
 
             let folders = sub_matches.get_many::<String>("folder");            
@@ -1294,7 +1320,7 @@ fn main() {
                 Ok(physna_models) => {
                     let models = model::ListOfModels::from(physna_models);
                     let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta, meta_filter) {
+                    match api.generate_simple_model_match_report(uuids, threshold, folders, exclusive, with_meta, meta_filter, ignore_errors) {
                         Ok(report) => {
                             let output = format::format_simple_duplicates_match_report(&report, &output_format, pretty, color); 
                             match output {
@@ -1371,7 +1397,7 @@ fn main() {
                     
                     debug!("Generating simple match report...");
                     
-                    match api.generate_simple_model_match_report(uuids, threshold, Some(folders.clone()), false, true, None) {
+                    match api.generate_simple_model_match_report(uuids, threshold, Some(folders.clone()), false, true, None, true) {
                         Ok(report) => {
 
                             let existing_folders = match api.get_list_of_folders(None) {
@@ -1754,6 +1780,7 @@ fn main() {
 
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap().to_owned();
             let with_meta = sub_matches.get_flag("meta");
+            let ignore_errors = !sub_matches.get_flag("continue-on-error");
             let meta_filter: Option<HashMap<String, String>> = match sub_matches.get_many::<String>("meta-filter") {
                 Some(meta_filter) => {
                     let mut map = HashMap::new();
@@ -1772,7 +1799,7 @@ fn main() {
                 None => None,
             };
 
-            match api.generate_model_match_report(uuids, threshold, with_meta, meta_filter) {
+            match api.generate_model_match_report(uuids, threshold, with_meta, meta_filter, ignore_errors) {
                 Ok(report) => {
 
                     let output = format::format_simple_duplicates_match_report(&report.duplicates, &format::Format::from_str("CSV").unwrap(), false, None);
@@ -1892,7 +1919,7 @@ fn main() {
                 index += 1;
                 debug!("Comparing item [{}]: {} of {}", uuid.to_string(), index, size);
                 
-                let visual_matches = api.match_model_visual(&uuid);
+                let visual_matches = api.match_model_visual(&uuid, 0.0);
                 match visual_matches {
                     Ok(visual_matches) => {
                         let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().filter(|m| m.uuid != uuid).map(|m| (m.uuid, m.name)).collect();      
