@@ -319,18 +319,18 @@ impl Api {
                                     .iter()
                                     .for_each(|item| combined_meta.add(item));
 
-                                reference_metadata
-                                    .as_ref()
-                                    .unwrap()
-                                    .properties
-                                    .iter()
-                                    .for_each(|item| {
-                                        combined_meta.add(&ModelMetadataItem::new(
-                                            item.key_id,
-                                            format!("reference.{}", item.name),
-                                            item.value.to_owned(),
-                                        ))
-                                    });
+                                match reference_metadata.as_ref() {
+                                    Some(reference_metadata) => {
+                                        reference_metadata.properties.iter().for_each(|item| {
+                                            combined_meta.add(&ModelMetadataItem::new(
+                                                item.key_id,
+                                                format!("reference.{}", item.name),
+                                                item.value.to_owned(),
+                                            ))
+                                        });
+                                    }
+                                    None => (),
+                                }
 
                                 Some(combined_meta)
                             } else {
