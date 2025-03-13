@@ -68,6 +68,8 @@ pub struct Folder {
     pub id: u32,
     #[serde(rename = "name")]
     pub name: String,
+    #[serde(rename = "parentFolderId")]
+    parent_folder_id: Option<u32>,
 }
 
 impl Hash for Folder {
@@ -79,8 +81,12 @@ impl Hash for Folder {
 }
 
 impl Folder {
-    pub fn new(id: u32, name: String) -> Self {
-        Folder { id, name }
+    pub fn new(id: u32, name: String, parent_folder_id: Option<u32>) -> Self {
+        Folder {
+            id,
+            name,
+            parent_folder_id,
+        }
     }
 }
 
@@ -104,7 +110,11 @@ impl PartialEq for Folder {
 
 impl From<FolderCreateResponse> for Folder {
     fn from(response: FolderCreateResponse) -> Self {
-        Folder::new(response.folder.id, response.folder.name)
+        Folder::new(
+            response.folder.id,
+            response.folder.name,
+            response.folder.parent_folder_id,
+        )
     }
 }
 
@@ -126,7 +136,7 @@ impl ToCsv for Folder {
             .from_writer(buf);
 
         if pretty {
-            let columns = vec!["ID", "NAME"];
+            let columns = vec!["ID", "NAME", "PARENT_FOLDER_ID"];
             writer.write_record(&columns)?;
         }
 
@@ -134,6 +144,10 @@ impl ToCsv for Folder {
 
         values.push(self.id.to_string());
         values.push(self.name.to_owned());
+        values.push(
+            self.parent_folder_id
+                .map_or("".to_string(), |i| i.to_string()),
+        );
         writer.write_record(&values)?;
         writer.flush()?;
 
@@ -202,7 +216,7 @@ impl ToCsv for ListOfFolders {
             .from_writer(buf);
 
         if pretty {
-            let columns = vec!["ID", "NAME"];
+            let columns = vec!["ID", "NAME", "PARENT_FOLDER_ID"];
             writer.write_record(&columns)?;
         }
 
@@ -211,6 +225,11 @@ impl ToCsv for ListOfFolders {
 
             values.push(folder.id.to_string());
             values.push(folder.name);
+            values.push(
+                folder
+                    .parent_folder_id
+                    .map_or("".to_string(), |i| i.to_string()),
+            );
             writer.write_record(&values)?;
         }
 
@@ -1393,7 +1412,7 @@ impl ToCsv for EnvironmentStatusReport {
 
 impl From<client::Folder> for Folder {
     fn from(folder: client::Folder) -> Self {
-        Folder::new(folder.id, folder.name)
+        Folder::new(folder.id, folder.name, folder.parent_folder_id)
     }
 }
 

@@ -1374,7 +1374,7 @@ fn main() {
             }
 
             // attempt to delete the folder itself
-            match api.delete_folder(folders) {
+            match api.delete_folder(folders, false) {
                 Ok(()) => (),
                 Err(e) => {
                     eprintln!("Error: {}", e);

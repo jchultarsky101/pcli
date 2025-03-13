@@ -83,7 +83,11 @@ impl Api {
         Ok(Folder::from(folder))
     }
 
-    pub fn delete_folder(&self, folders: HashSet<String>) -> Result<(), ApiError> {
+    // fn find_all_child_folders(&self, parent_folders: HashSet<String>) -> HashSet<String> {
+    //     todo!("Implement function")
+    // }
+
+    pub fn delete_folder(&self, folders: HashSet<String>, recursive: bool) -> Result<(), ApiError> {
         let folder_names = folders
             .iter()
             .map(|f| f.to_string())
@@ -91,7 +95,15 @@ impl Api {
             .join(",");
 
         log::trace!("Deleting folder(s): {}...", folder_names.to_owned());
+        //trace!("Reading the list of all folders...");
+        //let all_folders = self.get_list_of_folders(None)?;
+        trace!("Reading the list of specific folders...");
         let folders = self.get_list_of_folders(Some(folders))?;
+
+        // if recursive {
+        //     trace!("Identify all child folders...");
+        // }
+
         let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
 
         if folder_ids.len() > 0 {

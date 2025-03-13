@@ -162,6 +162,8 @@ pub struct Folder {
     pub owner_id: Option<String>,
     #[serde(rename = "name")]
     pub name: String,
+    #[serde(rename = "parentFolderId")]
+    pub parent_folder_id: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -960,7 +962,7 @@ impl ApiClient {
 
         let builder = self
             .client
-            .post(url)
+            .get(url)
             .timeout(Duration::from_secs(180))
             .header("cache-control", "no-cache")
             .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
