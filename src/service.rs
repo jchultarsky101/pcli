@@ -87,7 +87,11 @@ impl Api {
     //     todo!("Implement function")
     // }
 
-    pub fn delete_folder(&self, folders: HashSet<String>, recursive: bool) -> Result<(), ApiError> {
+    pub fn delete_folder(
+        &self,
+        folders: HashSet<String>,
+        _recursive: bool,
+    ) -> Result<(), ApiError> {
         let folder_names = folders
             .iter()
             .map(|f| f.to_string())
