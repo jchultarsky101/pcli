@@ -1659,7 +1659,7 @@ dependencies = [
 
 [[package]]
 name = "pcli"
-version = "1.9.13"
+version = "1.9.14"
 dependencies = [
  "base64 0.21.0",
  "clap",
