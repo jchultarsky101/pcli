@@ -1693,9 +1693,11 @@ fn main() {
                             let path = entry.path();
                             if path.is_file() {
                                 if let Some(file_name) = path.file_name() {
+
+                                    trace!("Checking file {}", &file_name.to_string_lossy());
                                     let parts: Vec<&str> = file_name.to_str().unwrap().split('.').collect();
                                     let extension = if parts.len() > 1 {
-                                        parts[1]
+                                        parts[parts.len() -1]
                                     } else {
                                         ""
                                     };
