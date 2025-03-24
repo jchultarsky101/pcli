@@ -1,8 +1,10 @@
+use crate::configuration::ClientConfiguration;
 use base64::engine::general_purpose;
 use base64::Engine;
+use chrono::Utc;
 use dirs::home_dir;
 use http::StatusCode;
-use jsonwebtoken::decode_header;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use log;
 use rpassword;
 use serde::{Deserialize, Serialize};
@@ -25,20 +27,74 @@ pub enum TokenError {
     FailedToObtainTokenFromProvider,
     #[error("Unknown tenant {0}")]
     UnknownTenant(String),
+    #[error("Token has expired")]
+    Expired,
+    #[error("JWT decoding error")]
+    JwtError(#[from] jwt::error::Error),
 }
 
 pub fn get_token_for_tenant(
-    configuration: &crate::configuration::ClientConfiguration,
+    configuration: &ClientConfiguration,
+    tenant: &String,
+) -> Result<String, TokenError> {
+    match read_valid_token_for_tenant(configuration, tenant) {
+        Ok(token) => Ok(token),
+        Err(_) => {
+            invalidate_token(tenant)?;
+            read_valid_token_for_tenant(configuration, tenant)
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    exp: usize, // Expiration time as a UNIX timestamp
+                // Add other standard or custom claims as needed
+}
+
+pub fn validate_token(token: &str, secret: &str) -> Result<(), TokenError> {
+    // Decode the token
+    let token_data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(secret.as_ref()),
+        &Validation::new(Algorithm::HS256),
+    )
+    .map_err(|_| TokenError::FailedToDecode)?;
+
+    // Extract the expiration timestamp from claims
+    let exp_timestamp = token_data.claims.exp as i64;
+
+    // Get the current UTC time as a timestamp
+    let now_timestamp = Utc::now().timestamp();
+
+    // Compare the expiration timestamp with the current timestamp
+    if exp_timestamp > now_timestamp {
+        Ok(())
+    } else {
+        Err(TokenError::Expired)
+    }
+}
+
+fn read_valid_token_for_tenant(
+    configuration: &ClientConfiguration,
     tenant: &String,
 ) -> Result<String, TokenError> {
     log::trace!("Obtaining new token from the provider...");
     let token = read_token_from_file(tenant);
+    let candidate_tenant = configuration.tenants.get(tenant);
+    let secret = match candidate_tenant {
+        Some(tenant) => match &tenant.client_secret {
+            Some(secret) => secret.to_owned(),
+            None => return Err(TokenError::EmptyClientId),
+        },
+        None => return Err(TokenError::UnknownTenant(tenant.to_owned())),
+    };
 
     match token {
         Ok(token) => {
             log::trace!("Validating previously acquired token...");
-            match validate_token(token) {
-                Ok(token) => {
+            match validate_token(token.as_str(), secret.as_str()) {
+                Ok(()) => {
                     log::trace!("The current token is still valid");
                     Ok(token)
                 }
@@ -56,13 +112,6 @@ pub fn get_token_for_tenant(
             write_token_to_file(tenant, &token)?;
             Ok(token)
         }
-    }
-}
-
-pub fn validate_token(token: String) -> Result<String, TokenError> {
-    match decode_header(&token) {
-        Ok(_header) => Ok(token),
-        Err(_) => Err(TokenError::FailedToDecode),
     }
 }
 
