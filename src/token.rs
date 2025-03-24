@@ -40,6 +40,7 @@ pub fn get_token_for_tenant(
     match read_valid_token_for_tenant(configuration, tenant) {
         Ok(token) => Ok(token),
         Err(_) => {
+            log::warn!("Token has expired. Attemtping to obtain a new token...");
             invalidate_token(tenant)?;
             read_valid_token_for_tenant(configuration, tenant)
         }
