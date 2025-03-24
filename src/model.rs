@@ -269,11 +269,11 @@ pub enum FolderListError {
 pub struct FolderEntry {
     id: u32,
     name: String,
-    children: Option<Vec<FolderEntry>>,
+    children: Option<Box<Vec<FolderEntry>>>,
 }
 
 impl FolderEntry {
-    pub fn new(id: u32, name: String, children: Option<Vec<FolderEntry>>) -> Self {
+    pub fn new(id: u32, name: String, children: Option<Box<Vec<FolderEntry>>>) -> Self {
         FolderEntry { id, name, children }
     }
 
@@ -293,10 +293,6 @@ impl FolderEntry {
         self.name = name.to_owned();
     }
 
-    pub fn children(&self) -> impl Iterator<Item = &FolderEntry> {
-        self.children.iter().flatten()
-    }
-
     pub fn has_children(&self) -> bool {
         self.children.as_ref().map_or(false, |c| !c.is_empty())
     }
@@ -304,7 +300,7 @@ impl FolderEntry {
     pub fn add_child(&mut self, child: FolderEntry) {
         match &mut self.children {
             Some(children) => children.push(child),
-            None => self.children = Some(vec![child]),
+            None => self.children = Some(Box::new(vec![child])),
         }
     }
 
@@ -319,65 +315,6 @@ impl FolderEntry {
         }
 
         Err(FolderListError::ChildNotFound)
-    }
-
-    pub fn find_child_by_id(&self, id: u32) -> Option<&FolderEntry> {
-        // Check direct children
-        self.children
-            .iter()
-            .flatten()
-            .find(|child| child.id == id)
-            .or_else(|| {
-                // Recursively check deeper levels
-                self.children
-                    .iter()
-                    .flatten()
-                    .find_map(|child| child.find_child_by_id(id))
-            })
-    }
-
-    pub fn find_child_by_name(&self, name: &str) -> Option<&FolderEntry> {
-        // Check direct children first
-        self.children
-            .iter()
-            .flatten()
-            .find(|child| child.name == name)
-            .or_else(|| {
-                // Recursively check deeper levels
-                self.children
-                    .iter()
-                    .flatten()
-                    .find_map(|child| child.find_child_by_name(name))
-            })
-    }
-}
-
-fn associate_folder_to_parent_entry(
-    root: &mut FolderEntry,
-    folder: &Folder,
-) -> Result<(), FolderListError> {
-    match folder.parent_folder_id {
-        Some(_parent_folder_id) => {
-            // this folder has a parent
-            todo!("Implement the rest here");
-        }
-        None => {
-            // this folder does not have parent, so it belongs to the root
-            root.add_child(FolderEntry::new(folder.id, folder.name.to_owned(), None));
-        }
-    }
-    Ok(())
-}
-
-impl From<&ListOfFolders> for FolderEntry {
-    fn from(folders: &ListOfFolders) -> Self {
-        let mut root = FolderEntry::new(0, "/".to_string(), None);
-        let folders: Vec<&Folder> = folders.folders.iter().sorted_by_key(|f| f.id).collect();
-        for folder in folders {
-            let _ = associate_folder_to_parent_entry(&mut root, &folder);
-        }
-
-        root
     }
 }
 
