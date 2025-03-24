@@ -53,22 +53,20 @@ struct Claims {
                 // Add other standard or custom claims as needed
 }
 
-pub fn validate_token(token: &str, secret: &str) -> Result<(), TokenError> {
-    // Decode the token
-    let token_data = decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(secret.as_ref()),
-        &Validation::new(Algorithm::HS256),
-    )
-    .map_err(|_| TokenError::FailedToDecode)?;
+pub fn validate_token(token: &str) -> Result<(), TokenError> {
+    // Create a Validation object with signature verification disabled
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.insecure_disable_signature_validation();
 
-    // Extract the expiration timestamp from claims
+    // Decode the token without verifying the signature
+    let token_data = decode::<Claims>(token, &DecodingKey::from_secret(b""), &validation)
+        .map_err(|_| TokenError::FailedToDecode)?;
+
+    // Extract the expiration timestamp
     let exp_timestamp = token_data.claims.exp as i64;
-
-    // Get the current UTC time as a timestamp
     let now_timestamp = Utc::now().timestamp();
 
-    // Compare the expiration timestamp with the current timestamp
+    // Check if the token has expired
     if exp_timestamp > now_timestamp {
         Ok(())
     } else {
@@ -82,25 +80,17 @@ fn read_valid_token_for_tenant(
 ) -> Result<String, TokenError> {
     log::trace!("Obtaining new token from the provider...");
     let token = read_token_from_file(tenant);
-    let candidate_tenant = configuration.tenants.get(tenant);
-    let secret = match candidate_tenant {
-        Some(tenant) => match &tenant.client_secret {
-            Some(secret) => secret.to_owned(),
-            None => return Err(TokenError::EmptyClientId),
-        },
-        None => return Err(TokenError::UnknownTenant(tenant.to_owned())),
-    };
 
     match token {
         Ok(token) => {
             log::trace!("Validating previously acquired token...");
-            match validate_token(token.as_str(), secret.as_str()) {
+            match validate_token(token.as_str()) {
                 Ok(()) => {
                     log::trace!("The current token is still valid");
                     Ok(token)
                 }
-                Err(_) => {
-                    log::trace!("The existing token is no longer valid!");
+                Err(e) => {
+                    log::trace!("The existing token is no longer valid! Error: {}", e);
                     let token = request_new_token_from_provider(configuration, tenant)?;
                     write_token_to_file(tenant, &token)?;
                     Ok(token)
