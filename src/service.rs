@@ -1,10 +1,11 @@
 use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
-    EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfMatchedMetadataItems,
-    ListOfModelMatches, ListOfModels, ListOfUsers, ListOfVisualModelMatches, MatchedMetadataItem,
-    Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
-    ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    self, EnvironmentStatusReport, FlatBom, Folder, FolderEntry, ListOfFolders,
+    ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, ListOfUsers,
+    ListOfVisualModelMatches, MatchedMetadataItem, Model, ModelAssemblyTree, ModelMatch,
+    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use log::debug;
@@ -39,6 +40,8 @@ pub enum ApiError {
     FailedToRead(String),
     #[error("Data format error: {0}")]
     FormatError(#[from] crate::format::FormatError),
+    #[error("Failed to convert folder list")]
+    FolderTreeError(#[from] model::FolderListError),
 }
 
 pub struct Api {
@@ -86,7 +89,7 @@ impl Api {
     // fn find_all_child_folders(&self, parent_folders: HashSet<String>) -> HashSet<String> {
     //     todo!("Implement function")
     // }
-
+    //
     pub fn delete_folder(
         &self,
         folders: HashSet<String>,
@@ -116,6 +119,12 @@ impl Api {
         } else {
             Err(ApiError::FolderNotFound(folder_names))
         }
+    }
+
+    pub fn get_folder_tree(&self) -> Result<FolderEntry, ApiError> {
+        let folders = self.get_list_of_folders(None)?;
+        let root = FolderEntry::from_list_of_folders(&folders)?;
+        Ok(root)
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ApiError> {

@@ -1,6 +1,5 @@
 use crate::client;
 use csv::{Terminator, Writer, WriterBuilder};
-use itertools::Itertools;
 use log::trace;
 use petgraph::matrix_graph::MatrixGraph;
 use ptree::style::Style;
@@ -272,9 +271,44 @@ pub struct FolderEntry {
     children: Option<Box<Vec<FolderEntry>>>,
 }
 
+fn populate_children(folders: &mut HashMap<u32, &Folder>, root: &mut FolderEntry) {
+    // First, collect child folder IDs that should be added to this root
+    let matching_ids: Vec<u32> = folders
+        .iter()
+        .filter_map(|(&id, folder)| {
+            if (root.id == 0 && folder.parent_folder_id.is_none())
+                || (folder.parent_folder_id == Some(root.id))
+            {
+                Some(id)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Now, iterate over the matching IDs, safely get the folder again, and recurse
+    for id in matching_ids {
+        if let Some(folder) = folders.get(&id) {
+            let mut child = FolderEntry::new(folder.id, folder.name.to_owned(), None);
+            populate_children(folders, &mut child);
+            root.add_child(child);
+        }
+    }
+}
+
 impl FolderEntry {
     pub fn new(id: u32, name: String, children: Option<Box<Vec<FolderEntry>>>) -> Self {
         FolderEntry { id, name, children }
+    }
+
+    pub fn from_list_of_folders(folders: &ListOfFolders) -> Result<FolderEntry, FolderListError> {
+        let mut folders: HashMap<u32, &Folder> =
+            folders.folders.iter().map(|f| (f.id, f)).collect();
+
+        let mut root = FolderEntry::new(0, "/".to_string(), None);
+        populate_children(&mut folders, &mut root);
+
+        Ok(root)
     }
 
     pub fn id(&self) -> u32 {
@@ -315,6 +349,36 @@ impl FolderEntry {
         }
 
         Err(FolderListError::ChildNotFound)
+    }
+}
+
+impl ToString for FolderEntry {
+    fn to_string(&self) -> String {
+        self.name.to_owned()
+    }
+}
+
+impl TreeItem for FolderEntry {
+    type Child = Self;
+
+    fn write_self<W: io::Write>(&self, f: &mut W, style: &Style) -> io::Result<()> {
+        write!(
+            f,
+            "{} [{}]",
+            style.paint(self.name.clone()),
+            style.paint(self.id.clone())
+        )
+    }
+
+    fn children(&self) -> Cow<[Self::Child]> {
+        match &self.children {
+            Some(children) => {
+                let mut sorted = *children.clone(); // Clone the Vec<FolderEntry>
+                sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+                Cow::Owned(sorted)
+            }
+            None => Cow::Borrowed(&[]),
+        }
     }
 }
 

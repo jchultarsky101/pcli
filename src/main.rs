@@ -512,6 +512,10 @@ fn main() {
                 ),
         )
         .subcommand(
+            Command::new("folder-tree")
+                .about("Prints the folder tree")
+        )
+        .subcommand(
             Command::new("assembly-bom")
                 .about("Generates flat BoM of model IDs for model")
                 .arg(
@@ -1380,6 +1384,17 @@ fn main() {
                     eprintln!("Error: {}", e);
                     ::std::process::exit(exitcode::DATAERR);
                 },
+            }
+        },
+        Some(("folder-tree", _)) => {
+            match api.get_folder_tree() {
+                Ok(root) => {
+                    let _ = ptree::print_tree(&root);
+                },
+                Err(_) => {
+                    println!("Failed to read the folder tree");
+                    ::std::process::exit(exitcode::DATAERR);
+                }
             }
         },
         Some(("label-folder", sub_matches)) => {
