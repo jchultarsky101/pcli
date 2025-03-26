@@ -511,6 +511,7 @@ fn main() {
                         .required(false)
                 ),
         )
+        /*
         .subcommand(
             Command::new("folder-tree")
                 .about("Prints the folder tree")
@@ -528,6 +529,7 @@ fn main() {
                         .value_parser(clap::value_parser!(Uuid))
                 ),
         )
+        */
         .subcommand(
             Command::new("status")
                 .about("Generates a tenant's environment status summary")
