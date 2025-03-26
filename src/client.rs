@@ -783,6 +783,7 @@ impl ApiClient {
             }
             None => Some(String::default()),
         };
+        log::trace!("Filter: {:?}", filter);
 
         let mut folders: Vec<Folder> = Vec::new();
         loop {
