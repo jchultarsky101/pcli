@@ -139,7 +139,8 @@ fn main() {
                         .num_args(1)
                         .help("The model UUID")
                         .required(true)
-                        .value_parser(clap::value_parser!(Uuid))                ),
+                        .value_parser(clap::value_parser!(Uuid))
+                ),
         )
         .subcommand(
             Command::new("models")
@@ -511,25 +512,23 @@ fn main() {
                         .required(false)
                 ),
         )
-        /*
         .subcommand(
             Command::new("folder-tree")
                 .about("Prints the folder tree")
         )
-        .subcommand(
-            Command::new("assembly-bom")
-                .about("Generates flat BoM of model IDs for model")
-                .arg(
-                    Arg::new("uuid")
-                        .short('u')
-                        .long("uuid")
-                        .num_args(1)
-                        .help("The model UUID")
-                        .required(true)
-                        .value_parser(clap::value_parser!(Uuid))
-                ),
-        )
-        */
+        // .subcommand(
+        //     Command::new("assembly-bom")
+        //         .about("Generates flat BoM of model IDs for model")
+        //         .arg(
+        //             Arg::new("uuid")
+        //                 .short('u')
+        //                 .long("uuid")
+        //                 .num_args(1)
+        //                 .help("The model UUID")
+        //                 .required(true)
+        //                 .value_parser(clap::value_parser!(Uuid))
+        //         ),
+        // )
         .subcommand(
             Command::new("status")
                 .about("Generates a tenant's environment status summary")

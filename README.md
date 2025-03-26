@@ -129,10 +129,10 @@
 
 # <a id="about-the-project"></a>About the project
 
-This utility is a CLI client for Physna's public API V2. It could be used to interact with the system
+This utility is a command-line (CLI) client for Physna's public API V2. It could be used to interact with the system
 in automated ways.
 
-**Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
+**Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. It is intended as a reference implementation and provides examples for using the APIs. This software has not been evaluated for SOC 2 compliance. Please review the license before use.
 
 # <a id="built-with"></a>Built with
 
@@ -145,9 +145,9 @@ This project is built with the wonderful programming language [Rust](https://www
 
 ## <a id="prerequisites"></a>Prerequisites
 
-This is a command line interface (CLI) program that runs in the terminal. You need to have some familiarity with how to execute commands. 
+This is a command-line interface (CLI) program that runs in the terminal. Basic familiarity with executing commands is recommended.
 
-It is a client to the Physna services. To be able to use it, you will need to first request a Physna Enterprise account. Please, contact your Physna representative for details.
+This CLI is a client for Physna services. To use it, you must first request a Physna Enterprise account. Please contact your Physna representative for more information.
 
 ## <a id="installation"></a>Installation
 
@@ -157,11 +157,11 @@ You can use the installation script for your platform as shown on the [documenta
 
 ### <a id="downloading-binary"></a>Downloading a pre-compiled binary
 
-You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You will have to decompress it and copy the file to a location of your choice.
+You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/pcli). You’ll need to decompress the file and copy it to a location of your choice.
 
 ### <a id="compilation"></a>Compilation from source
 
-You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:
+To use this method, you’ll need to have Rust installed on your computer. Clone this repository, navigate to the project root, and compile it using Rust:
 
 ````bash
 cargo build release
@@ -172,22 +172,18 @@ This will produce an executable for your operating system.
 
 ## <a id="about-tenants"></a>A word about tenants
 
-Physna is a multi-tenant system. As such, each client organization receives their own environment. 
-For example, if your company is MyCompany, LLC, you may receive an environment and your
-customer-facing web site may be at https://mycompany.physna.com. Here the identifier "mycompany" is
-your tenant ID.
+Physna is a multi-tenant system, meaning each client organization is assigned its own environment.
+For example, if your company is MyCompany, LLC, you might receive an environment where your customer-facing website is located at [https://mycompany.physna.com](https://mycompany.physna.com). In this case, the identifier mycompany is your tenant ID.
 
-The tenant ID is a critical bit of information, which will be required from you almost every time you execute
-the CLI. If you are unsure what your tenant ID is, please contact your Physna representative.
+The tenant ID is a crucial piece of information and is required for nearly every CLI command you run. If you’re unsure what your tenant ID is, please contact your Physna representative.
 
-Note: If you specify a tenant that is unknown (not in the configuration file), the error message will list all currently configured tenants
+**Note:** If you specify an unknown tenant (i.e., one not present in the configuration file), the error message will list all currently configured tenants.
 
 # <a id="configuration"></a>Configuration
 
-The tool uses a single configuration file. The location for this file is your home directory
-and the file name is ~/.pcli.conf.
+The tool uses a single configuration file located in your home directory, named ~/.pcli.conf.
 
-Here is an example of the contents of .pcli.conf:
+Below is an example of the contents of .pcli.conf:
 
 ~~~
 base_path: https://api.physna.com
@@ -198,19 +194,13 @@ tenants:
       client_secret: 
 ~~~
 
-In the example above, "mytenant" is your tenant ID as explained above. Make sure to 
-edit this sample to reflect that correctly.
+In the example above, "mytenant" represents your tenant ID. Be sure to update the sample to reflect your actual tenant ID.
 
-The only other piece of data you need to provide is the **client_id** value. This can be obtained
-by your Physna administrator. In most cases, you should leave the client secret field unpopulated. Read further to understand how
-it could be useful sometimes.
+The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be usefgul.
 
 # <a id="basic-use"></a>Basic use
 
-This is a command line utility. You can use it within a terminal session.
-To see what functions are supported, you can type "help" as the first argument.
-
-Example:
+You can run this utility from a terminal session. To view the available commands, use help as the first argument:
 
 ```bash
 pcli help
@@ -264,6 +254,10 @@ Commands:
           Infere metadata values for a model based on metadata values of other geometrically similar models
   delete-folder
           Deletes a specific folder
+  folder-tree
+          Prints the folder tree
+  assembly-bom
+          Generates flat BoM of model IDs for model
   status
           Generates a tenant's environment status summary
   upload
@@ -293,7 +287,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=magna-sen]
+          [env: PCLI_TENANT=solize]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -317,15 +311,13 @@ Options:
           Print version
 ```
 
-The application supports sub-commands. To get more detailed help for a
-specific sub-command, enter the command name after "help" or alternatively,
-first enter the command and add "--help" after as shown in the example:
+The application supports subcommands. To view detailed help for a specific subcommand, you can either place the command name after "help", or run the command followed by --help, as shown in the example below:
 
 ```bash
 pcli help model
 ```
 
-Produces the following output:
+The above produces the following output:
 
 ```
 Reads data for a specific model
@@ -339,8 +331,7 @@ Options:
   -V, --version      Print version
 ```
 
-As you can see, here the **model** sub-command takes "--uuid" as an argument
-to specify the UUID of the model we are trying to read.
+As shown, the **model** subcommand uses the --uuid argument to specify the UUID of the model you want to retrieve.
 
 Example):
 
@@ -648,6 +639,24 @@ The output is:
 The default output format is "json". The available options are "json", "csv", "tree".
 
 Adding "--pretty" in this case will add header row to the CSV output containing the column names.
+
+## Listing the folder tree
+
+Since folders could hav sub-folders, it is helpful sometimes to list them as a tree structure.
+
+```bash
+pcli help folder-tree
+```
+```
+Prints the folder tree
+
+Usage: pcli --tenant <tenant> folder-tree
+
+Options:
+  -h, --help     Print help
+```
+
+The output will be in the default 'tree' format.
 
 ## <a id="list-models"></a>Listing models
 
