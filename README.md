@@ -264,8 +264,6 @@ Commands:
           Infere metadata values for a model based on metadata values of other geometrically similar models
   delete-folder
           Deletes a specific folder
-  assembly-bom
-          Generates flat BoM of model IDs for model
   status
           Generates a tenant's environment status summary
   upload
