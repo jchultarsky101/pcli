@@ -1,23 +1,26 @@
 use crate::client::{ApiClient, AssemblyTree, ClientError};
 use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
-    EnvironmentStatusReport, FlatBom, Folder, ListOfFolders, ListOfMatchedMetadataItems,
-    ListOfModelMatches, ListOfModels, ListOfUsers, ListOfVisualModelMatches, MatchedMetadataItem,
-    Model, ModelAssemblyTree, ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata,
-    ModelMetadataItem, ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
+    self, EnvironmentStatusReport, FlatBom, Folder, FolderEntry, ListOfFolders,
+    ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, ListOfUsers,
+    ListOfVisualModelMatches, MatchedMetadataItem, Model, ModelAssemblyTree, ModelMatch,
+    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
 use log::debug;
 use log::{error, trace, warn};
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::matrix_graph::NodeIndex;
+use ptree::TreeItem;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::io::{Seek, SeekFrom, Write};
-use std::path::PathBuf;
+use std::ops::Deref;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tempfile::tempfile;
 use thiserror::Error;
@@ -39,6 +42,10 @@ pub enum ApiError {
     FailedToRead(String),
     #[error("Data format error: {0}")]
     FormatError(#[from] crate::format::FormatError),
+    #[error("Failed to convert folder list")]
+    FolderTreeError(#[from] model::FolderListError),
+    #[error("Cannot delete the root folder")]
+    CannotDeleteRootFolder,
 }
 
 pub struct Api {
@@ -86,36 +93,63 @@ impl Api {
     // fn find_all_child_folders(&self, parent_folders: HashSet<String>) -> HashSet<String> {
     //     todo!("Implement function")
     // }
-
+    //
     pub fn delete_folder(
         &self,
-        folders: HashSet<String>,
-        _recursive: bool,
+        folder: &FolderEntry,
+        force: bool,
+        recursive: bool,
     ) -> Result<(), ApiError> {
-        let folder_names = folders
-            .iter()
-            .map(|f| f.to_string())
-            .collect::<Vec<String>>()
-            .join(",");
+        log::trace!("Deleting folder: {:?}", &folder);
 
-        log::trace!("Deleting folder(s): {}...", folder_names.to_owned());
-        //trace!("Reading the list of all folders...");
-        //let all_folders = self.get_list_of_folders(None)?;
-        trace!("Reading the list of specific folders...");
-        let folders = self.get_list_of_folders(Some(folders))?;
-
-        // if recursive {
-        //     trace!("Identify all child folders...");
-        // }
-
-        let folder_ids: HashSet<u32> = folders.into_iter().map(|f| f.id).collect();
-
-        if folder_ids.len() > 0 {
-            self.client.delete_folder(&folder_ids)?;
-            Ok(())
-        } else {
-            Err(ApiError::FolderNotFound(folder_names))
+        if folder.id() == 0 {
+            return Err(ApiError::CannotDeleteRootFolder);
         }
+
+        if recursive && folder.has_children() {
+            log::trace!("Deleting children recursivelly...");
+            for child in folder.children().deref() {
+                self.delete_folder(child, force, recursive)?;
+            }
+        }
+
+        // delete all models in the folders if forced
+        if force {
+            match self.list_all_models_in_folder(folder, None) {
+                Ok(physna_models) => {
+                    let models = model::ListOfModels::from(physna_models);
+                    let uuids: Vec<Uuid> =
+                        models.models.into_iter().map(|model| model.uuid).collect();
+                    for uuid in uuids {
+                        match self.delete_model(&uuid) {
+                            Ok(()) => (),
+                            Err(e) => {
+                                eprintln!("Error: {}", e);
+                                ::std::process::exit(exitcode::DATAERR);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+        }
+
+        self.client.delete_folder(&folder.id())?;
+        Ok(())
+    }
+
+    pub fn get_folder_tree(&self, path: Option<&Path>) -> Result<Option<FolderEntry>, ApiError> {
+        let folders = self.get_list_of_folders(None)?;
+        let root = FolderEntry::from_list_of_folders(&folders)?;
+        let folder = match path {
+            Some(path) => root.find_by_path(path),
+            None => Some(root),
+        };
+
+        Ok(folder)
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ApiError> {
@@ -259,6 +293,46 @@ impl Api {
                             None => None,
                         };
                         model.folder_name = folder_name;
+
+                        list_of_models.push(model);
+                    }
+                }
+            }
+            has_more = result.page_data.current_page < result.page_data.last_page;
+            page = result.page_data.current_page + 1;
+        }
+
+        let result = ListOfModels::from(list_of_models);
+
+        //trace!("List of Models: {:?}", result);
+        Ok(result)
+    }
+
+    pub fn list_all_models_in_folder(
+        &self,
+        folder: &FolderEntry,
+        search: Option<&String>,
+    ) -> Result<ListOfModels, ApiError> {
+        let mut list_of_models: Vec<Model> = Vec::new();
+
+        let mut folders = HashSet::new();
+        folders.insert(folder.id());
+        let mut has_more = true;
+        let mut page: u32 = 1;
+        let per_page: u32 = 50;
+        while has_more {
+            let result = self.client.get_list_of_models_page(
+                Some(folders.to_owned()),
+                search.to_owned(),
+                per_page,
+                page,
+            )?;
+            if result.page_data.total > 0 {
+                let models = result.models;
+                if !models.is_empty() {
+                    for m in models {
+                        let mut model = Model::from(m.clone());
+                        model.folder_name = Some(folder.name());
 
                         list_of_models.push(model);
                     }

@@ -139,7 +139,8 @@ fn main() {
                         .num_args(1)
                         .help("The model UUID")
                         .required(true)
-                        .value_parser(clap::value_parser!(Uuid))                ),
+                        .value_parser(clap::value_parser!(Uuid))
+                ),
         )
         .subcommand(
             Command::new("models")
@@ -495,13 +496,13 @@ fn main() {
             Command::new("delete-folder")
                 .about("Deletes a specific folder")
                 .arg(
-                    Arg::new("folder")
-                        .short('d')
-                        .long("folder")
+                    Arg::new("path")
+                        .short('p')
+                        .long("path")
                         .num_args(1)
-                        .help("Folder name")
-                        .required(true)                  
-                        .value_parser(clap::value_parser!(String))
+                        .help("Path to the folder")
+                        .required(true)
+                        .value_parser(clap::value_parser!(PathBuf))
                 )
                 .arg(
                     Arg::new("force")
@@ -509,23 +510,41 @@ fn main() {
                         .num_args(0)
                         .help("If specified, all models in the folder will be deleted")
                         .required(false)
-                ),
-        )
-        /*
-        .subcommand(
-            Command::new("assembly-bom")
-                .about("Generates flat BoM of model IDs for model")
+                )
                 .arg(
-                    Arg::new("uuid")
-                        .short('u')
-                        .long("uuid")
-                        .num_args(1)
-                        .help("The model UUID")
-                        .required(true)
-                        .value_parser(clap::value_parser!(Uuid))
+                    Arg::new("recursive")
+                        .long("recursive")
+                        .num_args(0)
+                        .help("If specified, all sub-folders in this folder will also be deleted recursivelly")
+                        .required(false)
                 ),
         )
-        */
+        .subcommand(
+            Command::new("folder-tree")
+                .about("Prints the folder tree")
+                .arg(
+                    Arg::new("path")
+                        .short('p')
+                        .long("path")
+                        .num_args(1)
+                        .help("Path to the folder")
+                        .required(false)
+                        .value_parser(clap::value_parser!(PathBuf))
+                ),
+        )
+        // .subcommand(
+        //     Command::new("assembly-bom")
+        //         .about("Generates flat BoM of model IDs for model")
+        //         .arg(
+        //             Arg::new("uuid")
+        //                 .short('u')
+        //                 .long("uuid")
+        //                 .num_args(1)
+        //                 .help("The model UUID")
+        //                 .required(true)
+        //                 .value_parser(clap::value_parser!(Uuid))
+        //         ),
+        // )
         .subcommand(
             Command::new("status")
                 .about("Generates a tenant's environment status summary")
@@ -1350,38 +1369,54 @@ fn main() {
         },
         Some(("delete-folder", sub_matches)) => {
             let force = sub_matches.get_flag("force");
-            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
+            let recursive = sub_matches.get_flag("recursive");
+            let path: &PathBuf = sub_matches.get_one("path").unwrap();
 
-            // delete all models in the folders if forced
-            if force {
-                match api.list_all_models(Some(folders.clone()), None) {
-                    Ok(physna_models) => {
-                        let models = model::ListOfModels::from(physna_models);
-                        let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                        for uuid in uuids {
-                            match api.delete_model(&uuid) {
-                                Ok(()) => (),
-                                Err(e) => {
-                                    eprintln!("Error: {}", e);
-                                    ::std::process::exit(exitcode::DATAERR);
-                                }
-                            }
-                        }
+            let folder = api.get_folder_tree(Some(path.as_path()));
+            match folder {
+                Ok(folder) => match folder {
+                    Some(folder) => match api.delete_folder(&folder, force, recursive) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
                     },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
+                    None => {
+                        eprintln!("Folder not found");
                         ::std::process::exit(exitcode::DATAERR);
                     }
+                },
+                Err(e) => {
+                    eprintln!("Failed to delete folder: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                    
                 }
             }
-
-            // attempt to delete the folder itself
-            match api.delete_folder(folders, false) {
-                Ok(()) => (),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
+        },
+        Some(("folder-tree", sub_matches)) => {
+            let path = sub_matches.get_one("path");
+            let path = match path {
+                Some(path) => path,
+                None => &PathBuf::from_str("/").unwrap(),
+            };
+            
+            match api.get_folder_tree(Some(path.as_path())) {
+                Ok(folder) => {
+                    match folder {
+                        Some(folder) => {
+                            let _ = ptree::print_tree(&folder);
+                        },
+                        None => {
+                            println!("No such folder");
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
                 },
+                Err(_) => {
+                    println!("Failed to read the folder tree");
+                    ::std::process::exit(exitcode::DATAERR);
+                }
             }
         },
         Some(("label-folder", sub_matches)) => {

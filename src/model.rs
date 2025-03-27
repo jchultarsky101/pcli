@@ -1,6 +1,5 @@
 use crate::client;
 use csv::{Terminator, Writer, WriterBuilder};
-use itertools::Itertools;
 use log::trace;
 use petgraph::matrix_graph::MatrixGraph;
 use ptree::style::Style;
@@ -14,6 +13,7 @@ use std::io;
 use std::io::BufWriter;
 use std::iter::Extend;
 use std::iter::IntoIterator;
+use std::path::{Component, Path};
 use std::vec::IntoIter;
 use thiserror::Error;
 use uuid::Uuid;
@@ -269,12 +269,47 @@ pub enum FolderListError {
 pub struct FolderEntry {
     id: u32,
     name: String,
-    children: Option<Box<Vec<FolderEntry>>>,
+    children: Vec<FolderEntry>,
+}
+
+fn populate_children(folders: &mut HashMap<u32, &Folder>, root: &mut FolderEntry) {
+    // First, collect child folder IDs that should be added to this root
+    let matching_ids: Vec<u32> = folders
+        .iter()
+        .filter_map(|(&id, folder)| {
+            if (root.id == 0 && folder.parent_folder_id.is_none())
+                || (folder.parent_folder_id == Some(root.id))
+            {
+                Some(id)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Now, iterate over the matching IDs, safely get the folder again, and recurse
+    for id in matching_ids {
+        if let Some(folder) = folders.get(&id) {
+            let mut child = FolderEntry::new(folder.id, folder.name.to_owned(), vec![]);
+            populate_children(folders, &mut child);
+            root.add_child(child);
+        }
+    }
 }
 
 impl FolderEntry {
-    pub fn new(id: u32, name: String, children: Option<Box<Vec<FolderEntry>>>) -> Self {
+    pub fn new(id: u32, name: String, children: Vec<FolderEntry>) -> Self {
         FolderEntry { id, name, children }
+    }
+
+    pub fn from_list_of_folders(folders: &ListOfFolders) -> Result<FolderEntry, FolderListError> {
+        let mut folders: HashMap<u32, &Folder> =
+            folders.folders.iter().map(|f| (f.id, f)).collect();
+
+        let mut root = FolderEntry::new(0, "/".to_string(), vec![]);
+        populate_children(&mut folders, &mut root);
+
+        Ok(root)
     }
 
     pub fn id(&self) -> u32 {
@@ -294,27 +329,65 @@ impl FolderEntry {
     }
 
     pub fn has_children(&self) -> bool {
-        self.children.as_ref().map_or(false, |c| !c.is_empty())
+        !self.children.is_empty()
     }
 
     pub fn add_child(&mut self, child: FolderEntry) {
-        match &mut self.children {
-            Some(children) => children.push(child),
-            None => self.children = Some(Box::new(vec![child])),
-        }
+        self.children.push(child);
     }
 
-    pub fn delete_child(&mut self, child: FolderEntry) -> Result<(), FolderListError> {
-        if let Some(children) = &mut self.children {
-            let original_len = children.len();
-            children.retain(|c| c.id != child.id);
+    pub fn delete_child(&mut self, child: FolderEntry) {
+        self.children.retain(|c| c.id != child.id);
+    }
 
-            if children.len() < original_len {
-                return Ok(());
+    pub fn find_by_path<'a>(&self, path: &Path) -> Option<FolderEntry> {
+        let mut current = self.clone();
+
+        for component in path.components() {
+            match component {
+                Component::RootDir => {
+                    current = self.clone();
+                }
+                Component::CurDir => {}
+                Component::ParentDir => {
+                    // No parent traversal in owned tree
+                    return None;
+                }
+                Component::Normal(name) => {
+                    let name = name.to_string_lossy();
+                    let found = current.children.iter().find(|child| child.name == name)?;
+                    current = found.clone();
+                }
+                _ => return None,
             }
         }
 
-        Err(FolderListError::ChildNotFound)
+        Some(current)
+    }
+}
+
+impl ToString for FolderEntry {
+    fn to_string(&self) -> String {
+        self.name.to_owned()
+    }
+}
+
+impl TreeItem for FolderEntry {
+    type Child = Self;
+
+    fn write_self<W: io::Write>(&self, f: &mut W, style: &Style) -> io::Result<()> {
+        write!(
+            f,
+            "{} [{}]",
+            style.paint(self.name.clone()),
+            style.paint(self.id.clone())
+        )
+    }
+
+    fn children(&self) -> Cow<[Self::Child]> {
+        let mut sorted = self.children.clone();
+        sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        Cow::Owned(sorted)
     }
 }
 
