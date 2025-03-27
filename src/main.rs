@@ -496,19 +496,26 @@ fn main() {
             Command::new("delete-folder")
                 .about("Deletes a specific folder")
                 .arg(
-                    Arg::new("folder")
-                        .short('d')
-                        .long("folder")
+                    Arg::new("path")
+                        .short('p')
+                        .long("path")
                         .num_args(1)
-                        .help("Folder name")
-                        .required(true)                  
-                        .value_parser(clap::value_parser!(String))
+                        .help("Path to the folder")
+                        .required(true)
+                        .value_parser(clap::value_parser!(PathBuf))
                 )
                 .arg(
                     Arg::new("force")
                         .long("force")
                         .num_args(0)
                         .help("If specified, all models in the folder will be deleted")
+                        .required(false)
+                )
+                .arg(
+                    Arg::new("recursive")
+                        .long("recursive")
+                        .num_args(0)
+                        .help("If specified, all sub-folders in this folder will also be deleted recursivelly")
                         .required(false)
                 ),
         )
@@ -1362,38 +1369,29 @@ fn main() {
         },
         Some(("delete-folder", sub_matches)) => {
             let force = sub_matches.get_flag("force");
-            let folders: HashSet<String> = sub_matches.get_many::<String>("folder").unwrap().cloned().collect();
+            let recursive = sub_matches.get_flag("recursive");
+            let path: &PathBuf = sub_matches.get_one("path").unwrap();
 
-            // delete all models in the folders if forced
-            if force {
-                match api.list_all_models(Some(folders.clone()), None) {
-                    Ok(physna_models) => {
-                        let models = model::ListOfModels::from(physna_models);
-                        let uuids: Vec<Uuid> = models.models.into_iter().map(|model| Uuid::from_str(model.uuid.to_string().as_str()).unwrap()).collect();
-                        for uuid in uuids {
-                            match api.delete_model(&uuid) {
-                                Ok(()) => (),
-                                Err(e) => {
-                                    eprintln!("Error: {}", e);
-                                    ::std::process::exit(exitcode::DATAERR);
-                                }
-                            }
-                        }
+            let folder = api.get_folder_tree(Some(path.as_path()));
+            match folder {
+                Ok(folder) => match folder {
+                    Some(folder) => match api.delete_folder(&folder, force, recursive) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            ::std::process::exit(exitcode::DATAERR);
+                        },
                     },
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
+                    None => {
+                        eprintln!("Folder not found");
                         ::std::process::exit(exitcode::DATAERR);
                     }
-                }
-            }
-
-            // attempt to delete the folder itself
-            match api.delete_folder(folders, false) {
-                Ok(()) => (),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    ::std::process::exit(exitcode::DATAERR);
                 },
+                Err(e) => {
+                    eprintln!("Failed to delete folder: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                    
+                }
             }
         },
         Some(("folder-tree", sub_matches)) => {

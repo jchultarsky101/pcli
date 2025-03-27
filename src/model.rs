@@ -329,7 +329,7 @@ impl FolderEntry {
     }
 
     pub fn has_children(&self) -> bool {
-        self.children.is_empty()
+        !self.children.is_empty()
     }
 
     pub fn add_child(&mut self, child: FolderEntry) {
