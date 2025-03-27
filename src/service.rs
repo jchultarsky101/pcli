@@ -18,7 +18,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::io::{Seek, SeekFrom, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tempfile::tempfile;
 use thiserror::Error;
@@ -121,10 +121,15 @@ impl Api {
         }
     }
 
-    pub fn get_folder_tree(&self) -> Result<FolderEntry, ApiError> {
+    pub fn get_folder_tree(&self, path: Option<&Path>) -> Result<Option<FolderEntry>, ApiError> {
         let folders = self.get_list_of_folders(None)?;
         let root = FolderEntry::from_list_of_folders(&folders)?;
-        Ok(root)
+        let folder = match path {
+            Some(path) => root.find_by_path(path),
+            None => Some(root),
+        };
+
+        Ok(folder)
     }
 
     pub fn get_model_metadata(&self, uuid: &Uuid) -> Result<Option<ModelMetadata>, ApiError> {

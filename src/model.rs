@@ -13,6 +13,7 @@ use std::io;
 use std::io::BufWriter;
 use std::iter::Extend;
 use std::iter::IntoIterator;
+use std::path::{Component, Path};
 use std::vec::IntoIter;
 use thiserror::Error;
 use uuid::Uuid;
@@ -268,7 +269,7 @@ pub enum FolderListError {
 pub struct FolderEntry {
     id: u32,
     name: String,
-    children: Option<Box<Vec<FolderEntry>>>,
+    children: Vec<FolderEntry>,
 }
 
 fn populate_children(folders: &mut HashMap<u32, &Folder>, root: &mut FolderEntry) {
@@ -289,7 +290,7 @@ fn populate_children(folders: &mut HashMap<u32, &Folder>, root: &mut FolderEntry
     // Now, iterate over the matching IDs, safely get the folder again, and recurse
     for id in matching_ids {
         if let Some(folder) = folders.get(&id) {
-            let mut child = FolderEntry::new(folder.id, folder.name.to_owned(), None);
+            let mut child = FolderEntry::new(folder.id, folder.name.to_owned(), vec![]);
             populate_children(folders, &mut child);
             root.add_child(child);
         }
@@ -297,7 +298,7 @@ fn populate_children(folders: &mut HashMap<u32, &Folder>, root: &mut FolderEntry
 }
 
 impl FolderEntry {
-    pub fn new(id: u32, name: String, children: Option<Box<Vec<FolderEntry>>>) -> Self {
+    pub fn new(id: u32, name: String, children: Vec<FolderEntry>) -> Self {
         FolderEntry { id, name, children }
     }
 
@@ -305,7 +306,7 @@ impl FolderEntry {
         let mut folders: HashMap<u32, &Folder> =
             folders.folders.iter().map(|f| (f.id, f)).collect();
 
-        let mut root = FolderEntry::new(0, "/".to_string(), None);
+        let mut root = FolderEntry::new(0, "/".to_string(), vec![]);
         populate_children(&mut folders, &mut root);
 
         Ok(root)
@@ -328,27 +329,40 @@ impl FolderEntry {
     }
 
     pub fn has_children(&self) -> bool {
-        self.children.as_ref().map_or(false, |c| !c.is_empty())
+        self.children.is_empty()
     }
 
     pub fn add_child(&mut self, child: FolderEntry) {
-        match &mut self.children {
-            Some(children) => children.push(child),
-            None => self.children = Some(Box::new(vec![child])),
-        }
+        self.children.push(child);
     }
 
-    pub fn delete_child(&mut self, child: FolderEntry) -> Result<(), FolderListError> {
-        if let Some(children) = &mut self.children {
-            let original_len = children.len();
-            children.retain(|c| c.id != child.id);
+    pub fn delete_child(&mut self, child: FolderEntry) {
+        self.children.retain(|c| c.id != child.id);
+    }
 
-            if children.len() < original_len {
-                return Ok(());
+    pub fn find_by_path<'a>(&self, path: &Path) -> Option<FolderEntry> {
+        let mut current = self.clone();
+
+        for component in path.components() {
+            match component {
+                Component::RootDir => {
+                    current = self.clone();
+                }
+                Component::CurDir => {}
+                Component::ParentDir => {
+                    // No parent traversal in owned tree
+                    return None;
+                }
+                Component::Normal(name) => {
+                    let name = name.to_string_lossy();
+                    let found = current.children.iter().find(|child| child.name == name)?;
+                    current = found.clone();
+                }
+                _ => return None,
             }
         }
 
-        Err(FolderListError::ChildNotFound)
+        Some(current)
     }
 }
 
@@ -371,14 +385,9 @@ impl TreeItem for FolderEntry {
     }
 
     fn children(&self) -> Cow<[Self::Child]> {
-        match &self.children {
-            Some(children) => {
-                let mut sorted = *children.clone(); // Clone the Vec<FolderEntry>
-                sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-                Cow::Owned(sorted)
-            }
-            None => Cow::Borrowed(&[]),
-        }
+        let mut sorted = self.children.clone();
+        sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        Cow::Owned(sorted)
     }
 }
 

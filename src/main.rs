@@ -515,6 +515,15 @@ fn main() {
         .subcommand(
             Command::new("folder-tree")
                 .about("Prints the folder tree")
+                .arg(
+                    Arg::new("path")
+                        .short('p')
+                        .long("path")
+                        .num_args(1)
+                        .help("Path to the folder")
+                        .required(false)
+                        .value_parser(clap::value_parser!(PathBuf))
+                ),
         )
         // .subcommand(
         //     Command::new("assembly-bom")
@@ -1387,10 +1396,24 @@ fn main() {
                 },
             }
         },
-        Some(("folder-tree", _)) => {
-            match api.get_folder_tree() {
-                Ok(root) => {
-                    let _ = ptree::print_tree(&root);
+        Some(("folder-tree", sub_matches)) => {
+            let path = sub_matches.get_one("path");
+            let path = match path {
+                Some(path) => path,
+                None => &PathBuf::from_str("/").unwrap(),
+            };
+            
+            match api.get_folder_tree(Some(path.as_path())) {
+                Ok(folder) => {
+                    match folder {
+                        Some(folder) => {
+                            let _ = ptree::print_tree(&folder);
+                        },
+                        None => {
+                            println!("No such folder");
+                            ::std::process::exit(exitcode::DATAERR);
+                        }
+                    }
                 },
                 Err(_) => {
                     println!("Failed to read the folder tree");
