@@ -44,6 +44,8 @@ pub enum ApiError {
     FormatError(#[from] crate::format::FormatError),
     #[error("Failed to convert folder list")]
     FolderTreeError(#[from] model::FolderListError),
+    #[error("Cannot delete the root folder")]
+    CannotDeleteRootFolder,
 }
 
 pub struct Api {
@@ -99,6 +101,10 @@ impl Api {
         recursive: bool,
     ) -> Result<(), ApiError> {
         log::trace!("Deleting folder: {:?}", &folder);
+
+        if folder.id() == 0 {
+            return Err(ApiError::CannotDeleteRootFolder);
+        }
 
         if recursive && folder.has_children() {
             log::trace!("Deleting children recursivelly...");

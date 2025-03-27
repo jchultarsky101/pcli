@@ -85,6 +85,9 @@
           </ol>
         </li>
         <li><a href="#list-folders">Listing folders</a></li>
+        <li><a href="#list-folder-tree">Listing the folder tree</a></li>
+        <li><a href="#create-folder">Creating a new folder</a></li>
+        <li><a href="#delete-folder">Deleting a folder</a></li> 
         <li><a href="#list-models">Listing models</a></li>
         <li><a href="#query-model">Querying for a specific model</a></li>
         <li><a href="#upload-model">Uploading a model</a></li>
@@ -256,8 +259,6 @@ Commands:
           Deletes a specific folder
   folder-tree
           Prints the folder tree
-  assembly-bom
-          Generates flat BoM of model IDs for model
   status
           Generates a tenant's environment status summary
   upload
@@ -287,7 +288,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=solize]
+          [env: PCLI_TENANT=delta]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -640,7 +641,8 @@ The default output format is "json". The available options are "json", "csv", "t
 
 Adding "--pretty" in this case will add header row to the CSV output containing the column names.
 
-## Listing the folder tree
+
+## <a id="list-folder-tree"></a>Listing the folder tree
 
 Since folders could hav sub-folders, it is helpful sometimes to list them as a tree structure.
 
@@ -650,13 +652,138 @@ pcli help folder-tree
 ```
 Prints the folder tree
 
-Usage: pcli --tenant <tenant> folder-tree
+Usage: pcli --tenant <tenant> folder-tree [OPTIONS]
 
 Options:
-  -h, --help     Print help
+  -p, --path <path>  Path to the folder
+  -h, --help         Print help
+  -V, --version      Print version
 ```
 
 The output will be in the default 'tree' format.
+
+* --path: (optional) This argument specifies the path to a folder. If not specified the tree containing all folders will be printed. However, if you specify a path, only the folder matching this path and all of its sub-folders will be shown.
+
+For example, let us imagine we have the following folders:
+
+```bash
+pcli --tenant mytenant folder-tree
+```
+```
+/ [0]
+├─ folder_1 [1]
+├─ folder_2 [2]
+│  └─ folder_2_1 [3]
+│     ├─ folder_2_1_1 [4]
+│     └─ folder_2_1_2 [5]
+├─ folder_3 [6]
+````
+
+If we do not specify a --path, we will see the entire tree as output.
+
+However, if we execute the command with a path:
+
+```bash
+pcli --tenant mytenant folder-tree --path='/folder_2'
+```
+```
+folder_2 [2]
+└─ folder_2_1 [3]
+├─ folder_2_1_1 [4]
+└─ folder_2_1_2 [5]
+````
+
+In other words, you will see only the folder matching the path and all of its sub-folders.
+
+The folder named "/" is a special folder representing the root of the tree structure.
+
+## <a id="create-folder"></a>Creating a new folder
+
+The command **create-folder** allows you to create a new empty folder.
+
+```bash
+pcli help create-folder
+```
+```
+Creates a new folder
+
+Usage: pcli --tenant <tenant> create-folder --name <name>
+
+Options:
+  -n, --name <name>  Name of the new folder
+  -h, --help         Print help
+```
+
+The only mandatory parameter is the name of the desired name of the new folder.
+
+## <a id="delete-folder"></a>Deleting a folder
+
+**WARNING:** This command will permanently delete data. Proceed with caution!
+
+```bash
+pcli help delete-folder
+```
+```
+Deletes a specific folder
+
+Usage: pcli --tenant <tenant> delete-folder [OPTIONS] --path <path>
+
+Options:
+  -p, --path <path>  Path to the folder
+      --force        If specified, all models in the folder will be deleted
+      --recursive    If specified, all sub-folders in this folder will also be deleted recursivelly
+  -h, --help         Print help
+  -V, --version      Print version
+```
+
+The arguments are as follows:
+* --path: It specifies the path to the folder. See the example below.
+* --force: (optional) If the folder contains any models and you specify this flag, all models will be deleted first and then the folder itself will be deleted. If you do not specify this flag and the folder does contain models, you will receive an error.
+* --recursive: (optional) If the folder contains any sub-folders and you specify this flag, all subfolders and their sub-folders will be deleted recursivelly. Use together with --force to delete all data in the folder and the folder itself. 
+
+Example:
+
+Let us imagine that we have the following folder tree:
+
+/ [0]
+├─ folder_1 [1]
+├─ folder_2 [2]
+│  └─ folder_2_1 [3]
+│     ├─ folder_2_1_1 [4]
+│     └─ folder_2_1_2 [5]
+├─ folder_3 [6]
+
+If we want to delete folder with name 'folder_2_1_1', we need to use the path '/folder_1/folder_2/folder_2_1/folder_2_1_1'. This is because folder_2_1_1 is a child folder of folder_2_1 and so far. In this case, the command would be:
+
+```bash
+pcli --tenant mytenant delete-folder --path='/folder_2/folder_2_1/folder_2_1_1'
+```
+
+However, if this folder contains any models we will get an error. To force the deletion of all data in this folder and the folder itself, we can specify the --force flag:
+
+```bash
+pcli --tenant mytenant delete-folder --path='/folder_2/folder_2_1/folder_2_1_1' --force
+```
+
+Obviously, this is a dangerous operaion. If you make a mistake in the path of the folder, you may destroy important data. Use the folder-tree command first to make sure that you have the correct path.
+
+If we want to delete folder folder_2, we can see that it contains several sub-folders. Without using the --recursive option we get an error. If you specify --recursive, the deletion will be executed on all sub-folders.
+
+
+```bash
+pcli --tenant mytenant delete-folder --path='/folder_2/folder_2_1/folder_2_1_1' --recursive
+```
+
+To automatically delete all sub-folders and all data in them, use both flags:
+
+
+```bash
+pcli --tenant mytenant delete-folder --path='/folder_2/folder_2_1/folder_2_1_1' --recursive --force
+```
+
+Once again, use with caution! This is a very powerful command that can destroy large amounts of data very quickly. Once data is deleted there is no way to restore it unless you re-upload the files, which is an expensive process.
+
+**NOTE:** PCLI will prevent you from attempting to delete the root folder "/" for safety.
 
 ## <a id="list-models"></a>Listing models
 

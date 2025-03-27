@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## v1.9.16
 * Removed the assembly-bom command as it is no longer supported
 * Introduced the folder-tree command
+* Introfuced the create-folder command
+* Enhanced the delete-folder command to enable recursive deletion of sub-folders and their data
 
 ## v1.9.15
 * Implemented automatic token renewal
