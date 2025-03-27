@@ -783,6 +783,7 @@ impl ApiClient {
             }
             None => Some(String::default()),
         };
+        log::trace!("Filter: {:?}", filter);
 
         let mut folders: Vec<Folder> = Vec::new();
         loop {
@@ -797,32 +798,21 @@ impl ApiClient {
         Ok(FolderListResponse { folders })
     }
 
-    pub fn delete_folder(&self, folders: &HashSet<u32>) -> Result<(), ClientError> {
-        log::trace!("Deleting folder {:?}...", folders);
-        let url = format!("{}/v2/folders", self.base_url);
-        let mut query_parameters: Vec<(String, String)> = Vec::new();
+    pub fn delete_folder(&self, folder_id: &u32) -> Result<(), ClientError> {
+        log::trace!("Deleting folder {:?}...", folder_id);
+        let url = format!("{}/v2/folders/{}", self.base_url, folder_id);
 
-        for folder in folders {
-            query_parameters.push(("ids".to_string(), folder.to_string()));
-        }
+        let builder = self
+            .client
+            .delete(url)
+            .timeout(Duration::from_secs(180))
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .header("X-PHYSNA-TENANTID", self.tenant.to_owned());
 
-        if query_parameters.len() > 0 {
-            let builder = self
-                .client
-                .delete(url)
-                .timeout(Duration::from_secs(180))
-                .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
-                .header("X-PHYSNA-TENANTID", self.tenant.to_owned())
-                .query(&query_parameters)
-                .json(&folders);
-
-            let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
-            log::trace!("DELETE {}", request.url());
-            let response = self.client.execute(request);
-            self.handle_response::<()>(response)
-        } else {
-            Err(ClientError::InvalidFolderName)
-        }
+        let request = builder.bearer_auth(self.access_token.to_owned()).build()?;
+        log::trace!("DELETE {}", request.url());
+        let response = self.client.execute(request);
+        self.handle_response::<()>(response)
     }
 
     pub fn create_folder(&self, name: &String) -> Result<FolderCreateResponse, ClientError> {
