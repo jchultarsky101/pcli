@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>pcli Changelog</title><link>http://127.0.0.1:7979/pcli/changelog</link><description>Changelog information for pcli</description><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><atom:link href="http://127.0.0.1:7979/pcli/changelog.rss" rel="self"/><item><title>v1.10.0</title><link>http://127.0.0.1:7979/pcli/changelog/v1.10.0</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.10.0</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the match-model command with --method to enable part-in-part search</li>
+<li>Changed the output of matches to include forward and reverse match percentage</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.16</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.16</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.16</guid><content:encoded><![CDATA[<ul>
+<li>Removed the assembly-bom command as it is no longer supported</li>
+<li>Introduced the folder-tree command</li>
+<li>Introfuced the create-folder command</li>
+<li>Enhanced the delete-folder command to enable recursive deletion of sub-folders and their data</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.15</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.15</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.15</guid><content:encoded><![CDATA[<ul>
+<li>Implemented automatic token renewal</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.14</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.14</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.14</guid><content:encoded><![CDATA[<ul>
+<li>Fixed bug related to upload-many when file names contain multiple dots in the name</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.13</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.13</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.13</guid><content:encoded><![CDATA[<ul>
+<li>Updated assembly tree operations</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.12</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.12</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.12</guid><content:encoded><![CDATA[<ul>
+<li>Fixed a bug in match-report where the reference model does not have metadata and the --reference-meta flag is specified</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>main</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+]]></content:encoded></item><item><title>v1.9.11</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.11</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.11</guid><content:encoded><![CDATA[<ul>
+<li>Added --ignore-errors to match-report</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.10</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.10</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.10</guid><content:encoded><![CDATA[<ul>
+<li>Added --threshold argument to the <strong>visual-match</strong> command</li>
+<li>Updated the README.md file</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.9</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.9</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.9</guid><content:encoded><![CDATA[<ul>
+<li>Standardized column names to resolve inconsistencies in CSV format</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.8</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.8</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.8</guid><content:encoded><![CDATA[<ul>
+<li>Bug fix related to folder names in "models" command</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.7</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.7</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.7</guid><content:encoded><![CDATA[<ul>
+<li>Added "users" command</li>
+<li>Fixed bug where the owner ID was not shown in CSV format</li>
+<li>Fixed bug where the folder name was showing as NULL in the output of "models" command</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.6</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.6</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.6</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the "status" command. The argument (folder) is not optional. When none provided, it will generate status for all folders in the tenant</li>
+<li>Added "match-all-models" command. It will match all models in all folders at a specified threshold</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.4</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.4</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.4</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the match-report output to show the folder names instead of folder IDs</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.3</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.3</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.3</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the 'match-model' command by adding 'reference-meta' flag to include all metadata from the reference model in the output in addition to the candidate model metadata</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.2</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.2</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.2</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced 'image-search' command to enable new multiple image method</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.1</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.1</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.1</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the 'label-inference' command to include 'folder' filter</li>
+</ul>
+]]></content:encoded></item><item><title>v1.9.0</title><link>http://127.0.0.1:7979/pcli/changelog/v1.9.0</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.9.0</guid><content:encoded><![CDATA[<ul>
+<li>Added command 'label-inference'</li>
+<li>Added JT to the list of supported file formats</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.25</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.25</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.25</guid><content:encoded><![CDATA[<ul>
+<li>Fixed a bug in match-folder</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.24</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.24</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.24</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the 'match-folder' command. The --folder argument is now optional. If not folder names are provided, it will match all models in all folders in the tenant</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.23</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.23</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.23</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the 'match-folder' command by adding --meta-filter argument</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.22</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.22</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.22</guid><content:encoded><![CDATA[<ul>
+<li>Excluded models with "No 3D Data" status from automatic reprocessing</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.21</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.21</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.21</guid><content:encoded><![CDATA[<ul>
+<li>Added "upgrade" command to automatically update the executable when new version is available</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.20</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.20</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.20</guid><content:encoded><![CDATA[<ul>
+<li>Fixed a bug in the match report which was causing model matches not to be included if an assembly and a model have the same name</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.19</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.19</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.19</guid><content:encoded><![CDATA[<ul>
+<li>Bug fixes</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.18</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.18</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.18</guid><content:encoded><![CDATA[<ul>
+<li>Bug fixes</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.17</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.17</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.17</guid><content:encoded><![CDATA[<ul>
+<li>Enhanced the "upload-many" command to add --show-stats and --on-error arguments</li>
+<li>Updated the documentation</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.16</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.16</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.16</guid><content:encoded><![CDATA[<ul>
+<li>Added optional folder name filters to the "folders" command</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.15</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.15</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.15</guid><content:encoded><![CDATA[<ul>
+<li>Improved error messages</li>
+<li>Updated documentation</li>
+<li>Bug fixes</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.14</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.14</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.14</guid><content:encoded><![CDATA[<ul>
+<li>Fixed a bug preventing files with special extensions to be uploaded</li>
+</ul>
+]]></content:encoded></item><item><title>v1.8.13</title><link>http://127.0.0.1:7979/pcli/changelog/v1.8.13</link><category domain="https://github.com/jchultarsky101/pcli.git">pcli Changelog</category><guid>http://127.0.0.1:7979/pcli/changelog/v1.8.13</guid><content:encoded><![CDATA[<ul>
+<li>Implemented model-download command</li>
+<li>Updated the documentation</li>
+</ul>
+]]></content:encoded></item></channel></rss>

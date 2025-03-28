@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>pcli</title>
+    
+    
+      <link rel="icon" href="/pcli/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="CLI client utility to the Physna public API/V2" />
+      <meta property="og:description" content="CLI client utility to the Physna public API/V2" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="pcli" />
+    
+    
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/pcli/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/jchultarsky101/pcli.git">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">pcli</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/pcli/">Home</a></li>
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li><a href="/pcli/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+
+
+    <p><a rel="noopener noreferrer"></a></p>
+
+
+<p><a href="https://github.com/jchultarsky101/pcli/graphs/contributors" rel="noopener noreferrer"><img src="https://img.shields.io/github/contributors/jchultarsky101/pcli.svg?style=for-the-badge" alt="Contributors"></a>
+<a href="https://github.com/jchultarsky101/uacli/network/members" rel="noopener noreferrer"><img src="https://img.shields.io/github/forks/jchultarsky101/pcli.svg?style=for-the-badge" alt="Forks"></a>
+<a href="https://github.com/jchultarsky101/pcli/stargazers" rel="noopener noreferrer"><img src="https://img.shields.io/github/stars/jchultarsky101/pcli.svg?style=for-the-badge" alt="Stargazers"></a>
+<a href="https://github.com/jchultarsky101/pcli/issues" rel="noopener noreferrer"><img src="https://img.shields.io/github/issues/jchultarsky101/pcli.svg?style=for-the-badge" alt="Issues"></a>
+<a href="https://github.com/jchultarsky101/pcli/blob/master/LICENSE.txt" rel="noopener noreferrer"><img src="https://img.shields.io/github/license/jchultarsky101/pcli.svg?style=for-the-badge" alt="MIT License"></a>
+<a href="https://www.linkedin.com/in/julianchultarsky" rel="noopener noreferrer"><img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&amp;logo=linkedin&amp;colorB=555" alt="LinkedIn"></a></p>
+
+<br>
+<div>
+
+  <h3>PCLI</h3>
+  <p>
+    Command Line Interface client for the Physna API
+    <br>
+    <a href="https://jchultarsky101.github.io/pcli/" rel="noopener noreferrer"><strong>Explore the docs »</strong></a>
+    <br>
+    <br>
+    <a href="https://github.com/jchultarsky101/pcli/tree/main/images/demo.mov" rel="noopener noreferrer">View Demo</a>
+    ·
+    <a href="https://github.com/jchultarsky101/pcli/issues" rel="noopener noreferrer">Report Bug</a>
+    ·
+    <a href="https://github.com/jchultarsky101/pcli/issues" rel="noopener noreferrer">Request Feature</a>
+  </p>
+</div>
+
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#about-the-project" rel="noopener noreferrer">About the project</a></li>
+    <li><a href="#built-with" rel="noopener noreferrer">Built with</a></li>
+    <li>
+      <a href="#getting-started" rel="noopener noreferrer">Getting started</a>
+      <ol>
+        <li><a href="#prerequisites" rel="noopener noreferrer">Prerequisites</a></li>
+        <li>
+          <a href="#installation" rel="noopener noreferrer">Installation</a>
+          <ol>
+            <li><a href="#installers" rel="noopener noreferrer">Installers</a></li>
+            <li><a href="#downloading-binary" rel="noopener noreferrer">Downloading a pre-compiled binary</a></li>
+            <li><a href="#compilation" rel="noopener noreferrer">Compilation from source</a></li>
+          </ol>
+        </li>
+        <li><a href="#about-tenants" rel="noopener noreferrer">About tenants</a></li>
+      </ol>
+    </li>
+    <li><a href="#configuration" rel="noopener noreferrer">Configurations</a></li>
+    <li>
+      <a href="#basic-use" rel="noopener noreferrer">Basic use</a>
+      <ol>
+        <li>
+          <a href="#command-line-arguments" rel="noopener noreferrer">Command line arguments</a>
+          <ol>
+            <li><a href="#order-of-arguments" rel="noopener noreferrer">Order of arguments</a></li>
+            <li><a href="#general-vs-specific-args" rel="noopener noreferrer">How do I know which arguments are general and which are specific</a></li>
+            <li><a href="#signs-n-quotes" rel="noopener noreferrer">Equal sign, quotes, oh my</a></li>
+            <li><a href="#milti-value-args" rel="noopener noreferrer">Arguments with multiple values</a></li>
+          </ol>
+        </li>
+        <li>
+          <a href="#tokens" rel="noopener noreferrer">Working with tokens</a>
+          <ol>
+            <li><a href="#invalidate-token" rel="noopener noreferrer">Invalidating your token</a></li>
+            <li><a href="#print-token" rel="noopener noreferrer">Displaying your token</a></li>
+            <li><a href="#token-best-practices" rel="noopener noreferrer">Best practices for handling tokens</a></li>
+          </ol>
+        </li>
+        <li><a href="#list-folders" rel="noopener noreferrer">Listing folders</a></li>
+        <li><a href="#list-folder-tree" rel="noopener noreferrer">Listing the folder tree</a></li>
+        <li><a href="#create-folder" rel="noopener noreferrer">Creating a new folder</a></li>
+        <li><a href="#delete-folder" rel="noopener noreferrer">Deleting a folder</a></li> 
+        <li><a href="#list-models" rel="noopener noreferrer">Listing models</a></li>
+        <li><a href="#query-model" rel="noopener noreferrer">Querying for a specific model</a></li>
+        <li><a href="#upload-model" rel="noopener noreferrer">Uploading a model</a></li>
+        <li><a href="#upload-many-models" rel="noopener noreferrer">Uploading multiple models in one step</a></li>
+        <li><a href="#download-model" rel="noopener noreferrer">Downloading model file</a></li>
+        <li><a href="#reprocess-model" rel="noopener noreferrer">Reprocessing a model</a></li>
+        <li><a href="#delete-model" rel="noopener noreferrer">Delete a model</a></li>
+        <li><a href="#read-meta" rel="noopener noreferrer">Reading metadata</a></li>
+        <li><a href="#upload-meta" rel="noopener noreferrer">Uploading metadata</a></li>
+        <li><a href="#read-asm" rel="noopener noreferrer">Reading the assembly structure</a></li>
+        <li><a href="#match-model" rel="noopener noreferrer">Matching models to other models</a></li>
+        <li><a href="#match-folder" rel="noopener noreferrer">Matching entire folders of models</a></li>
+        <li><a href="#match-visual" rel="noopener noreferrer">Matching models by visual appearance</a></li>
+        <li><a href="#match-scan" rel="noopener noreferrer">Matching scanned model</a></li>
+        <li><a href="#match-report" rel="noopener noreferrer">Generating a match report</a></li>
+        <li><a href="#environment-status" rel="noopener noreferrer">Tenant environment status</a></li>
+        <li><a href="#2D-to-3D" rel="noopener noreferrer">Searching for 3D models by 2D image</a></li>
+        <li><a href="#label-folder" rel="noopener noreferrer">Model labeling</a></li>
+        <li><a href="#label-inference" rel="noopener noreferrer">Labeling of models by inference</a></li>
+        <li><a href="#list-users" rel="noopener noreferrer">Listing all users</a></li>
+      </ol>
+    </li>
+    <li><a href="#errors" rel="noopener noreferrer">Handling errors</a></li>
+    <li>
+      <a href="#advanced-use" rel="noopener noreferrer">Advanced use</a>
+      <ol>
+        <li><a href="#upgrade" rel="noopener noreferrer">Upgrading the PCLI version</a></li>
+        <li><a href="#pipes" rel="noopener noreferrer">Using pipes and redirecting output</a></li>
+        <li><a href="#nushell" rel="noopener noreferrer">Using NuShell</a></li>
+      </ol>
+    </li>
+    <li><a href="#support" rel="noopener noreferrer">Support</a></li>
+    <li><a href="#roadmap" rel="noopener noreferrer">Roadmap</a></li>
+    <li><a href="#contributing" rel="noopener noreferrer">Contributing</a></li>
+    <li><a href="#license" rel="noopener noreferrer">License</a></li>
+    <li><a href="#contact" rel="noopener noreferrer">Contact</a></li>
+    <li><a href="#acknowledgments" rel="noopener noreferrer">Acknowledgments</a></li>
+  </ol>
+</details>
+<p>
+</p><h1><a id="about-the-project" rel="noopener noreferrer"></a>About the project</h1>
+<p>This utility is a command-line (CLI) client for Physna's public API V2. It could be used to interact with the system
+in automated ways.</p>
+<p><strong>Disclaimer</strong>: This software is an open-source project and is not an officially supported product of Physna, Inc. It is intended as a reference implementation and provides examples for using the APIs. This software has not been evaluated for SOC 2 compliance. Please review the license before use.</p>
+<h1><a id="built-with" rel="noopener noreferrer"></a>Built with</h1>
+<p>This project is built with the wonderful programming language <a href="https://www.rust-lang.org" rel="noopener noreferrer">Rust</a>.</p>
+<p><a href="https://www.rust-lang.org/" rel="noopener noreferrer"><img src="http://rust-lang.org/logos/rust-logo-128x128.png" alt="Rust"></a></p>
+
+<h1><a id="getting-started" rel="noopener noreferrer"></a>Getting started</h1>
+<h2><a id="prerequisites" rel="noopener noreferrer"></a>Prerequisites</h2>
+<p>This is a command-line interface (CLI) program that runs in the terminal. Basic familiarity with executing commands is recommended.</p>
+<p>This CLI is a client for Physna services. To use it, you must first request a Physna Enterprise account. Please contact your Physna representative for more information.</p>
+<h2><a id="installation" rel="noopener noreferrer"></a>Installation</h2>
+<h3><a id="installers" rel="noopener noreferrer"></a>Installers</h3>
+<p>You can use the installation script for your platform as shown on the <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">documentation site</a>.</p>
+<h3><a id="downloading-binary" rel="noopener noreferrer"></a>Downloading a pre-compiled binary</h3>
+<p>You can download a pre-compiled binary for your platform from the <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">documentation site</a>. You’ll need to decompress the file and copy it to a location of your choice.</p>
+<h3><a id="compilation" rel="noopener noreferrer"></a>Compilation from source</h3>
+<p>To use this method, you’ll need to have Rust installed on your computer. Clone this repository, navigate to the project root, and compile it using Rust:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">cargo build release
+</span></pre>
+
+<p>This will produce an executable for your operating system.</p>
+<h2><a id="about-tenants" rel="noopener noreferrer"></a>A word about tenants</h2>
+<p>Physna is a multi-tenant system, meaning each client organization is assigned its own environment.
+For example, if your company is MyCompany, LLC, you might receive an environment where your customer-facing website is located at <a href="https://mycompany.physna.com" rel="noopener noreferrer">https://mycompany.physna.com</a>. In this case, the identifier mycompany is your tenant ID.</p>
+<p>The tenant ID is a crucial piece of information and is required for nearly every CLI command you run. If you’re unsure what your tenant ID is, please contact your Physna representative.</p>
+<p><strong>Note:</strong> If you specify an unknown tenant (i.e., one not present in the configuration file), the error message will list all currently configured tenants.</p>
+<h1><a id="configuration" rel="noopener noreferrer"></a>Configuration</h1>
+<p>The tool uses a single configuration file located in your home directory, named ~/.pcli.conf.</p>
+<p>Below is an example of the contents of .pcli.conf:</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">base_path: https://api.physna.com
+</span><span style="color:#eeffff;">identity_provider_url: https://physna.okta.com/oauth2/default/v1/token
+</span><span style="color:#eeffff;">tenants:
+</span><span style="color:#eeffff;">    mytenant:
+</span><span style="color:#eeffff;">      client_id: 0000000000000000
+</span><span style="color:#eeffff;">      client_secret: 
+</span></pre>
+
+<p>In the example above, "mytenant" represents your tenant ID. Be sure to update the sample to reflect your actual tenant ID.</p>
+<p>The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be usefgul.</p>
+<h1><a id="basic-use" rel="noopener noreferrer"></a>Basic use</h1>
+<p>You can run this utility from a terminal session. To view the available commands, use help as the first argument:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">╔═╗╔═╗╦  ╦
+</span><span style="color:#eeffff;">╠═╝║  ║  ║
+</span><span style="color:#eeffff;">╩  ╚═╝╩═╝╩
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Physna Command Line Interface
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">CLI client utility to the Physna public API/V2
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli [OPTIONS] --tenant &lt;tenant&gt; &lt;COMMAND&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Commands:
+</span><span style="color:#eeffff;">  sysinfo
+</span><span style="color:#eeffff;">          Prints details of the current host system
+</span><span style="color:#eeffff;">  upgrade
+</span><span style="color:#eeffff;">          Checks if a new version of PCLI is available and upgrades it to the latest
+</span><span style="color:#eeffff;">  token
+</span><span style="color:#eeffff;">          Obtains security access token from the provider
+</span><span style="color:#eeffff;">  invalidate
+</span><span style="color:#eeffff;">          Invalidates the current access token, which will cause new token to be created next execution
+</span><span style="color:#eeffff;">  model
+</span><span style="color:#eeffff;">          Reads data for a specific model
+</span><span style="color:#eeffff;">  reprocess
+</span><span style="color:#eeffff;">          Reprocesses a specific model
+</span><span style="color:#eeffff;">  delete-model
+</span><span style="color:#eeffff;">          Deletes a specific model
+</span><span style="color:#eeffff;">  model-meta
+</span><span style="color:#eeffff;">          Reads the metadata (properties) for a specific model
+</span><span style="color:#eeffff;">  models
+</span><span style="color:#eeffff;">          Lists available models that meet the search criteria
+</span><span style="color:#eeffff;">  assembly-tree
+</span><span style="color:#eeffff;">          Reads the model's assembly tree
+</span><span style="color:#eeffff;">  match-model
+</span><span style="color:#eeffff;">          Matches all models to the specified one
+</span><span style="color:#eeffff;">  match-visual
+</span><span style="color:#eeffff;">          Matches all models to the specified one. Uses visual match algorithm
+</span><span style="color:#eeffff;">  match-scan
+</span><span style="color:#eeffff;">          Scan-match all models to the specified one
+</span><span style="color:#eeffff;">  match-folder
+</span><span style="color:#eeffff;">          Matches all models in a folder to other models
+</span><span style="color:#eeffff;">  match-all-models
+</span><span style="color:#eeffff;">          Matches all models in all folders
+</span><span style="color:#eeffff;">  label-folder
+</span><span style="color:#eeffff;">          Labels models in a folder based on KNN algorithm and geometric match score as distance
+</span><span style="color:#eeffff;">  label-inference
+</span><span style="color:#eeffff;">          Infere metadata values for a model based on metadata values of other geometrically similar models
+</span><span style="color:#eeffff;">  delete-folder
+</span><span style="color:#eeffff;">          Deletes a specific folder
+</span><span style="color:#eeffff;">  folder-tree
+</span><span style="color:#eeffff;">          Prints the folder tree
+</span><span style="color:#eeffff;">  status
+</span><span style="color:#eeffff;">          Generates a tenant's environment status summary
+</span><span style="color:#eeffff;">  upload
+</span><span style="color:#eeffff;">          Uploads a file to Physna
+</span><span style="color:#eeffff;">  download
+</span><span style="color:#eeffff;">          Downloads the source CAD file for the model into the default download directory
+</span><span style="color:#eeffff;">  upload-many
+</span><span style="color:#eeffff;">          Performs a bulk upload of all files in a directory
+</span><span style="color:#eeffff;">  upload-model-meta
+</span><span style="color:#eeffff;">          Reads metadata from an input CSV file and uploads it for a model specified by UUID
+</span><span style="color:#eeffff;">  match-report
+</span><span style="color:#eeffff;">          Generates a match report for the specified models
+</span><span style="color:#eeffff;">  folders
+</span><span style="color:#eeffff;">          Lists all available folders
+</span><span style="color:#eeffff;">  users
+</span><span style="color:#eeffff;">          Lists all users
+</span><span style="color:#eeffff;">  create-folder
+</span><span style="color:#eeffff;">          Creates a new folder
+</span><span style="color:#eeffff;">  properties
+</span><span style="color:#eeffff;">          Lists all available metadata propertie names and their IDs
+</span><span style="color:#eeffff;">  image-search
+</span><span style="color:#eeffff;">          Search for 3D model based on 2D image(s) (object identification)
+</span><span style="color:#eeffff;">  help
+</span><span style="color:#eeffff;">          Print this message or the help of the given subcommand(s)
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -t, --tenant &lt;tenant&gt;
+</span><span style="color:#eeffff;">          Your tenant ID (check with your Physna admin if not sure)
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">          [env: PCLI_TENANT=a4iwg]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">  -f, --format &lt;format&gt;
+</span><span style="color:#eeffff;">          Output data format (optional: e.g. 'json', 'csv', or 'tree')
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">          [env: PCLI_FORMAT=]
+</span><span style="color:#eeffff;">          [default: json]
+</span><span style="color:#eeffff;">          [possible values: json, csv, tree, table]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">  -p, --pretty
+</span><span style="color:#eeffff;">          Produces pretty output (optional: default is 'false')
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">      --color &lt;color&gt;
+</span><span style="color:#eeffff;">          Adds color to the output (optional: e.g. 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white')
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">          [possible values: black, red, green, yellow, blue, magenta, cyan, white]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">  -h, --help
+</span><span style="color:#eeffff;">          Print help (see a summary with '-h')
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">  -V, --version
+</span><span style="color:#eeffff;">          Print version
+</span></pre>
+
+<p>The application supports subcommands. To view detailed help for a specific subcommand, you can either place the command name after "help", or run the command followed by --help, as shown in the example below:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help model
+</span></pre>
+
+<p>The above produces the following output:</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Reads data for a specific model
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; model [OPTIONS] --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;  The model UUID
+</span><span style="color:#eeffff;">  -m, --meta         Enhance output with model's metadata
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<p>As shown, the <strong>model</strong> subcommand uses the --uuid argument to specify the UUID of the model you want to retrieve.</p>
+<p>Example):</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">82cb38ce-c3e4-4a07-b605-5177602a6xxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>Most, but not all command line arguments support both short and long names. For example, for tenant we can
+specify the full name "--tenant" or the short name "-t". Those two are be equivalent. Not all arguments
+have a short name. In those cases, the long name is the only option. We reserve those for cases where the argument is
+rarely used or it is important to make sure we avoid mistakes.</p>
+<h2><a id="command-line-arguments" rel="noopener noreferrer"></a>Command line arguments</h2>
+<h3><a id="order-of-arguments" rel="noopener noreferrer"></a>Order of arguments</h3>
+<p>There are two types of arguments:</p>
+<ul>
+<li>General use</li>
+<li>Specific to a sub-command</li>
+</ul>
+<p>When composing your command line, you need to provide the general arguments first. If using a sub-command, type that next and
+follow that with any sub-command specific arguments. Both the general and specific arguments could be optional.</p>
+<p>This is the idea:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli </span><span style="font-style:italic;color:#c792ea;">[</span><span style="color:#82aaff;">general arguments</span><span style="font-style:italic;color:#c792ea;">]</span><span style="color:#82aaff;"> sub-command </span><span style="font-style:italic;color:#c792ea;">[</span><span style="color:#82aaff;">command</span><span style="color:#89ddff;">-</span><span style="color:#82aaff;">specific arguments</span><span style="font-style:italic;color:#c792ea;">]
+</span></pre>
+
+<p>Here are few examples:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help models
+</span></pre>
+
+<p>In this case, "help" is the subcommand. There are zero general arguments we need to provide for it.
+We provide one more subcommand <strong>models</strong> to identify the exact sub-command for which we need specific help.</p>
+<p>That was a very simple example. Here is a more complicated one:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">cvs</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">default</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">search</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">part_name</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>In this case, "tenant", "format", and "pretty" are all general arguments that apply accross many sub-commands.
+On another hand "folder" and "search" are arguments that are specific to the <strong>models</strong> command.
+Of course "models" is the sub-command itself.</p>
+<h3><a id="general-vs-specific-args" rel="noopener noreferrer"></a>How do I know which arguments are general and which are specific?</h3>
+<p>The general arguments are:</p>
+<ul>
+<li>--tenant</li>
+<li>--format</li>
+<li>--pretty</li>
+</ul>
+<p>If you display the help without specifying a command name, you will see the info about the general arguments. If you do provide
+a command name in the help request, you will see the command-specific arguments only.</p>
+<p>Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.</p>
+<h3><a id="signs-n-quites" rel="noopener noreferrer"></a>Equal sign, quotes, oh my!</h3>
+<p>There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
+but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.</p>
+<p>For example these two ways of executing the <strong>folders</strong> command are both valid and equivalent:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant folders
+</span></pre>
+
+<p>and</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<p>In other words, you can provide either the equal character ('=') or a space as the separator between argument and its value.
+The recommended way is to use the equal character (example #2) without any spaces between the '=' on either side.</p>
+<p>If a value does not contain spaces or any other characters that my cause confusion, you can type it without surrounding it with quotes.
+The best practice is to always wrap it in double quotes.</p>
+<p>In general, it is considered O.K. to not surround numbers with double quotes.
+It is a bit more typing, but I recommend to be consistent and wrap all values as a matter of good habit.</p>
+<h3><a id="multi-value-args" rel="noopener noreferrer"></a>Arguments with multiple values</h3>
+<p>Few sub-commands can take multiple values for an argument. Such arguments are clearly indicated in the help.
+In an example you will see further down again:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> match-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder1</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder2</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.99</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>This means that the <strong>match-folder</strong> command will search simultaneously in two folders (i.e. foler with name "myfolder1" and a second folder with name "myfolder2") and combine the output
+for both. This way, you can widen the search in one command.</p>
+<p>For connvenience, we provide an alternative method of specifying multiple values.
+You can use a single command line argument name and a comma-separated list of values.
+The following is equivalent to the example above:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> match-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder1,myfolder2</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.99</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>That can come handy when using PCLI in conjusction with a custom business logic, which prefers to use comma-separated values.</p>
+<h3>Arguments without a value</h3>
+<p>The argument "pretty" does not take a value. This is because it is a boolean argument or sometimes also called a flag. The mere presence of it indicates
+that you want to use it. In this case:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<p>it means that I would like to print a more human-readable JSON output than the default compact version meant for post-processing tasks.
+If I ommit "pretty" it is the same as setting a value of false for it, which is the default.</p>
+<h3>Default values for general arguments via environment variables</h3>
+<p>If you only have one tenant it would be annoying to have to type it every time you use PCLI. Instead, you can setup an environment variable in your command line
+shell. PCLI will use the value to automaically populate the tenant ID for you. How to create an environment variable and how to make that persistent for your shell
+is beyond the scope of this document. It differs between operating systems. Consult online resources if you are not familiar.</p>
+<p>Example of using an environment variable to set the tenant ID in Linux:</p>
+<pre style="background-color:#263238;"><span style="color:#c792ea;">export </span><span style="color:#eeffff;">PCLI_TENANT</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>Here we set the environment variable "PCLI_TENANT" to have value of "mytenant". When calling PCLI later, we do not need to provide --tenant as argument anymore.
+The value from the PCLI_TENANT variable is used. If you do specify the argument, it will override the one from the environment. In other words, the environment variable
+provides a default value for the argument if it is not explicitly specified.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli folders
+</span></pre>
+
+<p>There are two general arguments that can be configured as environment variables:</p>
+<ul>
+<li>--tenant - as "PCLI_TENANT"</li>
+<li>--format - as "PCLI_FORMAT"</li>
+</ul>
+<h2><a id="tokens" rel="noopener noreferrer"></a>Working with tokens</h2>
+<p>It is important to understand how the authentication and authorization work.
+Physna uses OpenID Connect provider and upon successful authentication will issue the user
+an access token, which will be valid for the duration of the session (several hours). As long
+as your token is valid, you do not need to authenticate every time you run the PCLI utility.</p>
+<p>The current token is stored by PCLI in a hidden file in your home directory. The file name
+is ".pcli.&lt;tenant_id&gt;.token". For example if your tenant is "beta", the file name for that
+environment would be ~/.pcli.beta.token.</p>
+<p>You can delete the token file at any time. If you do, PCLI will prompt you to authenticate again
+and create a new one in its place. There is an easier way however. The CLI supports dedicated sub-commands
+to deal with token generation:</p>
+<h3><a id="invalidate-token" rel="noopener noreferrer"></a>Invalidating your token</h3>
+<p>The sub-command <strong>invalidate</strong> will delete the current token for a given tenant. It will leave
+unmodified any other tokens belonging to other tenants you may have.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> invalidate
+</span></pre>
+
+<p>This operation causes PCLI to start a new session next time it is executed by requesting a new token.</p>
+<h3><a id="print-token" rel="noopener noreferrer"></a>Displaying your token</h3>
+<p>Your token data is encrypted. It does not reveal anything about yourself or your system.
+In the vast majority of cases, you would not care what it is. However, there may be some
+special use cases where knowing your token is handy. One such case is if you are trying to
+access the Physna's API in other ways than via this CLI. For example, this may be with cURL,
+Postman, or some other client.</p>
+<p>You do not need to execute this command just to get a new token. Every command you execute will attempt to obtain one if
+none currently exist.</p>
+<p>The following command will print the current token for your tenant to the terminal:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> token
+</span></pre>
+
+<h3><a id="token-best-practices" rel="noopener noreferrer"></a>Best practices for handling tokens</h3>
+<p>First of all, make sure your home directory is properly secured with the correct file permissions.
+It is by default on all popular OS-es, but this is your responsibility. If not secure, there is
+much to worry about, not just the access token by Physna.</p>
+<p>If you are automating your operations via shell scripts and you plan to invoke the CLI multiple times,
+it is always a good idea to start with a fresh session. In your BASH script, call the "invalidate" command
+first and once. You can then iterate over a batch of command executions without concern that your session
+may expire in the middle of your work. This is handy especially when you have unattended executions (e.g. triggered by a cron job, etc.).</p>
+<p>Also in the case of unattended executions, you could provide a value for your <strong>client_secret</strong> in your configuration file. This is
+a less secure option, because it will not prompt you to enter it in your terminal every time you authenticate,
+but if there is no human to enter it, it is difficult to automate. If you choose this path, make sure that
+your configuration file has the proper file permission to secure it against others that may share your
+computer.</p>
+<h2><a id="list-folders" rel="noopener noreferrer"></a>Listing folders</h2>
+<p>The command <strong>folders</strong> will print the full list of folders currently available for your tenant.
+Physna organizes data into logical storage units named folders. This is not unlike many other
+systems you are familiar with. Each folder has a name. It also has a numeric identifier.
+The folder ID is may be returned as part of the data Physna provides. For example, for 3D models,
+it indicates which folder they belong to. The folder name is useful as a fiter for some operations (read further).</p>
+<p>If you ask for the help screen of this command, you will see the following:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help folders
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Lists all available folders
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; folders [OPTIONS]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder [&lt;folder&gt;...]  Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+</span><span style="color:#eeffff;">  -h, --help                  Print help
+</span><span style="color:#eeffff;">  -V, --version               Print version
+</span></pre>
+
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">[{"id":1,"name":"Default Container"},{"id":2,"name":"Crawler"},{"id":3,"name":"myfolder"}]
+</span></pre>
+
+<p>The output of this command by default is formatted as compact JSON. This to allow you to chain the output
+of this utility with other commands you may have after.</p>
+<p>To make it a bit more human-readable, you can use the option "--pretty". This will pretty-print, or format
+the output with some structure to make it easy to view.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">[
+</span><span style="color:#eeffff;">  {
+</span><span style="color:#eeffff;">    "id": 1,
+</span><span style="color:#eeffff;">    "name": "Default Container"
+</span><span style="color:#eeffff;">  },
+</span><span style="color:#eeffff;">  {
+</span><span style="color:#eeffff;">    "id": 2,
+</span><span style="color:#eeffff;">    "name": "Crawler"
+</span><span style="color:#eeffff;">  },
+</span><span style="color:#eeffff;">  {
+</span><span style="color:#eeffff;">    "id": 3,
+</span><span style="color:#eeffff;">    "name": "myfolder"
+</span><span style="color:#eeffff;">  }
+</span></pre>
+
+<p>The <strong>folders</strong> command has the optional argiment "--folder". This allows you to narrow down your result. For example, if you are only interested in folder "myfolders",
+you could add the following filter:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> folders</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#82aaff;"> myfolder
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">[
+</span><span style="color:#eeffff;">  {
+</span><span style="color:#eeffff;">    "id": 3,
+</span><span style="color:#eeffff;">    "name": "myfolder"
+</span><span style="color:#eeffff;">  }
+</span><span style="color:#eeffff;">]
+</span></pre>
+
+<p>You can provide more than one "--folder" value or none at all. If you have none, it will list all available folders. If you have some, it will provide only the folders that have matching names in the list you specified.</p>
+<p>You can also add the option "--color" to make the output colorful if you wish:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">$ pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">color</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">green</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<p>Some commands support other types of format. For example, you can receive the same information as CSV for
+parsing later:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> folders
+</span></pre>
+
+<p>The output is:</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">1,Default Container
+</span><span style="color:#eeffff;">2,Crawler
+</span><span style="color:#eeffff;">3,myfolder
+</span></pre>
+
+<p>The default output format is "json". The available options are "json", "csv", "tree".</p>
+<p>Adding "--pretty" in this case will add header row to the CSV output containing the column names.</p>
+<h2><a id="list-folder-tree" rel="noopener noreferrer"></a>Listing the folder tree</h2>
+<p>Since folders could hav sub-folders, it is helpful sometimes to list them as a tree structure.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help folder-tree
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Prints the folder tree
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; folder-tree [OPTIONS]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -p, --path &lt;path&gt;  Path to the folder
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<p>The output will be in the default 'tree' format.</p>
+<ul>
+<li>--path: (optional) This argument specifies the path to a folder. If not specified the tree containing all folders will be printed. However, if you specify a path, only the folder matching this path and all of its sub-folders will be shown.</li>
+</ul>
+<p>For example, let us imagine we have the following folders:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant folder-tree
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">/ [0]
+</span><span style="color:#eeffff;">├─ folder_1 [1]
+</span><span style="color:#eeffff;">├─ folder_2 [2]
+</span><span style="color:#eeffff;">│  └─ folder_2_1 [3]
+</span><span style="color:#eeffff;">│     ├─ folder_2_1_1 [4]
+</span><span style="color:#eeffff;">│     └─ folder_2_1_2 [5]
+</span><span style="color:#eeffff;">├─ folder_3 [6]
+</span></pre>
+
+<p>If we do not specify a --path, we will see the entire tree as output.</p>
+<p>However, if we execute the command with a path:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant folder-tree</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">path</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">/folder_2</span><span style="color:#89ddff;">'
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">folder_2 [2]
+</span><span style="color:#eeffff;">└─ folder_2_1 [3]
+</span><span style="color:#eeffff;">├─ folder_2_1_1 [4]
+</span><span style="color:#eeffff;">└─ folder_2_1_2 [5]
+</span></pre>
+
+<p>In other words, you will see only the folder matching the path and all of its sub-folders.</p>
+<p>The folder named "/" is a special folder representing the root of the tree structure.</p>
+<h2><a id="create-folder" rel="noopener noreferrer"></a>Creating a new folder</h2>
+<p>The command <strong>create-folder</strong> allows you to create a new empty folder.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help create-folder
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Creates a new folder
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; create-folder --name &lt;name&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -n, --name &lt;name&gt;  Name of the new folder
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span></pre>
+
+<p>The only mandatory parameter is the name of the desired name of the new folder.</p>
+<h2><a id="delete-folder" rel="noopener noreferrer"></a>Deleting a folder</h2>
+<p><strong>WARNING:</strong> This command will permanently delete data. Proceed with caution!</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help delete-folder
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Deletes a specific folder
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; delete-folder [OPTIONS] --path &lt;path&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -p, --path &lt;path&gt;  Path to the folder
+</span><span style="color:#eeffff;">      --force        If specified, all models in the folder will be deleted
+</span><span style="color:#eeffff;">      --recursive    If specified, all sub-folders in this folder will also be deleted recursivelly
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<p>The arguments are as follows:</p>
+<ul>
+<li>--path: It specifies the path to the folder. See the example below.</li>
+<li>--force: (optional) If the folder contains any models and you specify this flag, all models will be deleted first and then the folder itself will be deleted. If you do not specify this flag and the folder does contain models, you will receive an error.</li>
+<li>--recursive: (optional) If the folder contains any sub-folders and you specify this flag, all subfolders and their sub-folders will be deleted recursivelly. Use together with --force to delete all data in the folder and the folder itself.</li>
+</ul>
+<p>Example:</p>
+<p>Let us imagine that we have the following folder tree:</p>
+<p>/ [0]
+├─ folder_1 [1]
+├─ folder_2 [2]
+│  └─ folder_2_1 [3]
+│     ├─ folder_2_1_1 [4]
+│     └─ folder_2_1_2 [5]
+├─ folder_3 [6]</p>
+<p>If we want to delete folder with name 'folder_2_1_1', we need to use the path '/folder_1/folder_2/folder_2_1/folder_2_1_1'. This is because folder_2_1_1 is a child folder of folder_2_1 and so far. In this case, the command would be:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant delete-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">path</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">/folder_2/folder_2_1/folder_2_1_1</span><span style="color:#89ddff;">'
+</span></pre>
+
+<p>However, if this folder contains any models we will get an error. To force the deletion of all data in this folder and the folder itself, we can specify the --force flag:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant delete-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">path</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">/folder_2/folder_2_1/folder_2_1_1</span><span style="color:#89ddff;">' --</span><span style="color:#f78c6c;">force
+</span></pre>
+
+<p>Obviously, this is a dangerous operaion. If you make a mistake in the path of the folder, you may destroy important data. Use the folder-tree command first to make sure that you have the correct path.</p>
+<p>If we want to delete folder folder_2, we can see that it contains several sub-folders. Without using the --recursive option we get an error. If you specify --recursive, the deletion will be executed on all sub-folders.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant delete-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">path</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">/folder_2/folder_2_1/folder_2_1_1</span><span style="color:#89ddff;">' --</span><span style="color:#f78c6c;">recursive
+</span></pre>
+
+<p>To automatically delete all sub-folders and all data in them, use both flags:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#82aaff;"> mytenant delete-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">path</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">/folder_2/folder_2_1/folder_2_1_1</span><span style="color:#89ddff;">' --</span><span style="color:#f78c6c;">recursive</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">force
+</span></pre>
+
+<p>Once again, use with caution! This is a very powerful command that can destroy large amounts of data very quickly. Once data is deleted there is no way to restore it unless you re-upload the files, which is an expensive process.</p>
+<p><strong>NOTE:</strong> PCLI will prevent you from attempting to delete the root folder "/" for safety.</p>
+<h2><a id="list-models" rel="noopener noreferrer"></a>Listing models</h2>
+<p>To obtain a list of models currently present in your tenant environment, use the <strong>models</strong> sub-command.
+Please, note that there is also <strong>model</strong> (singular) command, which is used for querying a single model.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help models
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Lists available models that meet the search criteria
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; models [OPTIONS]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder [&lt;folder&gt;...]  Optional: Folder name (e.g. --folder=default). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+</span><span style="color:#eeffff;">  -s, --search &lt;search&gt;       Optional: Search clause to further filter output (e.g. a model name)
+</span><span style="color:#eeffff;">  -h, --help                  Print help
+</span><span style="color:#eeffff;">  -V, --version               Print version
+</span></pre>
+
+<p>The <strong>models</strong> command takes a an optional argument "--folder", which is the folder name of interest and limits the search. If you use a folder name filter, but such does not exist, you will see an error message to that effect.</p>
+<p>If do not specify any folder names as a filter, it will return data from all available folders in your tenant.</p>
+<p>Example for listing all available models in folder "myfolder":</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The output from the above will include the list of models in folder with name "myfolder".</p>
+<p>You can further filter the output of the "models" command by specifying an optional search term. For example, to list
+all models in folder "myfolder" with model name containing the string "mypart", you can execute the following:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">search</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mypart</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>As with the <strong>folders</strong> command, you can specify CSV as the output format, use "--pretty" and "--color".</p>
+<p>The <strong>models</strong> command accepts multiple values for the folder name. You can query for the combined list of models from several folders in one command.
+In the following example, you will get all models belonging in either folder "myfolder1" or folder "myfolder2":</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder1</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder2</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>You can use the alternative notation with comma-separated values to achieve the same result:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder1,myfolder2</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>If one is provided, the search argument applies across the folders.</p>
+<h2><a id="query-model" rel="noopener noreferrer"></a>Querying for a specific model</h2>
+<p>The <strong>model</strong> command takes as mandatory argument the unique identifier (the UUID) of the model we are interested in. This is done via the "--uuid"
+argument. The CLI will query your tenant for that specific model regardless which folder it belongs to.</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Reads data for a specific model
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; model [OPTIONS] --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;  The model UUID
+</span><span style="color:#eeffff;">  -m, --meta         Enhance output with model's metadata
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<ul>
+<li>uuid - is the models UUID</li>
+<li>meta - is an optional flag. When provided, it will query and add the metadata of the model to the output</li>
+</ul>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>As explained before you can use different output formats, pretty-print, color.</p>
+<h2><a id="upload-model" rel="noopener noreferrer"></a>Uploading a model</h2>
+<p>The <strong>upload</strong> command assists you with uploading new 3D models to Physna. It takes the following arguments:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upload
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Uploads a file to Physna
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; upload --folder &lt;folder&gt; --input &lt;input&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder &lt;folder&gt;  Folder name (e.g. --folder=default)
+</span><span style="color:#eeffff;">  -i, --input &lt;input&gt;    Path to the input file
+</span><span style="color:#eeffff;">  -h, --help             Print help
+</span><span style="color:#eeffff;">  -V, --version          Print version
+</span></pre>
+
+<ul>
+<li>"input" is the path to the file you would like to upload in your local file system</li>
+<li>"folder" is the Physna folder name that will be the destination for your upload</li>
+</ul>
+<p>Here is an example of how all this comes together:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mycompany</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> upload</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">input</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">/path/to/my/file</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">units</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mm</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>If successful, it will upload the model in the file named "file".</p>
+<p>Be aware of the following restrictions:</p>
+<ul>
+<li>You can upload the following file types: .3ds, .asm, .catpart, .catproduct, .glb, .iges, .igs, .obj, .par, .prt, .sldasm, .sldprt, .stl, .step, .stp, .x_b, .x_t</li>
+<li>Please be aware that files may take several minutes to process after uploading.</li>
+<li>Scans with missing facets or filesizes over 150MB may impact performance.</li>
+<li>Each part file should not exceed 1GB</li>
+<li>Each assembly file should not have more than 3,000 parts</li>
+<li>All part files should be uploaded with their assembly file(s)</li>
+</ul>
+<h2><a href="upload-many-models" rel="noopener noreferrer"></a>Uploading multiple models in one step</h2>
+<p>You can upload multiple models in one step if they are located in the same directory on your computer. In this case,
+you can use the <strong>upload-many</strong> command. It is esentially the same as <strong>upload</strong>, but in this case the "--input" argument
+is not a file, but the path to the directory on your computer where the files are staged.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upload-many
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Performs a bulk upload of all files in a directory
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; upload-many --folder &lt;folder&gt; --input &lt;input&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder &lt;folder&gt;  Folder name (e.g. --folder=default)
+</span><span style="color:#eeffff;">  -i, --input &lt;input&gt;    Path to the input directory
+</span><span style="color:#eeffff;">      --on-error &lt;on-error&gt;  Optional: Action to perform on individual upload error [default: error] [possible values: error, warn, ignore]
+</span><span style="color:#eeffff;">      --show-stats           If specified, prints the upload stats after execution
+</span><span style="color:#eeffff;">  -h, --help             Print help
+</span><span style="color:#eeffff;">  -V, --version          Print version
+</span></pre>
+
+<p>Arguments:</p>
+<ul>
+<li>folder - the name of the destination folder in your tenant</li>
+<li>input - the local path to a directory containing the files you want to upload</li>
+<li>on-error - (Optional) can be one of the following:
+<ul>
+<li>error - if error is encountered when uploading an individual file, the entire upload will be interrupted and the program will exit</li>
+<li>warn - if error is encountered, PCLI will print it on screen, but will continue with the next upload</li>
+<li>ignore - no errors will be shown and PCLI will continue with the next upload</li>
+</ul>
+</li>
+<li>show-stats - (Optional) if specified, PCLI will print simple stats for the upload session</li>
+</ul>
+<p>Alternativelly, you can write a script to call the <strong>upload</strong> command for each file you want to upload.</p>
+<h2><a id="download-model" rel="noopener noreferrer"></a>Downloading model file</h2>
+<p>The <strong>download</strong> command will download the original source file of the model into your default download directory.
+The exact location of the download directory depends on your operating system, but it should be a sub-directory of your home directory.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help download
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Downloads the source CAD file for the model into the default download directory
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; download --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;  The model UUID
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<p>This command does not return any data. The result is a new file saved in your download directory. If a file with the same name already existed there, it will be overriden.</p>
+<p>Example:</p>
+<p>Suppose you previously uploaded a 3D model file named "myfile.stl" and it is now available in your tenant and has been assigned UUID of 511e65e7-d217-4873-af8d-2e3a438bxxxx.
+If you execute the following command:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> download</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#82aaff;"> 511e65e7-d217-4873-af8d-2e3a438bxxxx
+</span></pre>
+
+<p>if successful, you should see a file name "myfile.stl" in your default download directory.</p>
+<h2><a id="reprocess-model" rel="noopener noreferrer"></a>Reprocessing a model</h2>
+<p>The <strong>reprocess</strong> command is useful to recover from situations when a model has been uploaded, but for some reason its indexing
+in Physna has not completed normally. It takes mandatory parameter: the UUID of the model we want to reprocess.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help reprocess
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Reprocesses a specific model
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; reprocess --uuid &lt;uuid&gt;...
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;...  The model UUID
+</span><span style="color:#eeffff;">  -h, --help            Print help
+</span><span style="color:#eeffff;">  -V, --version         Print version
+</span></pre>
+
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> reprocess</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>This will cause the status of the model to be reset to "reprocessing" and the model will progress through the normal steps of processing and indexing as when uploading a new file.</p>
+<p>The command produces no output.</p>
+<p>The <strong>reprocess</strong> command has an alias <strong>reprocess-model</strong>. The following is equivalent to the above:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> reprocess-model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The <strong>reprocess</strong> command takes multiple values for the parameter --uuid. Therefore, you can reproces multiple models in one operation:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> reprocess</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceazzzzzz</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"</p>
+<h2><a id="delete-model" rel="noopener noreferrer"></a>Deleting a model</h2>
+<p>This command will delete a model and all related metadata from the Physna database.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> delete-model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The same command has an alias "delete". The same operation can be performed this way:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> delete</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>As with the <strong>reprocess</strong> command, it takes multiple values for --uuid to allow you to delete many models in one execution.</p>
+<p><strong>NOTE:</strong> Please, be extra careful when running bulk delete operations. Once deleted, a model cannot be recovered by Physna.
+You would have to upload it again.</p>
+<h2><a id="read-meta" rel="noopener noreferrer"></a>Reading metadata</h2>
+<p>In addition to the 3D geometry data, additional metadata can be associated with the model.
+The metadata is in the form of name/value pairs. Both the name and the value are UTF-8 strings.
+The metadata is returned as part of the model data when using the commands <strong>model</strong> or <strong>models</strong>.
+However, PCLI offers an additional specialized command to only retrieve the metadata and not the rest of the model data.
+This is useful when scripting more sophisticated solutions.</p>
+<p>The command is:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help model-meta
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Reads the metadata (properties) for a specific model
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; model-meta --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;  The model UUID
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print version
+</span></pre>
+
+<p>It takes one mandatory argument - the model's UUID.
+The output by default is JSON, but when we specify CSV, the output contains the following columns:</p>
+<ul>
+<li>UUID - the UUID of the model</li>
+<li>NAME - the property name</li>
+<li>VALUE - the property value</li>
+</ul>
+<p><strong>NOTE:</strong> The property names are case insensitive and are capitalized.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> model-meta</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">97377547-9062-4149-90f7-16daf400148x</span><span style="color:#89ddff;">"
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">UUID,NAME,VALUE
+</span><span style="color:#eeffff;">97377547-9063-4149-90f7-16daf400148x,DESCRIPTION,Test description
+</span><span style="color:#eeffff;">97377547-9063-4149-90f7-16daf400148x,SKU,Test
+</span></pre>
+
+<p>In this example, the model has two properties ("DESCRIPTION" and "SKU") with their corresponding names.</p>
+<p>The reason for the UUID of the model to be included as the first column is simple. You can concatenate the output of many executions of this command into one single file. That larger file will contain metadata for many models. You will see how that becomes helpful in the next section.</p>
+<h2><a id="upload-meta" rel="noopener noreferrer"></a>Uploading metadata</h2>
+<p>In some cases, we need to associate additional metadata with the geometry of a model. The command <strong>upload-model-meta</strong> serves this purpose.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upload-model-meta
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Reads metadata from an input CSV file and uploads it for a model specified by UUID
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; upload-model-meta --input &lt;input&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -i, --input &lt;input&gt;  Path to the input file
+</span><span style="color:#eeffff;">  -h, --help           Print help
+</span><span style="color:#eeffff;">  -V, --version        Print version
+</span></pre>
+
+<p>The file format is the same as the CSV-formatted output produced by the command <strong>model-meta</strong>.</p>
+<p><strong>NOTE:</strong> This command only works with the CSV format. It does not work with JSON. We may implement that option in a future release.</p>
+<p>The columns are: UUID,NAME,VALUE. One use case is to first read the metadata for some models, edit it externally (for example, with a text editor). This may include modifying values for existing properties or adding new properties and their values.</p>
+<p>The required argument is "input" - the name of the CSV formatted input file. There is no need for --uuid here because the UUID is included
+in the input file as the first column.</p>
+<p>If a property with this name already exists for the model, its value will be overridden with the new value provided.
+If the property does not exist, a new property with the provided (but capitalized) name will be created.</p>
+<p><strong>NOTE:</strong> If the metadata property value is an empty string, this command will delete the property for the model. In other words, if you want to delete a property, upload the same with value of an empty string in the input CSV file.</p>
+<h2><a id="read-asm" rel="noopener noreferrer"></a>Reading the assembly structure</h2>
+<p>The command <strong>assembly-tree</strong> will query for a specific model and return as result the assembly structure.
+Obviously, this is ony useful when working with assemblies. The assembly tree could be recursive with
+assemblies having sub-assemblies, and so forth.</p>
+<p>The <strong>assembly-tree</strong> command supports the unique output format of "tree".</p>
+<h2><a id="match-model" rel="noopener noreferrer"></a>Matching models to other models</h2>
+<p>Physna's core expertise is in finding geometric matches for models. The sub-command <strong>match-model</strong> does
+part-to-part match. This means that a model is matched as a unit to all other models in the system.
+With this function, we do not cascade from top-level assembly into all of its sub-assemblies, nor we
+try to determine if this model may be a component of another assembly.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help match-model
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Matches all models to the specified one
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; match-model [OPTIONS] --uuid &lt;uuid&gt; --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">          The model UUID
+</span><span style="color:#eeffff;">      --method &lt;method&gt;
+</span><span style="color:#eeffff;">          Type of search to be performed [default: part-to-part] [possible values: part-to-part, part-in-part]
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">          Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -m, --meta
+</span><span style="color:#eeffff;">          Enhance output with model's metadata
+</span><span style="color:#eeffff;">      --reference-meta
+</span><span style="color:#eeffff;">          Enhance output with the reference model's metadata, prefixed with 'reference.'
+</span><span style="color:#eeffff;">      --classification &lt;classification&gt;
+</span><span style="color:#eeffff;">          The name for the classification metadata property
+</span><span style="color:#eeffff;">      --tag &lt;tag&gt;
+</span><span style="color:#eeffff;">          The value for the classification metadata property
+</span><span style="color:#eeffff;">  -h, --help
+</span><span style="color:#eeffff;">          Print help
+</span><span style="color:#eeffff;">  -V, --version
+</span><span style="color:#eeffff;">          Print version
+</span></pre>
+
+<ul>
+<li>"uuid"           : is the UUID of the model we are trying to match.</li>
+<li>"method"         : is an optional argument. The default value is "part-to-part". Another option is "part-inpart", which will cause it to perform a search of a part within assemblies.</li>
+<li>"threshold"      : is the match level. This is a floating point value between [0..1]. For example, 80% match would be 0.8.</li>
+<li>"meta"           : is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.</li>
+<li>"reference-meta" : is an optional flag. If specified, it will include all metadata fields from the reference model to the output.</li>
+<li>"classification" : is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.</li>
+<li>"tag"            : requirest that the classification argument is present. It is the value to be associated with the "classification" property.</li>
+</ul>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> match-model</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.975</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The output contains the list of models that matched the criteria and a value between zero and one indicating the fit.
+A value of 1 means 100% match.</p>
+<p>As with the other commands, you can choose to output in JSON or CSV format.</p>
+<p><strong>NOTE:</strong> If you are using pipes to send the output to another process, please make sure you have obtained your
+token correctly prior to executing the operation. If not, the process will stop and wait for you to enter the client secret on the command line
+and your output will not be valid.</p>
+<p>The --classification argument requires further clarification.
+It is an optional argument, but if it is to be used, the --meta argument must be present.
+The purpose of this is to allow the user to permanently "tag" models that match the source model with a metadata name/value pair. In other words, for each model that
+matches, we will create a new medata property with name provided as --classification and value provided as --tag.
+If --classification is not provided, no new metadata will be created.
+This is useful in cases where we want to mark models that have similar geometry as some arbitrary class. Later, you can use this when you search for models and provide the value as the --search argument.
+You can also use the metadata to automate the ML learning for data classification.</p>
+<h2><a id="match-folder" rel="noopener noreferrer"></a>Matching entire folders of models</h2>
+<p>Sometimes, we need to execute match models in bulk. With the commands already provided so far, you could create a driver script to
+achieve the effect, but we provide a convenience method for this purpose. In other words, this command will query for the list of models in your folder and for each it will execute <strong>match-model</strong>. It will combine the responses into a single output. The input arguments are the same as the previous command.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help match-folder
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Matches all models in a folder to other models
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; match-folder [OPTIONS] --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;         Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -d, --folder [&lt;folder&gt;...]          Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+</span><span style="color:#eeffff;">  -s, --search &lt;search&gt;               Search clause to further filter output (optional: e.g. a model name)
+</span><span style="color:#eeffff;">  -e, --exclusive                     If specified, the output will include only models that belong to the input folder
+</span><span style="color:#eeffff;">  -m, --meta                          Enhance output with model's metadata
+</span><span style="color:#eeffff;">      --meta-filter [&lt;KEY=VALUE&gt;...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+</span><span style="color:#eeffff;">  -h, --help                          Print help
+</span><span style="color:#eeffff;">  -V, --version                       Print version
+</span></pre>
+
+<p>As with the <strong>models</strong> command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your serches as much as possible for better performance.</p>
+<p>Example:</p>
+<p>The following command will execute individual matches for all models found in the folder with name "myfolder" at match threshold of 99% (--threshold=0.99).
+It will output the result in CSV format (--format=csv) and add header line with column names to it (--pretty).</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> match-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.99</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>You can also specify a search term to further narrow down the filter. Finally, the "--meta" flag will cause any associated metadata to be added to the output.</p>
+<p>If you specify "--meta", you have the option to also specify "--meta-filter". For a value of this argument, you need to provie a name/value pair. You can have multiple occurrences of "--meta-filter" to add as many name/value pairs as required.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli match-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">0.9</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">test</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">meta</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">meta-filter</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">Keyword=Test</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The effect of the above is that PCLI will read the metadata for all models and only match those models that contain a property with name "Keyword" and value of "Test". All other matches will be ignored.</p>
+<p>This filter may be very helpful when you have large library of models across many folders and the only way to reduce the list is by specific metadata property(ies).</p>
+<h2><a id="match-visual" rel="noopener noreferrer"></a>Matching a model by its visual appearance</h2>
+<p>If you would like to find models that appear similar to a human eye, but may have different scale or details you can use the <strong>match-visual</strong> command. It only accounts for surface features.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli match-visual</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">help
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Matches all models to the specified one. Uses visual match algorithm
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; match-visual [OPTIONS] --uuid &lt;uuid&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;  The model UUID
+</span><span style="color:#eeffff;">  -m, --meta         Enhance output with model's metadata
+</span><span style="color:#eeffff;">  -h, --help         Print help
+</span><span style="color:#eeffff;">  -V, --version      Print versio
+</span></pre>
+
+<p>The output is a list of matched models. It is sorted by match confidence with the best result as the first element.</p>
+<h2><a id="match-scan" rel="noopener noreferrer"></a>Matching scanned model</h2>
+<p>If you have uploaded a 3D model that has been generated by a 3D scanner techolgy (e.g. photogrammetry), the tessellation may be widely different than a model produced by a CAD system.
+The geometry between the two models will be very different and you most likelly would not get a good match. In this situation, Physna provides a different algorithm, which is based
+on bounding box and other parameters. You may get better results this way.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help match-scan
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Scan-match all models to the specified one
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; match-scan [OPTIONS] --uuid &lt;uuid&gt; --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;                      The model UUID
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;            Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -m, --meta                             Enhance output with model's metadata
+</span><span style="color:#eeffff;">      --classification &lt;classification&gt;  The name for the classification metadata property
+</span><span style="color:#eeffff;">      --tag &lt;tag&gt;                        The value for the classification metadata property
+</span><span style="color:#eeffff;">  -h, --help                             Print help
+</span><span style="color:#eeffff;">  -V, --version                          Print version
+</span></pre>
+
+<p>Otherwise the use is very similar to the <strong>model-match</strong> command.</p>
+<h2><a id="match-report" rel="noopener noreferrer"></a>Generating a match report</h2>
+<p>The <strong>match-report</strong> command combines multiple operations. It is used to generate comprehensive match report that
+could be used as input for further post processing. For example, machine learning algorithms. It produces multiple
+outputs and therefore it requires the user to specify file names for each output.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help match-report
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Generates a match report for the specified models
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; match-report [OPTIONS] --uuid &lt;uuid&gt; --threshold &lt;threshold&gt; --duplicates &lt;duplicates&gt; --graph &lt;graph&gt; --dictionary &lt;dictionary&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;                   Top-level assembly UUID (you can provide multiple)
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;         Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -d, --duplicates &lt;duplicates&gt;       Output file name to store the duplicate report in CSV format
+</span><span style="color:#eeffff;">  -g, --graph &lt;graph&gt;                 Output file name to store the assembly graph in DOT Graphviz format
+</span><span style="color:#eeffff;">  -r, --dictionary &lt;dictionary&gt;       Output file name to store the index-name-uuid dictionary in JSON format
+</span><span style="color:#eeffff;">  -m, --meta                          Enhance output with model's metadata
+</span><span style="color:#eeffff;">      --meta-filter [&lt;KEY=VALUE&gt;...]  List of name/value pairs that will be used as a filter against the model's metadata properties
+</span><span style="color:#eeffff;">      --continue-on-error             Continue operation when errors are encountered
+</span><span style="color:#eeffff;">  -h, --help                          Print help
+</span><span style="color:#eeffff;">  -V, --version                       Print versiot
+</span></pre>
+
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> match-report </span><span style="color:#89ddff;">\
+</span><span style="color:#89ddff;">--</span><span style="color:#f78c6c;">duplicates</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">./my_duplicates.csv</span><span style="color:#89ddff;">" \
+</span><span style="color:#89ddff;">--</span><span style="color:#f78c6c;">graph</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">./my_graph.graphviz</span><span style="color:#89ddff;">" \
+</span><span style="color:#89ddff;">--</span><span style="color:#f78c6c;">dictionary</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">./my_dictionary.json</span><span style="color:#89ddff;">" \
+</span><span style="color:#89ddff;">--</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">0.95</span><span style="color:#89ddff;">" \
+</span><span style="color:#89ddff;">--</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">&lt;my_master_assembly_uuid&gt;</span><span style="color:#89ddff;">"
+</span></pre>
+
+<ul>
+<li>"duplicates" is an output file name. A new file will be created (overridden if it exists) with a CSV content listing each model match and its percentage. The percentage is not lower than the threshold specified</li>
+<li>"graph" is an output file. It will contain special GraphViz format that represents the graph of the master assembly. It can be converted to an image and viewed, or used as input to the next process</li>
+<li>"dictionary" is an output file in JSON format. It will map the UUIDs for each model in Physna to the graph node IDs</li>
+<li>"threshold" is the minimum match level</li>
+<li>"uuid" is the UUID for the master assembly in Physna</li>
+<li>"continue-on-error" is optional flag. The default value is 'false'. When set to 'true' PCLI will continue querieng for data even in cases when some individual network operations fail. The purpose is to collect as much data as possible without breaking a long-running process</li>
+</ul>
+<p>Hint: You can find the UUID for any model by name by using the "models" command and a search clause.</p>
+<p>Hint: You can install and use the <a href="https://graphviz.org/doc/info/command.html" rel="noopener noreferrer">Graphviz CLI</a> to convert the graphviz format to an image that you can view.
+You will have to install that utility separately. For example, to convert the file we created earlier:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">cat ./my_graph.graphviz </span><span style="color:#89ddff;">| </span><span style="color:#82aaff;">dot</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">Tsvg </span><span style="color:#89ddff;">&gt;</span><span style="color:#82aaff;"> my_graph.svg
+</span></pre>
+
+<p>This will produce a SVG file, which you can view by opening it in your browser or another graphics viewer.</p>
+<h2><a id="environment-status" rel="noopener noreferrer"></a>Tenant environment status</h2>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help status
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Generates a tenant's environment status summary
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; status [OPTIONS]
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder [&lt;folder&gt;...]  Folder name [optional, if none specified all folders will be included]
+</span><span style="color:#eeffff;">  -r, --repair                Forces repair operation on any model that is not in status FINISHED
+</span><span style="color:#eeffff;">      --noasm                 When using --repair, this flag causes assmeblies to be ignored
+</span><span style="color:#eeffff;">  -h, --help                  Print help
+</span><span style="color:#eeffff;">  -V, --version               Print version
+</span></pre>
+
+<p>We provide a convenience command to check on the status of folders in your environment.</p>
+<p>The following command would output details about the number of models in the specified folder
+per type of file and status.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> status</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>It will produce a summary report with stats of model types and their processing states. A state of "FINISHED" means that all is well and
+the model is ready for use. Status of "FAILED" indicates that there is a data issue with the model or perhaps the file does not
+contain any valid geometry.</p>
+<p>The "status" command takes an optional flag "--repair". When specified, PCLI will automatically issue <strong>reprocess</strong> command for any model
+that is not in "FINISHED" state. Please, notice that the reprocessing takes time and it is an offline action in Physna.
+Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the <strong>status</strong> command until all
+background processing completed.</p>
+<p>The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.</p>
+<p>The --folder argument is optional. You can provide multiple --folder arguments as well. If none is provided, it will generate the status for all folders available in the tenant. If one or more are specified, it will limit the output to those.</p>
+<h2><a id="match-all-models" rel="noopener noreferrer"></a>Matching all available models in the tenant</h2>
+<p>The match-all-models command is primarily for convenience, as it internally runs the match-report command for all available folders within the tenant. As a result, the only required input is the threshold argument. Please use this command sparingly, as it is resource-intensive.</p>
+<h2><a id="2D-to-3D" rel="noopener noreferrer"></a>Searching for 3D models by 2D image</h2>
+<p>In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
+that corresponds to this image.</p>
+<p>Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediatelly.</p>
+<p>To search by image, PCLI implements the <strong>image-search</strong> command:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help image-search
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; image-search [OPTIONS] --input &lt;input&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -i, --input &lt;input&gt;    Path to the input file
+</span><span style="color:#eeffff;">  -l, --limit &lt;limit&gt;    Maximum number of results to be returned (default is 20) [default: 20]
+</span><span style="color:#eeffff;">  -s, --search &lt;search&gt;  Search clause to further filter output (optional: e.g. a model name)
+</span><span style="color:#eeffff;">  -f, --filter &lt;filter&gt;  Physna filter expression. See: https://api.physna.com/v2/docs#model-FilterExpression
+</span><span style="color:#eeffff;">  -h, --help             Print help
+</span><span style="color:#eeffff;">  -V, --version          Print version
+</span></pre>
+
+<p>It takes four arguments:</p>
+<ul>
+<li>input - the path to the image file on your local file system</li>
+<li>limit - the maximum number of matches to be returned. This is optional with default of 20</li>
+<li>search - is optional argument. When provided it will sub-select the results based on the text value. For example, you could provide folder name or the value of a metadata property</li>
+<li>filter - is optional. You could specify a Physna filter expression for detailed control of the query. For more details on the syntax, please see <a href="https://api.physna.com/v2/docs#model-FilterExpression" rel="noopener noreferrer">Physna's documentation</a></li>
+</ul>
+<p>The search results are sorted where the most likely matches are returned first.</p>
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">csv</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> image-search</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">input</span><span style="color:#82aaff;"> my_picture.JPG</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">limit</span><span style="color:#82aaff;"> 30
+</span></pre>
+
+<p>This will return a list of matching model records in CSV format. Only the top 30 matches will be returned.</p>
+<p>For best results, you should specify the folder in which your models reside by utilizing the --filter argument. For example, if I know that my 3D models are in folder with ID of 100,
+I would add the following filter expression:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">csv</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> image-search</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">input</span><span style="color:#82aaff;"> my_picture.JPG</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">limit</span><span style="color:#82aaff;"> 30</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">filter</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">folderId(eq(100))</span><span style="color:#89ddff;">'
+</span></pre>
+
+<p>This would provide the result faster and more accuratelly than searching the entire database.</p>
+<p>It is important to take photos that show as many geometric features of the object as possible. In some cases, to get a better match, we need to provide
+multiple images of the same object taken from different angles. PCLI allows you to upload multiple images by repeating the --input argument.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">csv</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> image-search</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">input</span><span style="color:#82aaff;"> my_picture_take1.JPG ---input my_picture_take2.JPG-limit 30</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">filter</span><span style="color:#89ddff;">='</span><span style="color:#c3e88d;">folderId(eq(100))</span><span style="color:#89ddff;">'
+</span></pre>
+
+<p>Behind the seens, PCLI will execute two (or more) queries against Physna for each of your pictures. It will then combine the results by ranking up those that
+are repeating in the outputs.</p>
+<h2><a id="label-folder" rel="noopener noreferrer"></a>Model labeling</h2>
+<p>The PCLI client provides its own mechanism for label propagation, which is form of object classification.
+This is implemented in the <strong>label-folder</strong> command.
+It is based entirely on geometric match scores provided by Physna.</p>
+<p>The user provides 3 mandatory and one optional input arguments:</p>
+<ul>
+<li>"folder" - the target folder name in your tenant</li>
+<li>"classification" - the name of a metadata property that will be used for classification</li>
+<li>"threshold" - the confidence threshold value</li>
+<li>"exclusive" - this is a flag and does not take a value. If present, only the models found in the source fodler will be considered for matching. The default is to consider all models in the tenenat regardless of their parent folder.</li>
+</ul>
+<p>When executed, PLCI will read the contents of the folder and for each of the models in it,
+it will perform part-to-part match as in the <strong>match-model</strong> command.
+The match will be done with the specified threshold.
+It will then rank the matches by their scores and starting from the highest to the lowest will check if
+the matching models contain a value for the metadata property specified.
+If they do, the model will also be assigned that same metadata property and value.</p>
+<p>The assumption is that if model "A" has metadata property of "classification" with value of "apple" and model "B" is 98.5% geometrically the same as model "A", than we can say with
+98.5% confidence that model "B" is also an "apple".
+We indicate that by setting model "A"'s metadata property "classification" to have value of "apple"</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help label-folder
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Labels models in a folder based on KNN algorithm and geometric match score as distance
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; label-folder [OPTIONS] --folder &lt;folder&gt; --threshold &lt;threshold&gt; --classification &lt;classification&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -d, --folder &lt;folder&gt;
+</span><span style="color:#eeffff;">          Folder name
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">          Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -c, --classification &lt;classification&gt;
+</span><span style="color:#eeffff;">          The name for the classification metadata property
+</span><span style="color:#eeffff;">  -s, --search &lt;search&gt;
+</span><span style="color:#eeffff;">          Search clause to further filter output (optional: e.g. a model name)
+</span><span style="color:#eeffff;">  -m, --meta
+</span><span style="color:#eeffff;">          Enhance output with model's metadata
+</span><span style="color:#eeffff;">  -e, --exclusive
+</span><span style="color:#eeffff;">          If specified, the output will include only models that belong to the input folder
+</span><span style="color:#eeffff;">  -h, --help
+</span><span style="color:#eeffff;">          Print help
+</span><span style="color:#eeffff;">  -V, --version
+</span><span style="color:#eeffff;">          Print version
+</span></pre>
+
+<p>Example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> label-folder</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">0.9</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">classification</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">classification</span><span style="color:#89ddff;">"
+</span></pre>
+
+<p>The optional --search argument may be used to further refine the target list of models. Only models that match the search
+criteria will be labeled and all others ignored. The --search option works the same as for the <strong>models</strong> command.</p>
+<p>The command does not have any visible output, except returning success or error status. Once completed, your models should be labeled accordingly.</p>
+<p><strong>NOTE:</strong> Because the logic depeneds on at least some models being labeled apriori and because the command implements a single pass through the folder
+you may need to run this command multiple times for best results.</p>
+<p><strong>NOTE:</strong> If a model does not have any geometric matches that contain the required metadata property, its own property by that name will be deleted.
+Be careful what property name you use for classification. On another hand, you can run this command by specifying different property names if so desired.</p>
+<p>Although the user may target models in specific folder for labeling, PCLI will match any model in any folder
+unless the user adds the --exclusive command line argument. It that is specified, only the model in the target
+folder will be used for matching.
+In other words, the label values may come from any folder in your tenant unless you specify --exclusive.</p>
+<p>For the initial labeling of models, you can use the "upload-model-meta" command.</p>
+<p>Here's a refined version of your documentation for clarity and correctness:</p>
+<h2><a id="label-inference" rel="noopener noreferrer"></a>Labeling Models by Inference</h2>
+<p>The command <code>label-inference</code> enables users to automatically derive metadata properties from geometrically similar models, though it operates distinctively.</p>
+<p>You provide the UUID of a single model as an input argument. The command then attempts to find all matching models that meet or exceed a specified threshold (also provided as input). It lists the distinct properties available, sorted by the highest matching scores first, and outputs these inferred properties in a format compatible with the <code>upload-model-meta</code> command.</p>
+<p>This functionality allows users to infer property values for a model lacking them from those that are geometrically similar.</p>
+<p>For example, if model "A" is 99.5% similar to model "B", and model "B" has the property Material = Steel, then it is logical to infer that model "A" should also have the same property with the same value.</p>
+<p>When used judiciously, this command can be incredibly useful for processing large datasets.</p>
+<h3>Command Help</h3>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help label-inference
+</span></pre>
+
+<h3>Usage</h3>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Infere metadata values for a model based on metadata values of other geometrically similar models
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; label-inference [OPTIONS] --uuid &lt;uuid&gt; --threshold &lt;threshold&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -u, --uuid &lt;uuid&gt;            The model UUID
+</span><span style="color:#eeffff;">  -t, --threshold &lt;threshold&gt;  Match threshold percentage (e.g. 0.8 for 80%)
+</span><span style="color:#eeffff;">  -k, --key [&lt;meta-key&gt;...]    Optional: Metadata property key subject to inference (you can provide up to 10 keys)
+</span><span style="color:#eeffff;">  -d, --folder [&lt;folder&gt;...]   Optional: Folder name (e.g. --folder=myfolder). You can specify this argument multiple times. If none specified, it will return all models in the tenant
+</span><span style="color:#eeffff;">      --cascade-assembly       Optional: When this flag is used and the reference model is an assembly, it will recursively perform this operation for each sub-assembly and part within the main assembly
+</span><span style="color:#eeffff;">      --apply                  Optional: When this flag is specified, the infered values will be automatically applied to the model
+</span><span style="color:#eeffff;">  -h, --help                   Print help
+</span><span style="color:#eeffff;">  -V, --version                Print version
+</span></pre>
+
+<h3>Input Arguments</h3>
+<ul>
+<li><strong>"uuid"</strong>: The reference model UUID.</li>
+<li><strong>"threshold"</strong>: The confidence threshold value in percentage. Example: use the value of '0.8' for 80%</li>
+<li><strong>"key"</strong>: This optional argument allows you to specify explicitly which property names are to be considered for inference. Properties not specified are ignored.</li>
+<li><strong>"apply"</strong>: This optional flag, when specified, automatically sets the inferred properties in the reference model. Existing property values are not overridden to maintain data integrity.</li>
+<li><strong>"folder"</strong>: This is optional argument. You can specify it multiple times. If provided, it will filter the list of matching models only to those that belong in a folder that is listed. If none are specified, it will include matches from all existing folders, which is the default.</li>
+</ul>
+<h3>Example</h3>
+<p>Consider inferring potential metadata properties for a model with UUID <code>d915cc6d-5daa-4597-8f75-3d786b671790</code>, based on models that are at least 88% geometrically similar:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">csv</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">pretty</span><span style="color:#82aaff;"> label-inference</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">uuid</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">d915cc6d-5daa-4597-8f75-3d786b671790</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">threshold</span><span style="color:#89ddff;">=</span><span style="color:#82aaff;">0.88
+</span></pre>
+
+<p>Output:</p>
+<pre style="background-color:#263238;"><span style="color:#eeffff;">UUID,NAME,VALUE,MATCH_SCORE
+</span><span style="color:#eeffff;">d915cc6d-5daa-4597-8f75-3d786b671790,Material,PLA,0.9430817258938444
+</span><span style="color:#eeffff;">d915cc6d-5daa-4597-8f75-3d786b671790,3D Printable,Yes,0.8887639114858723
+</span></pre>
+
+<p>According to the output, the following properties were inferred from other models:</p>
+<ul>
+<li>Material: "PLA"</li>
+<li>3D Printable: "Yes"</li>
+</ul>
+<p>If multiple matches occur with the same property name but varying values, the value from the match with the highest percentage is used.</p>
+<p>Users can save the output to a CSV file and manually edit it if necessary. Afterwards, they can use the <code>upload-model-meta</code> command to upload the same file and persist the changes.</p>
+<p>If you trust the output, adding the <code>--apply</code> flag will automatically apply the changes to the model.</p>
+<h2><a id="list-users" rel="noopener noreferrer"></a>Listing all users</h2>
+<p>This is a support function to list all available users in the tenant.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help users
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Lists all users
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; users
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -h, --help     Print help
+</span><span style="color:#eeffff;">  -V, --version  Print version
+</span></pre>
+
+<p>It does not require any arguments. It simply outputs the full list of users. As other commands, it supports csv and json formats.</p>
+<h1><a id="errors" rel="noopener noreferrer"></a>Handling erors</h1>
+<p>Errors may occur for many different reasons. They can be caused by incorrect user input, network operations, etc.</p>
+<p>When an error occurs, the process is interrupted and an error message is returned to the user.</p>
+<p>It is important to understand that CLI commands in general have two seprate <a href="https://en.wikipedia.org/wiki/Standard_streams" rel="noopener noreferrer">standard output streams</a>.
+One is called STDIN and it is used for normal output. The other is called STDERR and it is used to print erro messages.</p>
+<p>PCLI follows this convention and it will print out error messages to STDERR. This way, if you are piping the output from PCLI to another downstream process
+it will not receive confusing data that may include error messages.</p>
+<p>Finally, CLI commands normaly return exit code of zero in case of successful operation and exit code other than zero when they encounter errors. PCLI follows
+the same rule. You can check the process exit code from PCLI to determine if the operation was successful or not.</p>
+<h1><a id="advanced-use" rel="noopener noreferrer"></a>Advanced use</h1>
+<h2><a id="upgrade" rel="noopener noreferrer"></a>Upgrading the PCLI version</h2>
+<p>You can automatically upgrade PCLI to the latest available version via the built-in "upgrade" command.</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli help upgrade
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Checks if a new version of PCLI is available and upgrades it to the latest
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: pcli --tenant &lt;tenant&gt; upgrade
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">  -h, --help     Print help
+</span><span style="color:#eeffff;">  -V, --version  Print version
+</span></pre>
+
+<p>You will be promted to confirm and if you do, the latest version of the binary for your platform will be automatically downloaded and installed.</p>
+<p>You can always manually install any version of PCLI from the GitHub repository.</p>
+<h2><a id="pipes" rel="noopener noreferrer"></a>Using pipes and redirecting output</h2>
+<p>The real power of this CLI tool comes when you use it in conjunction with other tools. For example,
+you can filter down the list of models further by piping the output (formatted as JSON) to <a href="https://stedolan.github.io/jq/" rel="noopener noreferrer">JQ</a>:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">t</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folders</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" | </span><span style="color:#82aaff;">jq </span><span style="color:#89ddff;">'</span><span style="color:#c3e88d;">.[] | select(.id=="96049555-b55a-45b1-bdcb-2555cb0012fe")</span><span style="color:#89ddff;">'
+</span></pre>
+
+<p>JQ has many useful features that could help you manipulate the output as needed.</p>
+<p>You can also redirect the output to a file on your disk for post-processing of the output:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> -</span><span style="color:#f78c6c;">t</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">format</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">csv</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folders</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" &gt;</span><span style="color:#82aaff;"> myfile.csv
+</span></pre>
+
+<p>Be aware that "--pretty" adds more to the output. For example, if your output format is CSV, it will add
+a header record. If your post-processor counts the number of records in the CSV to tally the number of
+models found (as example), you will have to ignore the first record. In this case it is probably better
+not to include the "--pretty" flag. This argument is binary and does not take a value. If it is present, it
+means that it is active; if not, it is effectively set to false.</p>
+<h2><a id="nushell" rel="noopener noreferrer"></a>Using NuShell</h2>
+<p><a href="https://www.nushell.sh/" rel="noopener noreferrer">NuShell</a> is an excellent partner for PCLI. You can use the combination of the two to a great effect.
+Instead of using the CSV format, you can ask NuShell to parse the JSON output of PCLI and even query the results in interesting ways.</p>
+<p>The scope of this document is not to explain in length how this works, but here is an example:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">pcli</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">tenant</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">mytenant</span><span style="color:#89ddff;">"</span><span style="color:#82aaff;"> models</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">folder</span><span style="color:#89ddff;">="</span><span style="color:#c3e88d;">myfolder</span><span style="color:#89ddff;">" | </span><span style="color:#82aaff;">from json </span><span style="color:#89ddff;">| </span><span style="color:#82aaff;">where name =</span><span style="font-style:italic;color:#ff5370;">~ </span><span style="color:#89ddff;">'</span><span style="color:#c3e88d;">Block</span><span style="color:#89ddff;">' | </span><span style="color:#82aaff;">select id name state </span><span style="color:#89ddff;">| </span><span style="color:#82aaff;">to csv
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">id,name,state
+</span><span style="color:#eeffff;">81a9f730-6a69-4a0d-ae6e-e737d34ca744,Block_Puzzle_1.STL,finished
+</span><span style="color:#eeffff;">4345f06d-5113-4329-9aeb-f5e04f34f8aa,Block_Puzzle_3.STL,finished
+</span><span style="color:#eeffff;">97b01c4f-5570-4790-9139-d0f50b54a8fd,Block_Puzzle_2.STL,finished
+</span><span style="color:#eeffff;">6f071997-19f0-4311-a14e-41f5c168762e,Block_Puzzle_5.STL,finished
+</span><span style="color:#eeffff;">4c13d2d4-8bef-43c3-afad-26d248a3da80,Block_Puzzle_4.STL,finished
+</span></pre>
+
+<p>This command will execute PCLI and ask it to return the list of models found in folder "myfolder".
+Next, it will filter out only thouse models that have the worf "Block" in the model's name.
+It will then subselect only the data from properties "id", "name", "state".
+Finally, it will format the output as CSV.</p>
+<p>Please, read the NuShell documentation for all the wonderful ways you can use it for data manipulations.</p>
+<h1><a id="support" rel="noopener noreferrer"></a>Support</h1>
+<p>If you have any questions, please e-mail to <a href="mailto:jchultarsky@physna.com" rel="noopener noreferrer">jchultarsky@physna.com</a>.</p>
+
+<h1><a id="roadmap" rel="noopener noreferrer"></a>Roadmap</h1>
+<p><em>The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch.</em></p>
+<ul>
+<li>✅ Implement basic operations (CRUD, search)</li>
+<li>✅ Implement advanced operation (match report)</li>
+<li>✅ Add Changelog</li>
+<li>✅ CI/CD</li>
+<li>✅ Create documentation</li>
+<li>✅ Better error messages</li>
+<li>Test suite</li>
+<li>Local data cache</li>
+</ul>
+<p>See the <a href="https://github.com/jchultarsky101/pcli/issues" rel="noopener noreferrer">open issues</a> for a full list of proposed features (and known issues).</p>
+
+<h1><a id="contributing" rel="noopener noreferrer"></a>Contributing</h1>
+<p>Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are <strong>greatly appreciated</strong>.</p>
+<p>If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!</p>
+<ol>
+<li>Fork the Project</li>
+<li>Create your Feature Branch (<code>git checkout -b feature/AmazingFeature</code>)</li>
+<li>Commit your Changes (<code>git commit -m 'Add some AmazingFeature'</code>)</li>
+<li>Push to the Branch (<code>git push origin feature/AmazingFeature</code>)</li>
+<li>Open a Pull Request</li>
+</ol>
+
+<h1><a id="license" rel="noopener noreferrer"></a>License</h1>
+<p>Distributed under the Apache License. See <code>LICENSE</code> for more information.</p>
+
+<h1><a id="contact" rel="noopener noreferrer"></a>Contact</h1>
+<p>Julian Chultarsky - <a href="https://twitter.com/jchultarsky101" rel="noopener noreferrer">@jchultarsky101</a> - <a href="mailto:jchultarsky@physna.com" rel="noopener noreferrer">jchultarsky@physna.com</a></p>
+<p>Project Link: <a href="https://jchultarsky101.github.io/pcli" rel="noopener noreferrer">https://jchultarsky101.github.io/pcli</a></p>
+
+<h1><a id="acknowledgments" rel="noopener noreferrer"></a>Acknowledgments</h1>
+<ul>
+<li><a href="https://choosealicense.com" rel="noopener noreferrer">Choose an Open Source License</a></li>
+<li><a href="https://www.webpagefx.com/tools/emoji-cheat-sheet" rel="noopener noreferrer">GitHub Emoji Cheat Sheet</a></li>
+<li><a href="https://shields.io" rel="noopener noreferrer">Img Shields</a></li>
+<li><a href="https://pages.github.com" rel="noopener noreferrer">GitHub Pages</a></li>
+<li><a href="https://fontawesome.com" rel="noopener noreferrer">Font Awesome</a></li>
+<li><a href="https://github.com/othneildrew/Best-README-Template" rel="noopener noreferrer">Best-README-Template</a></li>
+<li><a href="https://crates.io/crates/clap" rel="noopener noreferrer">Clap</a></li>
+<li><a href="https://crates.io/crates/configuration" rel="noopener noreferrer">Configuration</a></li>
+<li><a href="https://crates.io/crates/dirs" rel="noopener noreferrer">Dirs</a></li>
+<li><a href="https://crates.io/crates/env" rel="noopener noreferrer">Env</a></li>
+<li><a href="https://crates.io/crates/keyring" rel="noopener noreferrer">Keyring</a></li>
+<li><a href="https://crates.io/crates/log" rel="noopener noreferrer">Log</a></li>
+</ul>
+
+
+
+
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/jchultarsky101/pcli.git"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          pcli
+        </span>
+      </footer>
+    </div>
+
+    
+    
+
+    
+
+
+  </body>
+</html>
