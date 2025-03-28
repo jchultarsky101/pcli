@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## v1.10.0
+* Enhanced the match-model command with --method to enable part-in-part search
+* Changed the output of matches to include forward and reverse match percentage
+
 ## v1.9.16
 * Removed the assembly-bom command as it is no longer supported
 * Introduced the folder-tree command
