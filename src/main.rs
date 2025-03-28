@@ -5,6 +5,7 @@ use clap::{
     Arg, 
     Command, ArgAction
 };
+use pcli::model::MatchMethod;
 use pcli::{service, token, format, model::{self, ModelMetadata, ModelMetadataItem, ModelExtendedMetadataItem}};
 use std::str::FromStr;
 use dirs::home_dir;
@@ -188,6 +189,15 @@ fn main() {
                         .help("The model UUID")
                         .required(true)
                         .value_parser(clap::value_parser!(Uuid))
+                )
+                .arg(
+                    Arg::new("method")
+                        .long("method")
+                        .num_args(1)
+                        .default_value("part-to-part")
+                        .required(false)
+                        .value_parser(["part-to-part", "part-in-part"/*, "visual", "scan"*/])
+                        .help("Type of search to be performed")
                 )
                 .arg(
                     Arg::new("threshold")
@@ -1166,13 +1176,31 @@ fn main() {
         },
         Some(("match-model", sub_matches)) => {
             let uuid = sub_matches.get_one::<Uuid>("uuid").unwrap();
+            let method = sub_matches.get_one::<String>("method").unwrap();
             let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
             let with_meta = sub_matches.get_flag("meta");
             let with_reference_meta = sub_matches.get_flag("reference-meta");
             let classification = sub_matches.get_one::<String>("classification");
             let tag = sub_matches.get_one::<String>("tag");
             
-            let model_matches = match api.match_model(&uuid, threshold.to_owned(), with_meta, with_reference_meta, classification, tag) {
+
+            log::trace!("Executing model match via method='{}", &method);
+            let model_matches = match method.to_lowercase().as_str() {
+                "part-to-part" => {
+                    api.match_model(&uuid, threshold.to_owned(), MatchMethod::PartToPart, with_meta, with_reference_meta, classification, tag)
+                },
+                "part-in-part" => {
+                    api.match_model(&uuid, threshold.to_owned(), MatchMethod::PartInPart, with_meta, with_reference_meta, classification, tag)
+                },
+                //"visual" => log::trace!("Visual"),
+                //"scan" => log::trace!("Scan"),
+                _ => {
+                    eprintln!("This match method is valid, but not yet implemented in PCLI");
+                    ::std::process::exit(exitcode::USAGE);    
+                },
+            };
+            
+            let model_matches = match model_matches {
                 Ok(model_matches) => {
                     trace!("We found {} match(es)!", model_matches.inner.len());
                     model_matches
@@ -1468,9 +1496,9 @@ fn main() {
                                     
                                     // sort the list of matches by the mach score
                                     item.matches.sort_by(|a, b| {
-                                        if a.percentage < b.percentage {
+                                        if a.forward_percentage < b.forward_percentage {
                                             return Ordering::Less;
-                                        } else if a.percentage > b.percentage {
+                                        } else if a.forward_percentage > b.forward_percentage {
                                             return Ordering::Greater;
                                         }
                                         return Ordering::Equal;
@@ -1964,11 +1992,11 @@ fn main() {
                         let visual_matches: HashMap<Uuid, String> = visual_matches.models.iter().cloned().filter(|m| m.uuid != uuid).map(|m| (m.uuid, m.name)).collect();      
 
                         // we are interested only in the top 10 visual matches
-                        let key4_matches = api.match_model(&uuid, THRESHOLD, false, false, None, None);
+                        let key4_matches = api.match_model(&uuid, THRESHOLD, MatchMethod::PartToPart, false, false, None, None);
                         match key4_matches {
                             Ok(key4_matches) => {
                                 let key4_matches = key4_matches.inner;
-                                let key4_percentages: HashMap<Uuid, f64> = key4_matches.into_iter().map(|m| (m.model.uuid, m.percentage)).collect();
+                                let key4_percentages: HashMap<Uuid, f64> = key4_matches.into_iter().map(|m| (m.model.uuid, m.forward_percentage)).collect();
 
                                 for m in visual_matches {
                                     let (visual_match_uuid, visual_match_name) = m;

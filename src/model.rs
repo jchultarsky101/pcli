@@ -1073,12 +1073,22 @@ impl ToCsv for FlatBom {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum MatchMethod {
+    PartToPart,
+    PartInPart,
+    Scan,
+    Visual,
+}
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ModelMatch {
     #[serde(rename = "model")]
     pub model: Model,
-    #[serde(rename = "percentage")]
-    pub percentage: f64,
+    #[serde(rename = "forwardPercentage")]
+    pub forward_percentage: f64,
+    #[serde(rename = "reversePercentage")]
+    pub reverse_percentage: f64,
     #[serde(rename = "comparisonUrl", skip_serializing_if = "Option::is_none")]
     pub comparison_url: Option<String>,
 }
@@ -1091,10 +1101,16 @@ impl PartialEq for ModelMatch {
 impl Eq for ModelMatch {}
 
 impl ModelMatch {
-    pub fn new(model: Model, percentage: f64, comparison_url: Option<String>) -> ModelMatch {
+    pub fn new(
+        model: Model,
+        forward_percentage: f64,
+        reverse_percentage: f64,
+        comparison_url: Option<String>,
+    ) -> ModelMatch {
         ModelMatch {
             model,
-            percentage,
+            forward_percentage,
+            reverse_percentage,
             comparison_url,
         }
     }
@@ -1131,7 +1147,8 @@ impl ToCsv for ListOfModelMatches {
 
         let mut columns: HashSet<String> = HashSet::new();
         let standard_columns = vec![
-            "MATCH_PERCENTAGE",
+            "FORWARD_MATCH_PERCENTAGE",
+            "REVERSE_MATCH_PERCENTAGE",
             "ID",
             "NAME",
             "FOLDER_ID",
@@ -1168,10 +1185,12 @@ impl ToCsv for ListOfModelMatches {
 
         for m in matches {
             let model = m.model;
-            let percentage = m.percentage;
+            let forward_percentage = m.forward_percentage;
+            let reverse_percentage = m.reverse_percentage;
             let mut values: Vec<String> = Vec::new();
 
-            values.push(format!("{:.4}", percentage));
+            values.push(format!("{:.4}", forward_percentage));
+            values.push(format!("{:.4}", reverse_percentage));
             values.push(model.uuid.to_string());
             values.push(model.name);
             values.push(model.folder_id.to_string());
@@ -1405,7 +1424,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
 
                 values.push(model_name.to_owned());
                 values.push(m.model.name.to_owned());
-                values.push(m.percentage.to_string());
+                values.push(m.forward_percentage.to_string());
                 values.push(source_uuid.to_owned());
                 values.push(m.model.uuid.to_string());
                 values.push(source_folder_name.to_owned());
@@ -1587,7 +1606,16 @@ impl From<client::PartToPartMatch> for ModelMatch {
     fn from(m: client::PartToPartMatch) -> Self {
         let model = Model::from((m.matched_model).clone());
         let percentage = m.match_percentage;
-        ModelMatch::new(model, percentage, None)
+        ModelMatch::new(model, percentage, percentage, None)
+    }
+}
+
+impl From<client::PartInPartMatch> for ModelMatch {
+    fn from(m: client::PartInPartMatch) -> Self {
+        let model = Model::from((m.matched_model).clone());
+        let forward_percentage = m.forward_match_percentage;
+        let reverse_percentage = m.reverse_match_percentage;
+        ModelMatch::new(model, forward_percentage, reverse_percentage, None)
     }
 }
 
