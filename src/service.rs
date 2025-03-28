@@ -3,8 +3,8 @@ use crate::format::{format_list_of_matched_properties, Format};
 use crate::model::{
     self, EnvironmentStatusReport, FlatBom, Folder, FolderEntry, ListOfFolders,
     ListOfMatchedMetadataItems, ListOfModelMatches, ListOfModels, ListOfUsers,
-    ListOfVisualModelMatches, MatchedMetadataItem, Model, ModelAssemblyTree, ModelMatch,
-    ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
+    ListOfVisualModelMatches, MatchMethod, MatchedMetadataItem, Model, ModelAssemblyTree,
+    ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
     ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
@@ -352,6 +352,7 @@ impl Api {
         &self,
         uuid: &Uuid,
         threshold: f64,
+        method: MatchMethod,
         with_meta: bool,
         with_reference_meta: bool,
         classification: Option<&String>,
@@ -370,9 +371,13 @@ impl Api {
         let mut page: u32 = 1;
         let per_page: u32 = 50;
         while has_more {
-            let result = self
-                .client
-                .get_model_match_page(uuid, threshold, per_page, page)?;
+            let result = self.client.get_model_match_page(
+                uuid,
+                threshold,
+                method.to_owned(),
+                per_page,
+                page,
+            )?;
             if result.page_data.total > 0 {
                 let matches = result.matches;
                 if !matches.is_empty() {
@@ -733,14 +738,21 @@ impl Api {
                 None => None,
             };
 
-            let matches =
-                match self.match_model(&uuid, threshold.clone(), with_meta, false, None, None) {
-                    Ok(matches) => matches,
-                    Err(e) => {
-                        warn!("Failed to match model {}: {}", uuid, e);
-                        continue;
-                    }
-                };
+            let matches = match self.match_model(
+                &uuid,
+                threshold.clone(),
+                MatchMethod::PartToPart,
+                with_meta,
+                false,
+                None,
+                None,
+            ) {
+                Ok(matches) => matches,
+                Err(e) => {
+                    warn!("Failed to match model {}: {}", uuid, e);
+                    continue;
+                }
+            };
 
             let mut simple_duplicate_matches: Vec<ModelMatch> = Vec::new();
 
@@ -1050,7 +1062,15 @@ impl Api {
         apply: bool,
         folders: &Option<HashSet<String>>,
     ) -> Result<ListOfMatchedMetadataItems, ApiError> {
-        let matches = self.match_model(uuid, threshold, true, false, None, None)?;
+        let matches = self.match_model(
+            uuid,
+            threshold,
+            MatchMethod::PartToPart,
+            true,
+            false,
+            None,
+            None,
+        )?;
 
         let existing_folders = self.get_list_of_folders(folders.clone())?;
 
@@ -1063,8 +1083,8 @@ impl Api {
         // Sort matches by score in descending order (largest percentage first)
         let mut matches = matches.inner;
         matches.sort_by(|a, b| {
-            b.percentage
-                .partial_cmp(&a.percentage)
+            b.forward_percentage
+                .partial_cmp(&a.forward_percentage)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
 
@@ -1107,7 +1127,7 @@ impl Api {
                 }
             }
 
-            let score = m.percentage;
+            let score = m.forward_percentage;
             let folder_id = m.model.folder_id;
 
             if existing_folders.get(&folder_id).is_some() {

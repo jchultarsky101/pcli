@@ -1,7 +1,7 @@
 use crate::model::{
     FolderCreateResponse, GeoMatch, ImageMatch, ListOfModels, ListOfUsers,
-    ListOfVisualModelMatches, Model, ModelCreateMetadataResponse, ModelMetadata, ModelMetadataItem,
-    Property, PropertyCollection, VisualMatchItem, VisuallyMatchedModel,
+    ListOfVisualModelMatches, MatchMethod, Model, ModelCreateMetadataResponse, ModelMetadata,
+    ModelMetadataItem, Property, PropertyCollection, VisualMatchItem, VisuallyMatchedModel,
 };
 use core::str::FromStr;
 use log;
@@ -105,6 +105,26 @@ pub struct PartToPartMatch {
     pub match_percentage: f64,
 }
 
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct PartInPartMatch {
+    #[serde(rename = "matchedModel")]
+    pub matched_model: Model,
+    #[serde(rename = "forwardMatchPercentage")]
+    pub forward_match_percentage: f64,
+    #[serde(rename = "reverseMatchPercentage")]
+    pub reverse_match_percentage: f64,
+}
+
+impl From<PartToPartMatch> for PartInPartMatch {
+    fn from(m: PartToPartMatch) -> PartInPartMatch {
+        PartInPartMatch {
+            matched_model: m.matched_model,
+            forward_match_percentage: m.match_percentage,
+            reverse_match_percentage: m.match_percentage,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FolderFilterData {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -150,6 +170,23 @@ pub struct PartToPartMatchResponse {
     pub matches: Vec<PartToPartMatch>,
     #[serde(rename = "pageData")]
     pub page_data: PageData,
+}
+
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct PartInPartMatchResponse {
+    #[serde(rename = "matches")]
+    pub matches: Vec<PartInPartMatch>,
+    #[serde(rename = "pageData")]
+    pub page_data: PageData,
+}
+
+impl From<PartToPartMatchResponse> for PartInPartMatchResponse {
+    fn from(r: PartToPartMatchResponse) -> Self {
+        Self {
+            matches: r.matches.into_iter().map(Into::into).collect(),
+            page_data: r.page_data,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -600,14 +637,23 @@ impl ApiClient {
         &self,
         uuid: &Uuid,
         threshold: f64,
+        method: MatchMethod,
         per_page: u32,
         page: u32,
-    ) -> Result<PartToPartMatchResponse, ClientError> {
-        let url = format!(
-            "{}/v2/models/{id}/part-to-part-matches",
-            self.base_url,
-            id = urlencode(uuid.to_string())
-        );
+    ) -> Result<PartInPartMatchResponse, ClientError> {
+        let url = match method {
+            MatchMethod::PartToPart => format!(
+                "{}/v2/models/{id}/part-to-part-matches",
+                self.base_url,
+                id = urlencode(uuid.to_string())
+            ),
+            MatchMethod::PartInPart => format!(
+                "{}/v2/models/{id}/part-in-part-matches",
+                self.base_url,
+                id = urlencode(uuid.to_string())
+            ),
+            _ => panic!("Invalid match method requested"),
+        };
 
         let builder = self
             .client
@@ -625,7 +671,15 @@ impl ApiClient {
         log::trace!("GET {}", request.url());
         let response = self.client.execute(request);
 
-        Ok(self.handle_response::<PartToPartMatchResponse>(response)?)
+        let response = match method {
+            MatchMethod::PartToPart => self
+                .handle_response::<PartToPartMatchResponse>(response)?
+                .into(),
+            MatchMethod::PartInPart => self.handle_response::<PartInPartMatchResponse>(response)?,
+            _ => panic!("Unsupported match method requested"),
+        };
+
+        Ok(response)
     }
 
     pub fn get_model_scan_match_page(

@@ -288,7 +288,7 @@ Options:
   -t, --tenant <tenant>
           Your tenant ID (check with your Physna admin if not sure)
 
-          [env: PCLI_TENANT=delta]
+          [env: PCLI_TENANT=a4iwg]
 
   -f, --format <format>
           Output data format (optional: e.g. 'json', 'csv', or 'tree')
@@ -1149,6 +1149,8 @@ Usage: pcli --tenant <tenant> match-model [OPTIONS] --uuid <uuid> --threshold <t
 Options:
   -u, --uuid <uuid>
           The model UUID
+      --method <method>
+          Type of search to be performed [default: part-to-part] [possible values: part-to-part, part-in-part]
   -t, --threshold <threshold>
           Match threshold percentage (e.g. 0.8 for 80%)
   -m, --meta
@@ -1165,12 +1167,13 @@ Options:
           Print version
 ```
 
-* "uuid" is the UUID of the model we are trying to match.
-* "threshold" is the match level. This is a floating point value between [0..1]. For example, 80% match would be 0.8.
-* "meta" is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
-* "reference-meta" is an optional flag. If specified, it will include all metadata fields from the reference model to the output.
-* "classification" is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.
-* "tag" requirest that the classification argument is present. It is the value to be associated with the "classification" property.
+* "uuid"           : is the UUID of the model we are trying to match.
+* "method"         : is an optional argument. The default value is "part-to-part". Another option is "part-inpart", which will cause it to perform a search of a part within assemblies.
+* "threshold"      : is the match level. This is a floating point value between [0..1]. For example, 80% match would be 0.8.
+* "meta"           : is an optional flag. When specified, we will query for additional metadata and if present we will add that to the output.
+* "reference-meta" : is an optional flag. If specified, it will include all metadata fields from the reference model to the output.
+* "classification" : is an optional argument and requires that he "meta" is present. It is the name of a metadata property that will be set for each matching model. This way the user can permanently tag models.
+* "tag"            : requirest that the classification argument is present. It is the value to be associated with the "classification" property.
 
 Example:
 

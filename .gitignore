@@ -1,3 +1,4 @@
+start.sh
 Cargo.lock
 .DS_Store
 *.csv
