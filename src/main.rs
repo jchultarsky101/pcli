@@ -447,7 +447,7 @@ fn main() {
         )
         .subcommand(
             Command::new("label-inference")
-                .about("Infere metadata values for a model based on metadata values of other geometrically similar models")
+                .about("Infer metadata values for a model based on metadata values of other geometrically similar models")
                 .arg(
                     Arg::new("uuid")
                         .short('u')
