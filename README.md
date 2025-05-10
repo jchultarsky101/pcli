@@ -1713,6 +1713,11 @@ Finally, it will format the output as CSV.
 
 Please, read the NuShell documentation for all the wonderful ways you can use it for data manipulations.
 
+In the example bellow, we combine NuShell with PCLI to automate the cleanup of a folder by deleting all models that have 'No 3D Data' state:
+
+````nushell
+pcli --tenant='mytenant' --format='csv' --pretty models --folder='myfolder' | from csv | select ID STATE |  where STATE == 'No 3D Data' | each {|record| pcli delete-model --uuid $record.ID}
+````
 
 # <a id="support"></a>Support
 
