@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
+ ## v1.10.1
+* Added validation-report command
 
 ## v1.10.0
 * Enhanced the match-model command with --method to enable part-in-part search

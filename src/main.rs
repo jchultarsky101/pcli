@@ -821,6 +821,19 @@ fn main() {
                         .required(false)
                 ),
         )
+        .subcommand(
+            Command::new("validation-report")
+                .about("Generates a validation report used to test the accuracty of match results")
+                .arg(
+                    Arg::new("threshold")
+                        .short('t')
+                        .long("threshold")
+                        .num_args(1)
+                        .help("Match threshold percentage (e.g. 0.8 for 80%)")
+                        .required(true)
+                        .value_parser(clap::value_parser!(f64))
+                )
+        )
         /*
         .subcommand(
             Command::new("compare-matches")
