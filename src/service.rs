@@ -6,7 +6,7 @@ use crate::model::{
     ListOfVisualModelMatches, MatchMethod, MatchedMetadataItem, Model, ModelAssemblyTree,
     ModelMatch, ModelMatchReport, ModelMatchReportItem, ModelMetadata, ModelMetadataItem,
     ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
-    PropertyCollection, SimpleDuplicatesMatchReport,
+    PropertyCollection, SimpleDuplicatesMatchReport, ValidationMatches, ValidationTestReport,
 };
 use log::debug;
 use log::{error, trace, warn};
@@ -1168,5 +1168,50 @@ impl Api {
         }
 
         Ok(result)
+    }
+
+    pub fn validation_test(
+        &self,
+        positive_test_folder: &String,
+        _negative_test_folder: &String,
+        threshold: &f64,
+    ) -> Result<ValidationTestReport, ApiError> {
+        let mut report = ValidationTestReport::new(threshold.to_owned());
+        let mut set_of_positive_test_folders: HashSet<String> = HashSet::new();
+        set_of_positive_test_folders.insert(positive_test_folder.to_owned());
+
+        let positive_test_models = self.list_all_models(Some(set_of_positive_test_folders), None);
+        match positive_test_models {
+            Ok(positive_test_models) => {
+                let models = model::ListOfModels::from(positive_test_models);
+                for model in models.models {
+                    let positive_test_matches = self.match_model(
+                        &model.uuid,
+                        threshold.to_owned(),
+                        MatchMethod::PartToPart,
+                        false,
+                        false,
+                        None,
+                        None,
+                    )?;
+
+                    let validation_matches = ValidationMatches {
+                        reference_model: model.clone(),
+                        success: positive_test_matches.inner.len() > 0,
+                        candidate_models: positive_test_matches.inner.deref().clone(),
+                    };
+
+                    report
+                        .positive_tests
+                        .insert(model.uuid.to_owned(), validation_matches);
+                }
+            }
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                ::std::process::exit(exitcode::DATAERR);
+            }
+        }
+
+        Ok(report)
     }
 }

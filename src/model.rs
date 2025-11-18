@@ -2045,3 +2045,34 @@ impl From<Vec<User>> for ListOfUsers {
         Self { users }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct ValidationMatches {
+    pub reference_model: Model,
+    pub success: bool,
+    pub candidate_models: Vec<ModelMatch>,
+}
+
+#[derive(Debug)]
+pub struct ValidationTestReport {
+    pub threshold: f64,
+    pub positive_tests: HashMap<Uuid, ValidationMatches>,
+}
+
+impl ValidationTestReport {
+    pub fn new(threshold: f64) -> Self {
+        Self {
+            threshold,
+            positive_tests: HashMap::new(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ReducedValidationTestReport {
+    pub threshold: f64,
+    pub reference_uuid: Uuid,
+    pub reference_name: String,
+    pub success: bool,
+    pub matches: Vec<String>,
+}

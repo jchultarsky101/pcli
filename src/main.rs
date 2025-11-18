@@ -833,6 +833,22 @@ fn main() {
                         .required(true)
                         .value_parser(clap::value_parser!(f64))
                 )
+                .arg(
+                    Arg::new("positive-tests-folder")
+                        .long("positive-tests-folder")
+                        .num_args(1)
+                        .action(clap::ArgAction::Set) 
+                        .help("Folder path containing positive test cases")
+                        .required(true)
+                )
+                .arg(
+                    Arg::new("negative-tests-folder")
+                        .long("negative-tests-folder")
+                        .num_args(1)
+                        .action(clap::ArgAction::Set) 
+                        .help("Folder path containing negative test cases")
+                        .required(true)
+                )
         )
         /*
         .subcommand(
@@ -2047,6 +2063,22 @@ fn main() {
                     );
                 println!("{},{},\"{}\",\"{}\",{:.2},{}", item.uuid, item.visual_match_uuid, item.name, item.visual_match_name, item.percentage, comparison_url);
             }
+        },
+        Some(("validation-report", sub_matches)) => {
+            let threshold = sub_matches.get_one::<f64>("threshold").unwrap();
+            let positive_test_folder = sub_matches.get_one::<String>("positive-tests-folder").unwrap();            
+            let negative_test_folder = sub_matches.get_one::<String>("negative-tests-folder").unwrap();
+
+            match api.validation_test(positive_test_folder, negative_test_folder, threshold) {
+                Ok(report) => {
+                    println!("{:?}", report)
+                }
+                Err(e) => {
+                    eprintln!("Error occurred while performing visual match: {}", e);
+                    ::std::process::exit(exitcode::DATAERR);
+                }
+            }
+
         },
         _ => unreachable!("Error: Invalid command. See help for details"),
     }
