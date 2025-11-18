@@ -384,7 +384,7 @@ impl TreeItem for FolderEntry {
         )
     }
 
-    fn children(&self) -> Cow<[Self::Child]> {
+    fn children(&self) -> Cow<'_, [Self::Child]> {
         let mut sorted = self.children.clone();
         sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
         Cow::Owned(sorted)
@@ -924,7 +924,7 @@ impl TreeItem for ModelAssemblyTree {
         )
     }
 
-    fn children(&self) -> Cow<[Self::Child]> {
+    fn children(&self) -> Cow<'_, [Self::Child]> {
         if self.children.is_none() {
             Cow::from(vec![])
         } else {
@@ -1385,6 +1385,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
             "MATCHING_UUID",
             "SOURCE_FOLDER_NAME",
             "MATCHING_FOLDER_NAME",
+            "MATCHING_ASSEMBLY",
             "COMPARISON_URL",
         ];
 
@@ -1429,6 +1430,7 @@ impl ToCsv for SimpleDuplicatesMatchReport {
                 values.push(m.model.uuid.to_string());
                 values.push(source_folder_name.to_owned());
                 values.push(m.model.folder_name.to_owned().unwrap_or_default());
+                values.push(m.model.is_assembly.to_string());
 
                 match &m.comparison_url {
                     Some(url) => values.push(url.to_owned()),
