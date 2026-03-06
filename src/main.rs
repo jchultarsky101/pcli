@@ -894,7 +894,7 @@ fn main() {
     let configuration = match configuration {
         Ok(configuration) => configuration,
         Err(e) => {
-            eprintln!("Cannot initialize process with the provided configuration: {}", e);
+            eprintln!("Error: {}", e);
             ::std::process::exit(exitcode::CONFIG);
         },
     };
