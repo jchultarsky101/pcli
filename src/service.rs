@@ -8,8 +8,7 @@ use crate::model::{
     ModelMetadataItemShort, ModelStatusRecord, PartNodeDictionaryItem, Property,
     PropertyCollection, SimpleDuplicatesMatchReport,
 };
-use log::debug;
-use log::{error, trace, warn};
+use log::{debug, trace, warn};
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::matrix_graph::NodeIndex;
 use ptree::TreeItem;

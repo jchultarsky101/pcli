@@ -8,7 +8,6 @@ use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use log;
 use rpassword;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::time::Duration;
 use thiserror::Error;
@@ -259,14 +258,4 @@ fn request_new_token_from_provider(
         }
         None => Err(TokenError::UnknownTenant(tenant.to_owned())),
     }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct TokenEnvironment {
-    token: String,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct TokenContainer {
-    environments: HashMap<String, TokenEnvironment>,
 }

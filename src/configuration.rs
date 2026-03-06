@@ -8,10 +8,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ConfigurationError {
-    #[error("I/O error")]
-    InputOutputError(#[from] std::io::Error),
-    #[error("JSON parsing error")]
-    YamlParsingError(#[from] serde_yaml::Error),
+    #[error("Failed to read configuration file '{0}': {1}")]
+    InputOutputError(String, std::io::Error),
+    #[error("Failed to parse configuration file '{0}': {1}")]
+    YamlParsingError(String, serde_yaml::Error),
     #[error("Token error")]
     TokenError(#[from] TokenError),
 }
@@ -32,9 +32,11 @@ pub fn from_client_configuration(
 
 /// Reads the client configuration from a file
 pub fn initialize(configuration: &String) -> Result<ClientConfiguration, ConfigurationError> {
-    let configuration = Path::new(configuration.as_str());
-    let configuration = read_to_string(configuration)?;
-    Ok(serde_yaml::from_str(&configuration)?)
+    let configuration_path = Path::new(configuration.as_str());
+    let configuration_content = read_to_string(configuration_path)
+        .map_err(|e| ConfigurationError::InputOutputError(configuration.clone(), e))?;
+    serde_yaml::from_str(&configuration_content)
+        .map_err(|e| ConfigurationError::YamlParsingError(configuration.clone(), e))
 }
 
 /// Represents a Physna tenant
