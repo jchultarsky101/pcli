@@ -73,7 +73,7 @@
             <li><a href="#order-of-arguments">Order of arguments</a></li>
             <li><a href="#general-vs-specific-args">How do I know which arguments are general and which are specific</a></li>
             <li><a href="#signs-n-quotes">Equal sign, quotes, oh my</a></li>
-            <li><a href="#milti-value-args">Arguments with multiple values</a></li>
+            <li><a href="#multi-value-args">Arguments with multiple values</a></li>
           </ol>
         </li>
         <li>
@@ -132,7 +132,7 @@
 
 # <a id="about-the-project"></a>About the project
 
-This utility is a command-line (CLI) client for Physna's public API V2. It could be used to interact with the system
+This utility is a command-line (CLI) client for Physna's public API V2. It can be used to interact with the system
 in automated ways.
 
 **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. It is intended as a reference implementation and provides examples for using the APIs. This software has not been evaluated for SOC 2 compliance. Please review the license before use.
@@ -199,7 +199,7 @@ tenants:
 
 In the example above, "mytenant" represents your tenant ID. Be sure to update the sample to reflect your actual tenant ID.
 
-The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be usefgul.
+The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be useful.
 
 # <a id="basic-use"></a>Basic use
 
@@ -254,7 +254,7 @@ Commands:
   label-folder
           Labels models in a folder based on KNN algorithm and geometric match score as distance
   label-inference
-          Infere metadata values for a model based on metadata values of other geometrically similar models
+          Infer metadata values for a model based on metadata values of other geometrically similar models
   delete-folder
           Deletes a specific folder
   folder-tree
@@ -378,7 +378,7 @@ That was a very simple example. Here is a more complicated one:
 pcli --tenant="mytenant" --format="cvs" --pretty models --folder="default" --search="part_name"
 ```
 
-In this case, "tenant", "format", and "pretty" are all general arguments that apply accross many sub-commands.
+In this case, "tenant", "format", and "pretty" are all general arguments that apply across many sub-commands.
 On another hand "folder" and "search" are arguments that are specific to the **models** command.
 Of course "models" is the sub-command itself.
 
@@ -395,7 +395,7 @@ a command name in the help request, you will see the command-specific arguments 
 
 Remember, provide the general arguments (if any) first, then the command name followed with any specific command arguments.
 
-### <a id="signs-n-quites"></a>Equal sign, quotes, oh my!
+### <a id="signs-n-quotes"></a>Equal sign, quotes, oh my!
 
 There is some free play when it comes of how you provide values to an argument. Strictly speaking, those rules are not implemented by PCLI,
 but the operating system you are using and the terminal program you are using. However, it may be useful to go over few things here.
@@ -433,7 +433,7 @@ pcli --tenant="mytenant" --format="csv" --pretty match-folder --folder="myfolder
 This means that the **match-folder** command will search simultaneously in two folders (i.e. foler with name "myfolder1" and a second folder with name "myfolder2") and combine the output 
 for both. This way, you can widen the search in one command.
 
-For connvenience, we provide an alternative method of specifying multiple values. 
+For convenience, we provide an alternative method of specifying multiple values. 
 You can use a single command line argument name and a comma-separated list of values.
 The following is equivalent to the example above:
 
@@ -731,7 +731,7 @@ Usage: pcli --tenant <tenant> delete-folder [OPTIONS] --path <path>
 Options:
   -p, --path <path>  Path to the folder
       --force        If specified, all models in the folder will be deleted
-      --recursive    If specified, all sub-folders in this folder will also be deleted recursivelly
+      --recursive    If specified, all sub-folders in this folder will also be deleted recursively
   -h, --help         Print help
   -V, --version      Print version
 ```
@@ -944,7 +944,7 @@ Arguments:
   - ignore - no errors will be shown and PCLI will continue with the next upload
 * show-stats - (Optional) if specified, PCLI will print simple stats for the upload session
 
-Alternativelly, you can write a script to call the **upload** command for each file you want to upload.
+Alternatively, you can write a script to call the **upload** command for each file you want to upload.
 
 ## <a id="download-model"></a>Downloading model file
 
@@ -1020,7 +1020,7 @@ The **reprocess** command takes multiple values for the parameter --uuid. Theref
 pcli --tenant="mytenant" reprocess --uuid="95ac73f8-c086-4bec-a8f6-de6ceaxxxxxx" --uuid="95ac73f8-c086-4bec-a8f6-de6ceazzzzzz"
 ```
 
-Alternativelly, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
+Alternatively, you can use a comma-separated values for the UUID: --uuid="98797abc-bb3d-4898-9262-3b82827f43adxxxxxxx, 98797abc-bb3d-4898-9262-3b82827f43adyyyyyyy"
 
 ## <a id="delete-model"></a>Deleting a model
 
@@ -1222,7 +1222,7 @@ Options:
   -V, --version                       Print version
 ```
 
-As with the **models** command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your serches as much as possible for better performance.
+As with the **models** command, you can provide multiple folder name filters, or none at all if you want to match your entire database. However, it is recommended that you always try to narrow down your searches as much as possible for better performance.
 
 Example:
 
@@ -1320,7 +1320,7 @@ Options:
       --meta-filter [<KEY=VALUE>...]  List of name/value pairs that will be used as a filter against the model's metadata properties
       --continue-on-error             Continue operation when errors are encountered
   -h, --help                          Print help
-  -V, --version                       Print versiot
+  -V, --version                       Print version
 ```
 
 Example:
@@ -1343,7 +1343,7 @@ pcli --tenant="mytenant" match-report \
 
 Hint: You can find the UUID for any model by name by using the "models" command and a search clause.
 
-Hint: You can install and use the [Graphviz CLI](https://graphviz.org/doc/info/command.html) to convert the graphviz format to an image that you can view. 
+Hint: You can install and use the [Graphviz CLI](https://graphviz.org/doc/info/command.html) to convert the GraphViz format to an image that you can view. 
 You will have to install that utility separately. For example, to convert the file we created earlier:
 
 ```bash
@@ -1366,7 +1366,7 @@ Usage: pcli --tenant <tenant> status [OPTIONS]
 Options:
   -d, --folder [<folder>...]  Folder name [optional, if none specified all folders will be included]
   -r, --repair                Forces repair operation on any model that is not in status FINISHED
-      --noasm                 When using --repair, this flag causes assmeblies to be ignored
+      --noasm                 When using --repair, this flag causes assemblies to be ignored
   -h, --help                  Print help
   -V, --version               Print version
 ```
@@ -1391,7 +1391,7 @@ that is not in "FINISHED" state. Please, notice that the reprocessing takes time
 Therefore, the model will not immediately appear in "FIXED" state. You may need to wait a bit and re-run the **status** command until all
 background processing completed.
 
-The --noasm flag can be used when the --repair flag is specified. It causes assmeblies to be excluded from the repair process.
+The --noasm flag can be used when the --repair flag is specified. It causes assemblies to be excluded from the repair process.
 
 The --folder argument is optional. You can provide multiple --folder arguments as well. If none is provided, it will generate the status for all folders available in the tenant. If one or more are specified, it will limit the output to those.
 
@@ -1404,7 +1404,7 @@ The match-all-models command is primarily for convenience, as it internally runs
 In some cases, we want to find a 3D model by providing a 2D image of the object. For example, we could take a photo with our mobile phone and want to identify the 3D model
 that corresponds to this image.
 
-Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediatelly.
+Physna provides this functionality via Vector Based Similarity Search. It is a machine learning algorithm, but it does not need supervised training - it is ready to use immediately.
 
 To search by image, PCLI implements the **image-search** command:
 
@@ -1713,6 +1713,11 @@ Finally, it will format the output as CSV.
 
 Please, read the NuShell documentation for all the wonderful ways you can use it for data manipulations.
 
+In the example bellow, we combine NuShell with PCLI to automate the cleanup of a folder by deleting all models that have 'No 3D Data' state:
+
+````nushell
+pcli --tenant='mytenant' --format='csv' --pretty models --folder='myfolder' | from csv | select ID STATE |  where STATE == 'No 3D Data' | each {|record| pcli delete-model --uuid $record.ID}
+````
 
 # <a id="support"></a>Support
 

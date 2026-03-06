@@ -781,7 +781,7 @@ impl Api {
                 }
             }
 
-            let folder = folders.get_folder_by_id(&model.folder_id.clone());
+            let folder = existing_folders.get_folder_by_id(&model.folder_id.clone());
             let folder_name = match folder {
                 Some(folder) => folder.name.to_owned(),
                 None => String::default(),
