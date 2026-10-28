@@ -63,7 +63,14 @@
         <li><a href="#about-tenants">About tenants</a></li>
       </ol>
     </li>
-    <li><a href="#configuration">Configurations</a></li>
+    <li>
+      <a href="#configuration">Configurations</a>
+      <ol>
+        <li><a href="#configuration-settings">Settings</a></li>
+        <li><a href="#configuration-multiple-tenants">Multiple tenants</a></li>
+        <li><a href="#configuration-migration">Migrating from Okta</a></li>
+      </ol>
+    </li>
     <li>
       <a href="#basic-use">Basic use</a>
       <ol>
@@ -188,17 +195,22 @@ The tool uses a single configuration file located in your home directory, named 
 
 Below is an example of the contents of .pcli.conf:
 
-~~~
+~~~yaml
 base_path: https://api.physna.com
+scope: physna-api/access
+
 tenants:
-    mytenant:
-      client_id: 0000000000000000
-      client_secret: 
-      identity_provider_url: https://physna-v2-identity-mytenant.auth.us-east-2.amazoncognito.com/oauth2/token
-      scope: physna-api/access
+  mytenant:
+    client_id: 0000000000000000
+    client_secret:
+    identity_provider_url: https://physna-v2-identity-mytenant.auth.us-east-2.amazoncognito.com/oauth2/token
 ~~~
 
 In the example above, "mytenant" represents your tenant ID. Be sure to update the sample to reflect your actual tenant ID.
+
+You need to provide the client_id and the identity_provider_url, both of which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty, in which case you will be prompted to enter it whenever a new access token is needed. Read on to learn when it might be useful to provide it.
+
+## <a id="configuration-settings"></a>Settings
 
 The following settings can be specified at the top level of the file, where they apply to all tenants, or inside a tenant, where they apply to that tenant only and take precedence over the top-level value:
 
@@ -208,9 +220,51 @@ The following settings can be specified at the top level of the file, where they
 | identity_provider_url | The OAuth 2.0 token address provided by Physna for your tenant | none (required) |
 | scope | The OAuth scope requested when obtaining a token | physna-api/access |
 
-This allows a single configuration file to hold tenants that use different API addresses or identity providers.
+For each tenant, the CLI uses the value set inside the tenant first, then the top-level value, and finally the default.
+If no identity_provider_url is configured for a tenant, the CLI reports an error.
 
-The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be useful.
+The following settings can only be specified inside a tenant:
+
+| Setting | Description |
+|---|---|
+| client_id | The OAuth 2.0 client ID issued by Physna (required) |
+| client_secret | The OAuth 2.0 client secret. If empty, you will be prompted for it |
+
+## <a id="configuration-multiple-tenants"></a>Multiple tenants
+
+Because the API address, identity provider and scope can be set per tenant, a single configuration file can hold tenants that use different environments:
+
+~~~yaml
+base_path: https://api.physna.com
+scope: physna-api/access
+
+tenants:
+  mytenant:
+    client_id: 0000000000000000
+    client_secret:
+    identity_provider_url: https://physna-v2-identity-mytenant.auth.us-east-2.amazoncognito.com/oauth2/token
+
+  othertenant:
+    client_id: 1111111111111111
+    client_secret:
+    base_path: https://api.example.physna.com
+    identity_provider_url: https://physna-v2-identity-othertenant.auth.us-east-2.amazoncognito.com/oauth2/token
+~~~
+
+## <a id="configuration-migration"></a>Migrating from Okta
+
+Physna has moved authentication for the V2 API from Okta to AWS Cognito. The API itself is unchanged. To migrate an existing configuration:
+
+1. Replace the client_id and client_secret with the new values provided by Physna.
+2. Set identity_provider_url to the new token address provided by Physna (e.g. https://physna-v2-identity-mytenant.auth.us-east-2.amazoncognito.com/oauth2/token).
+3. Remove any scope setting, or set it to physna-api/access.
+4. Run the **invalidate** command once for the tenant, so the CLI discards the cached Okta token and obtains a new one:
+
+~~~bash
+pcli --tenant mytenant invalidate
+~~~
+
+If a tenant still authenticates via Okta, set its scope to "tenantApp roles" and keep the Okta token address as its identity_provider_url.
 
 # <a id="basic-use"></a>Basic use
 
