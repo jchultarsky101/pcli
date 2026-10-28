@@ -24,6 +24,8 @@ pub enum TokenError {
     HttpError(#[from] reqwest::Error),
     #[error("Failed to obtain security token from provider")]
     FailedToObtainTokenFromProvider,
+    #[error("No identity provider URL configured for tenant {0}")]
+    MissingIdentityProviderUrl(String),
     #[error("Unknown tenant {0}")]
     UnknownTenant(String),
     #[error("Token has expired")]
@@ -160,7 +162,8 @@ struct AuthenticationResponse {
     token_type: String, //e.g. "Bearer"
     expires_in: u64,    //e.g. 36000
     access_token: String,
-    scope: String, //e.g. "tenantApp"
+    #[serde(default)]
+    scope: Option<String>, //e.g. "tenantApp"; not returned by AWS Cognito
 }
 
 fn read_client_secret_from_console() -> String {
@@ -180,7 +183,10 @@ fn request_new_token_from_provider(
             let client_id = active_tenant.client_id.clone();
             let client_secret = active_tenant.client_secret.clone();
             let actual_client_secret;
-            let security_provider_url = configuration.identity_provider_url.clone();
+            let security_provider_url = configuration
+                .identity_provider_url_for(tenant)
+                .ok_or_else(|| TokenError::MissingIdentityProviderUrl(tenant.to_owned()))?;
+            let scope = configuration.scope_for(tenant);
 
             log::trace!("Requesting for tenant {:?}...", tenant.to_owned());
 
@@ -203,7 +209,7 @@ fn request_new_token_from_provider(
             // "cache-control", "no-cache"
             // 2. Prepare multi value request body:
             // "grant_type", "client_credentials"
-            // "scope", "tenantApp"
+            // "scope", configured scope (e.g. "physna-api/access")
             // 3. POST to the provider URL
 
             let combined_credentials = [client_id.clone(), actual_client_secret.clone()]
@@ -219,7 +225,7 @@ fn request_new_token_from_provider(
 
             let params = [
                 ("grant_type", "client_credentials"),
-                ("scope", "tenantApp roles"),
+                ("scope", scope.as_str()),
             ];
 
             // Create the HTTP client instance
@@ -257,5 +263,18 @@ fn request_new_token_from_provider(
             }
         }
         None => Err(TokenError::UnknownTenant(tenant.to_owned())),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_cognito_response_without_scope() {
+        let json = r#"{"access_token":"abc","expires_in":86400,"token_type":"Bearer"}"#;
+        let response: AuthenticationResponse = serde_yaml::from_str(json).unwrap();
+        assert_eq!(response.access_token, "abc");
+        assert_eq!(response.scope, None);
     }
 }

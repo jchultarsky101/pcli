@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+* Added support for AWS Cognito as the identity provider
+* The OAuth scope is now configurable via the scope setting (default physna-api/access)
+* base_path, identity_provider_url and scope can now be set per tenant, overriding the top-level values
+
 ## v1.10.0
 * Enhanced the match-model command with --method to enable part-in-part search
 * Changed the output of matches to include forward and reverse match percentage

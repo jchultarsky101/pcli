@@ -190,14 +190,25 @@ Below is an example of the contents of .pcli.conf:
 
 ~~~
 base_path: https://api.physna.com
-identity_provider_url: https://physna.okta.com/oauth2/default/v1/token
 tenants:
     mytenant:
       client_id: 0000000000000000
       client_secret: 
+      identity_provider_url: https://physna-v2-identity-mytenant.auth.us-east-2.amazoncognito.com/oauth2/token
+      scope: physna-api/access
 ~~~
 
 In the example above, "mytenant" represents your tenant ID. Be sure to update the sample to reflect your actual tenant ID.
+
+The following settings can be specified at the top level of the file, where they apply to all tenants, or inside a tenant, where they apply to that tenant only and take precedence over the top-level value:
+
+| Setting | Description | Default |
+|---|---|---|
+| base_path | The address of the Physna API | https://api.physna.com |
+| identity_provider_url | The OAuth 2.0 token address provided by Physna for your tenant | none (required) |
+| scope | The OAuth scope requested when obtaining a token | physna-api/access |
+
+This allows a single configuration file to hold tenants that use different API addresses or identity providers.
 
 The only other piece of information you need to provide is the client_id, which can be obtained from your Physna administrator. In most cases, you should leave the client_secret field empty. Read on to learn when it might be useful.
 
